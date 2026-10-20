@@ -31,6 +31,10 @@ Topic-organized notes for **RHCSA (EX200, RHEL 10)**, Linux administration inter
 - [Getting help & system documentation](shell-and-command-line/getting-help-and-documentation.md)
 - [Working with files & directories](shell-and-command-line/files-and-directories.md)
 
+### Files & text processing
+- [Viewing & creating file contents](files-and-text-processing/viewing-and-creating-file-contents.md)
+- [Archiving & compression](files-and-text-processing/archiving-and-compression.md)
+
 ### Networking & SSH
 - [SSH remote access, login & switching users](networking-and-ssh/ssh-remote-access.md) *(basics; extended in S64–68)*
 
