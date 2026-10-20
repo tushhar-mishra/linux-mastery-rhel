@@ -14,7 +14,7 @@
 | Use input-output redirection (`>`, `>>`, `\|`, `2>`, etc.) | 16 | [io-redirection-and-pipes.md](../files-and-text-processing/io-redirection-and-pipes.md) |
 | Use grep and regular expressions to analyze text | 17, 20 | [grep-and-regular-expressions.md](../files-and-text-processing/grep-and-regular-expressions.md) |
 | Access remote systems using SSH | 3, 64–65 | [ssh-remote-access.md](../networking-and-ssh/ssh-remote-access.md) |
-| Log in and switch users in multi-user targets | 3, 21, 50 | [ssh-remote-access.md §4](../networking-and-ssh/ssh-remote-access.md#4-logging-in-and-switching-users-rhcsa-core) |
+| Log in and switch users in multi-user targets | 3, 21, 50 | [ssh-remote-access.md §4](../networking-and-ssh/ssh-remote-access.md#4-logging-in-and-switching-users-rhcsa-core) · [local-users.md](../users-groups-and-permissions/local-users.md) · [shell-startup-files.md](../users-groups-and-permissions/shell-startup-files.md) |
 | Archive, compress, unpack, uncompress (tar, gzip, bzip2) | 8 | [archiving-and-compression.md](../files-and-text-processing/archiving-and-compression.md) |
 | Create and edit text files | 7, 20 | [vi-and-vim.md](../files-and-text-processing/vi-and-vim.md) · [viewing-and-creating-file-contents.md](../files-and-text-processing/viewing-and-creating-file-contents.md) |
 | Create, delete, copy, move files and directories | 6 | [files-and-directories.md](../shell-and-command-line/files-and-directories.md) |
@@ -98,12 +98,12 @@
 
 ## 9. Manage users and groups
 
-| Objective | Sessions |
-|---|---|
-| Create, delete, modify local users | 21 |
-| Change passwords; adjust password aging | 22 |
-| Create, delete, modify groups and memberships | 24 |
-| Configure privileged access | 27 |
+| Objective | Sessions | Notes |
+|---|---|---|
+| Create, delete, modify local users | 21 | [local-users.md](../users-groups-and-permissions/local-users.md) |
+| Change passwords; adjust password aging | 22 | [passwords-and-aging.md](../users-groups-and-permissions/passwords-and-aging.md) |
+| Create, delete, modify groups and memberships | 24 | [groups.md](../users-groups-and-permissions/groups.md) |
+| Configure privileged access | 27 | `users-groups-and-permissions/` (planned) |
 
 ## 10. Manage security
 
