@@ -11,30 +11,32 @@
 | Objective | Sessions | Notes |
 |---|---|---|
 | Access a shell prompt and issue commands with correct syntax | 4–6, 9–15 | [shell-basics-and-command-syntax.md](../shell-and-command-line/shell-basics-and-command-syntax.md) |
-| Use input-output redirection (`>`, `>>`, `\|`, `2>`, etc.) | 16 | `files-and-text-processing/` |
-| Use grep and regular expressions to analyze text | 17, 20 | `files-and-text-processing/` |
+| Use input-output redirection (`>`, `>>`, `\|`, `2>`, etc.) | 16 | [io-redirection-and-pipes.md](../files-and-text-processing/io-redirection-and-pipes.md) |
+| Use grep and regular expressions to analyze text | 17, 20 | [grep-and-regular-expressions.md](../files-and-text-processing/grep-and-regular-expressions.md) |
 | Access remote systems using SSH | 3, 64–65 | [ssh-remote-access.md](../networking-and-ssh/ssh-remote-access.md) |
-| Log in and switch users in multi-user targets | 3, 21, 50 | [ssh-remote-access.md](../networking-and-ssh/ssh-remote-access.md#4-logging-in-and-switching-users-rhcsa-core) |
+| Log in and switch users in multi-user targets | 3, 21, 50 | [ssh-remote-access.md §4](../networking-and-ssh/ssh-remote-access.md#4-logging-in-and-switching-users-rhcsa-core) |
 | Archive, compress, unpack, uncompress (tar, gzip, bzip2) | 8 | [archiving-and-compression.md](../files-and-text-processing/archiving-and-compression.md) |
-| Create and edit text files | 7, 20 | [viewing-and-creating-file-contents.md](../files-and-text-processing/viewing-and-creating-file-contents.md) (vi: S20, planned) || Create, delete, copy, move files and directories | 6 | [files-and-directories.md](../shell-and-command-line/files-and-directories.md) |
-| Create hard and soft links | 28 | `users-groups-and-permissions/` |
-| List, set, change standard ugo/rwx permissions | 25 | `users-groups-and-permissions/` |
+| Create and edit text files | 7, 20 | [vi-and-vim.md](../files-and-text-processing/vi-and-vim.md) · [viewing-and-creating-file-contents.md](../files-and-text-processing/viewing-and-creating-file-contents.md) |
+| Create, delete, copy, move files and directories | 6 | [files-and-directories.md](../shell-and-command-line/files-and-directories.md) |
+| Create hard and soft links | 28 | `users-groups-and-permissions/` (planned) |
+| List, set, change standard ugo/rwx permissions | 25 | `users-groups-and-permissions/` (planned) |
 | Locate, read, use docs: man, info, `/usr/share/doc` | 4–5 | [getting-help-and-documentation.md](../shell-and-command-line/getting-help-and-documentation.md) |
+
 ## 2. Manage software
 
 | Objective | Sessions | Notes |
 |---|---|---|
-| Configure access to RPM repositories | 57 | `logs-scheduling-and-packages/` |
-| Install and remove RPM packages | 57 | `logs-scheduling-and-packages/` |
-| Configure access to Flatpak repositories | 58 | `logs-scheduling-and-packages/` |
-| Install and remove Flatpak packages | 58 | `logs-scheduling-and-packages/` |
+| Configure access to RPM repositories | 57 | `logs-scheduling-and-packages/` (planned) |
+| Install and remove RPM packages | 57 | `logs-scheduling-and-packages/` (planned) |
+| Configure access to Flatpak repositories | 58 | `logs-scheduling-and-packages/` (planned) |
+| Install and remove Flatpak packages | 58 | `logs-scheduling-and-packages/` (planned) |
 
 ## 3. Create simple shell scripts
 
-| Objective | Sessions |
-|---|---|
-| Conditionally execute code (`if`, `test`, `[ ]`) | 87–90 |
-| Looping constructs (`for`, etc.) to process files and command-line input | 91 |
+| Objective | Sessions | Notes |
+|---|---|---|
+| Conditionally execute code (`if`, `test`, `[ ]`) | 87–90 | `bash-scripting-and-automation/` (planned) |
+| Looping constructs (`for`, etc.) to process files and command-line input | 91 | `bash-scripting-and-automation/` (planned) |
 | Process script inputs (`$1`, `$2`, …) | 13, 86–87 | [shell-variables-and-environment.md §6](../shell-and-command-line/shell-variables-and-environment.md#6-positional-parameters-rhcsa-core) |
 | Process output of shell commands within a script | 14, 85 | [command-substitution-and-shell-options.md](../shell-and-command-line/command-substitution-and-shell-options.md) |
 
