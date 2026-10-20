@@ -35,8 +35,8 @@
 |---|---|
 | Conditionally execute code (`if`, `test`, `[ ]`) | 87–90 |
 | Looping constructs (`for`, etc.) to process files and command-line input | 91 |
-| Process script inputs (`$1`, `$2`, …) | 86–87 |
-| Process output of shell commands within a script | 14, 85 |
+| Process script inputs (`$1`, `$2`, …) | 13, 86–87 | [shell-variables-and-environment.md §6](../shell-and-command-line/shell-variables-and-environment.md#6-positional-parameters-rhcsa-core) |
+| Process output of shell commands within a script | 14, 85 | [command-substitution-and-shell-options.md](../shell-and-command-line/command-substitution-and-shell-options.md) |
 
 ## 4. Operate running systems
 
