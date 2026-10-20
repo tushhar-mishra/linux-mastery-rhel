@@ -26,6 +26,9 @@ Topic-organized notes for **RHCSA (EX200, RHEL 10)**, Linux administration inter
 - [Virtualization & RHEL 10 lab setup](linux-fundamentals/virtualization-and-lab-setup.md)
 - [Filesystem hierarchy (RHEL 10)](linux-fundamentals/filesystem-hierarchy.md)
 
+### Networking & SSH
+- [SSH remote access, login & switching users](networking-and-ssh/ssh-remote-access.md) *(basics; extended in S64–68)*
+
 ### Shell & command line
 - [Shell basics & command syntax](shell-and-command-line/shell-basics-and-command-syntax.md)
 - [Getting help & system documentation](shell-and-command-line/getting-help-and-documentation.md)
@@ -39,9 +42,12 @@ Topic-organized notes for **RHCSA (EX200, RHEL 10)**, Linux administration inter
 ### Files & text processing
 - [Viewing & creating file contents](files-and-text-processing/viewing-and-creating-file-contents.md)
 - [Archiving & compression](files-and-text-processing/archiving-and-compression.md)
-
-### Networking & SSH
-- [SSH remote access, login & switching users](networking-and-ssh/ssh-remote-access.md) *(basics; extended in S64–68)*
+- [I/O redirection & pipes](files-and-text-processing/io-redirection-and-pipes.md)
+- [Text filters & pipelines](files-and-text-processing/text-filters.md)
+- [Finding files: find & locate](files-and-text-processing/finding-files.md)
+- [awk](files-and-text-processing/awk.md)
+- [grep & regular expressions](files-and-text-processing/grep-and-regular-expressions.md)
+- [vi & vim](files-and-text-processing/vi-and-vim.md)
 
 ## Repository Layout
 
@@ -75,7 +81,7 @@ linux-rhcsa-notes/
 | 4–6 | Shells, man pages, directories, files | `shell-and-command-line/shell-basics-and-command-syntax.md`, `getting-help-and-documentation.md`, `files-and-directories.md` | Done (S6 theory supplemented) |
 | 7–8 | File contents, compression, archives | `files-and-text-processing/viewing-and-creating-file-contents.md`, `archiving-and-compression.md` | Done (S7 theory supplemented) |
 | 9–15 | Expansion, control operators, variables, positional parameters, substitution/options, history, globbing | `shell-and-command-line/` (5 files) | Done (S13 & expansion order supplemented) |
-| 16–20 | Redirection, filters, find, awk, regex, vi | `files-and-text-processing/` | Pending |
+| 16–20 | Redirection, filters, find/locate, awk, regex, vi | `files-and-text-processing/` (6 files) | Done (S17 theory supplemented) |
 | 21–28 | Users, groups, permissions, sudo, links | `users-groups-and-permissions/` | Pending |
 | 29–30 | Processes, priorities | `processes-and-resource-management/` | Pending |
 | 31–48 | Storage, LVM, swap, RAID, VDO, Stratis, LUKS | `storage-and-filesystems/` | Pending |
