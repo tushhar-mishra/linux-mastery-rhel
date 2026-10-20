@@ -208,5 +208,5 @@ PS1='[\u@\h \W]\$ '    # RHEL default prompt  hostnamectl set-hostname NAME   # 
 - [Getting help & documentation](getting-help-and-documentation.md)
 - [Files & directories](files-and-directories.md)
 - [Login & switching users](../networking-and-ssh/ssh-remote-access.md#4-logging-in-and-switching-users-rhcsa-core)
-- Expansions, variables, history, globbing: S9–15 (planned in this folder)
+- [Quoting & control operators](quoting-and-control-operators.md) · [Variables](shell-variables-and-environment.md) · [Substitution & options](command-substitution-and-shell-options.md) · [History](command-history.md) · [Expansion & globbing](shell-expansion-and-globbing.md)
 - Profile files (`~/.bashrc`, `/etc/profile`): S23 (`users-groups-and-permissions/`)
