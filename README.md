@@ -49,6 +49,12 @@ Topic-organized notes for **RHCSA (EX200, RHEL 10)**, Linux administration inter
 - [grep & regular expressions](files-and-text-processing/grep-and-regular-expressions.md)
 - [vi & vim](files-and-text-processing/vi-and-vim.md)
 
+### Users, groups & permissions
+- [Local user accounts](users-groups-and-permissions/local-users.md)
+- [Passwords, aging & account locking](users-groups-and-permissions/passwords-and-aging.md)
+- [Shell startup (profile) files](users-groups-and-permissions/shell-startup-files.md)
+- [Groups & group membership](users-groups-and-permissions/groups.md)
+
 ## Repository Layout
 
 ```
@@ -82,7 +88,8 @@ linux-rhcsa-notes/
 | 7–8 | File contents, compression, archives | `files-and-text-processing/viewing-and-creating-file-contents.md`, `archiving-and-compression.md` | Done (S7 theory supplemented) |
 | 9–15 | Expansion, control operators, variables, positional parameters, substitution/options, history, globbing | `shell-and-command-line/` (5 files) | Done (S13 & expansion order supplemented) |
 | 16–20 | Redirection, filters, find/locate, awk, regex, vi | `files-and-text-processing/` (6 files) | Done (S17 theory supplemented) |
-| 21–28 | Users, groups, permissions, sudo, links | `users-groups-and-permissions/` | Pending |
+| 21–24 | Local users, passwords & aging, profile files, groups | `users-groups-and-permissions/local-users.md`, `passwords-and-aging.md`, `shell-startup-files.md`, `groups.md` | Done |
+| 25–28 | Permissions, advanced permissions, sudo, links | `users-groups-and-permissions/` | Pending |
 | 29–30 | Processes, priorities | `processes-and-resource-management/` | Pending |
 | 31–48 | Storage, LVM, swap, RAID, VDO, Stratis, LUKS | `storage-and-filesystems/` | Pending |
 | 49–53 | Boot, systemd, kernel, modules | `boot-systemd-and-kernel/` | Pending |
