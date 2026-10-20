@@ -1,7 +1,7 @@
 # Shell Basics & Command Syntax
 
 > **Sessions:** S4 (shells, prompt, command format) + S6 "Start using Linux" practice · **Baseline:** RHEL 10, bash 5.x
-> **Related:** [Getting help](getting-help-and-documentation.md) · [Files & directories](files-and-directories.md) · [SSH & switching users](../networking-and-ssh/ssh-remote-access.md) · Expansion, variables, history (S9–15, planned)
+> **Related:** [Getting help](getting-help-and-documentation.md) · [Files & directories](files-and-directories.md) · [SSH & switching users](../networking-and-ssh/ssh-remote-access.md) · [Quoting & control operators](quoting-and-control-operators.md) · [Variables](shell-variables-and-environment.md)
 
 ## 1. Overview
 
@@ -49,9 +49,9 @@ dnf list --available zsh tcsh ksh   # check repo availability before relying on 
 ### 2.3 How bash processes a command line **[Interview Knowledge]**
 
 1. **Read and tokenize** the line into words and operators (`|`, `;`, `&&`, `>`).
-2. **Expand:** brace → tilde → parameter/variable → command substitution → arithmetic → word splitting → globbing (S9–15).
+2. **Expand:** brace → tilde → parameter/variable → command substitution → arithmetic → word splitting → globbing ([expansion note](shell-expansion-and-globbing.md)).
 3. **Remove quotes.**
-4. **Set up redirections** (S16).
+4. **Set up redirections** ([redirection note](../files-and-text-processing/io-redirection-and-pipes.md)).
 5. **Look up the command,** in this order: alias → keyword → function → builtin → hashed path / `$PATH` search.
 6. **Execute.** Builtins run inside the shell. External programs run via `fork()` + `execve()`, and the shell waits, then stores the exit status in `$?`.
 
@@ -84,7 +84,7 @@ PS1='[\u@\h \w]\$ '                          # current shell only
 echo "PS1='[\u@\h \w]\\$ '" >> ~/.bashrc     # persistent for this user
 ```
 
-- `PS2` is the continuation prompt (`> `), shown when a command is incomplete (open quote, trailing `\`).
+- `PS2` is the continuation prompt (`> `), shown when a command is incomplete (open quote, trailing `\`). All PS0–PS4 variables are covered in the [variables note](shell-variables-and-environment.md#5-prompt-variables-ps0ps4).
 
 > ⚠️ **Course correction:** `user@host:~$` is the Debian/Ubuntu default prompt, not RHEL's.
 
@@ -108,8 +108,8 @@ ls       -l -h      /var/log
 ```bash
 cp file1.txt file2.txt /tmp/        # multiple sources → last argument must be a directory
 ls -l /etc | less                   # pipe: stdout of ls → stdin of less
-cmd1 ; cmd2                         # run sequentially (S11)
-mkdir /data && cd /data             # run cmd2 only if cmd1 succeeded (S11)
+cmd1 ; cmd2                         # run sequentially
+mkdir /data && cd /data             # run cmd2 only if cmd1 succeeded
 long command \                      # backslash continues a line
   --option value
 ```
@@ -127,7 +127,7 @@ long command \                      # backslash continues a line
 | `Ctrl+L` | Clear the screen |
 | `Ctrl+A` / `Ctrl+E` | Start / end of line |
 | `Ctrl+U` / `Ctrl+K` / `Ctrl+W` | Delete to start / to end / previous word |
-| `Ctrl+R` | Reverse-search history (S15) |
+| `Ctrl+R` | Reverse-search history ([history note](command-history.md)) |
 | `Alt+.` | Insert the last argument of the previous command |
 | `Ctrl+S` / `Ctrl+Q` | Freeze / resume terminal output (if the terminal "hangs," try `Ctrl+Q`) |
 
@@ -209,4 +209,4 @@ PS1='[\u@\h \W]\$ '    # RHEL default prompt  hostnamectl set-hostname NAME   # 
 - [Files & directories](files-and-directories.md)
 - [Login & switching users](../networking-and-ssh/ssh-remote-access.md#4-logging-in-and-switching-users-rhcsa-core)
 - [Quoting & control operators](quoting-and-control-operators.md) · [Variables](shell-variables-and-environment.md) · [Substitution & options](command-substitution-and-shell-options.md) · [History](command-history.md) · [Expansion & globbing](shell-expansion-and-globbing.md)
-- Profile files (`~/.bashrc`, `/etc/profile`): S23 (`users-groups-and-permissions/`)
+- Profile files (`~/.bashrc`, `/etc/profile`): S23 (`users-groups-and-permissions/`, planned)
