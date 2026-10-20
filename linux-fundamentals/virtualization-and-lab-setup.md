@@ -1,7 +1,7 @@
 # Virtualization & RHEL 10 Lab Setup
 
 > **Sessions:** S2 (virtualization; installation supplemented, see note) · **Verified:** Oct 2026
-> **Related:** [RHEL 9 vs 10](rhel-9-vs-rhel-10.md) · [SSH](../networking-and-ssh/ssh-remote-access.md) · KVM in depth: `containers-and-virtualization/` (S80)
+> **Related:** [RHEL 9 vs 10](rhel-9-vs-rhel-10.md) · [SSH](../networking-and-ssh/ssh-remote-access.md) · KVM in depth: `containers-and-virtualization/` (S80, planned)
 
 > 📝 **Coverage note:** The course notes for S2 covered physical servers and hypervisors but contained **no RHEL 10 installation material**. Sections 6–7 are supplemented and should be revisited if installation notes are added later.
 
@@ -150,3 +150,10 @@ Persistence requires an `/etc/fstab` entry for the ISO mount (covered in storage
 ## 10. Quick Revision
 
 KVM = kernel hypervisor + QEMU + libvirt. Check virtualization with `vmx|svm` and `systemd-detect-virt`. RHEL 10 needs AVX2. Root is disabled by default, so make your user an administrator. The DVD ISO provides BaseOS + AppStream local repos.
+
+## 11. Cross-References
+
+- [RHEL 9 vs RHEL 10](rhel-9-vs-rhel-10.md)
+- [SSH remote access](../networking-and-ssh/ssh-remote-access.md)
+- [Viewing & creating files (heredocs)](../files-and-text-processing/viewing-and-creating-file-contents.md)
+- Package management (S57) and KVM (S80): planned
