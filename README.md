@@ -26,6 +26,11 @@ Topic-organized notes for **RHCSA (EX200, RHEL 10)**, Linux administration inter
 - [Virtualization & RHEL 10 lab setup](linux-fundamentals/virtualization-and-lab-setup.md)
 - [Filesystem hierarchy (RHEL 10)](linux-fundamentals/filesystem-hierarchy.md)
 
+### Shell & command line
+- [Shell basics & command syntax](shell-and-command-line/shell-basics-and-command-syntax.md)
+- [Getting help & system documentation](shell-and-command-line/getting-help-and-documentation.md)
+- [Working with files & directories](shell-and-command-line/files-and-directories.md)
+
 ### Networking & SSH
 - [SSH remote access, login & switching users](networking-and-ssh/ssh-remote-access.md) *(basics; extended in S64–68)*
 
@@ -58,7 +63,7 @@ linux-rhcsa-notes/
 | 1 | Exam objectives, careers, RHEL 9 vs 10 | `linux-fundamentals/rhcsa-exam-and-certification.md`, `rhel-9-vs-rhel-10.md` | Done |
 | 2 | UNIX/Linux history, virtualization, installation | `unix-linux-history-and-architecture.md`, `virtualization-and-lab-setup.md` | Done (installation supplemented) |
 | 3 | Remote access, filesystem hierarchy | `networking-and-ssh/ssh-remote-access.md`, `linux-fundamentals/filesystem-hierarchy.md` | Done |
-| 4–6 | Shells, man pages, directories, files | `shell-and-command-line/` | Pending |
+| 4–6 | Shells, man pages, directories, files | `shell-and-command-line/shell-basics-and-command-syntax.md`, `getting-help-and-documentation.md`, `files-and-directories.md` | Done (S6 theory supplemented) |
 | 7–8 | File contents, compression, archives | `files-and-text-processing/` | Pending |
 | 9–15 | Expansion, variables, history, globbing | `shell-and-command-line/` | Pending |
 | 16–20 | Redirection, filters, find, awk, regex, vi | `files-and-text-processing/` | Pending |
