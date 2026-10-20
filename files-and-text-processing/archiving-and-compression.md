@@ -1,7 +1,7 @@
 # Archiving & Compression
 
 > **Sessions:** S8 · **Objective:** *Archive, compress, unpack, and uncompress files using tar, gzip, and bzip2* **[RHCSA Core]**
-> **Related:** [Viewing files](viewing-and-creating-file-contents.md) · [Files & directories](../shell-and-command-line/files-and-directories.md) · rsync & remote backups (S68) · SELinux contexts (S72–76)
+> **Related:** [Viewing files](viewing-and-creating-file-contents.md) · [Files & directories](../shell-and-command-line/files-and-directories.md) · [Finding files](finding-files.md) · [I/O redirection](io-redirection-and-pipes.md) · rsync & remote backups (S68) · SELinux contexts (S72–76)
 
 ## 1. Overview
 
@@ -246,6 +246,8 @@ f LAST in the option bundle | run as root for system dirs | --selinux --acls --x
 ## 10. Cross-References
 
 - [Viewing files](viewing-and-creating-file-contents.md)
+- [Finding files (find + tar)](finding-files.md)
+- [I/O redirection (streams, split)](io-redirection-and-pipes.md)
 - rsync & cron-based backups (S68): `networking-and-ssh/` (planned)
 - LVM snapshots for consistent backups (S36): `storage-and-filesystems/` (planned)
 - Log rotation & journal (S55): `logs-scheduling-and-packages/` (planned)
