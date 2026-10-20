@@ -1,11 +1,11 @@
 # Viewing & Creating File Contents
 
-> **Sessions:** S7 (practice) · theory supplemented · **Objective:** *Create and edit text files* (partial; `vi` in S20) **[RHCSA Core]**
-> **Related:** [Archiving & compression](archiving-and-compression.md) · [Files & directories](../shell-and-command-line/files-and-directories.md) · Redirection (S16) · Filters, grep (S17) · vi (S20)
+> **Sessions:** S7 (practice) · theory supplemented · **Objective:** *Create and edit text files* (with [vi](vi-and-vim.md)) **[RHCSA Core]**
+> **Related:** [Archiving & compression](archiving-and-compression.md) · [Files & directories](../shell-and-command-line/files-and-directories.md) · [I/O redirection](io-redirection-and-pipes.md) · [Text filters](text-filters.md) · [vi & vim](vi-and-vim.md)
 
 ## 1. Overview
 
-Admins read files constantly (configs, logs) and create small ones quickly (repo files, test data, configs). This note covers read-only viewing (`cat`, `less`, `head`, `tail`, `wc`) and fast creation without an editor (`echo`, `printf`, heredocs, `tee`). Full redirection theory is in S16; interactive editing with `vi` is in S20.
+Admins read files constantly (configs, logs) and create small ones quickly (repo files, test data, configs). This note covers read-only viewing (`cat`, `less`, `head`, `tail`, `wc`) and fast creation without an editor (`echo`, `printf`, heredocs, `tee`). Full redirection theory is in the [redirection note](io-redirection-and-pipes.md); interactive editing is in [vi & vim](vi-and-vim.md).
 
 ## 2. Viewing Files
 
@@ -56,7 +56,7 @@ tail -n 12 /etc/passwd         # last 12 lines
 tail -n +5 file                # from line 5 to the end (skip a header)
 sudo tail -f /var/log/messages # follow by file descriptor (stops tracking after rotation)
 sudo tail -F /var/log/secure   # follow by NAME, survives log rotation (prefer for logs)
-sed -n '10,20p' file           # lines 10–20 (sed covered in S17)
+sed -n '10,20p' file           # lines 10–20 (sed: see text filters note)
 ```
 
 ### 2.5 `wc`
@@ -114,7 +114,7 @@ printf '%s\n' line1 line2 > f   # one argument per line, predictable everywhere
 printf 'Name: %s, UID: %d\n' alice 1001
 ```
 
-Quoting rules (single vs double quotes, `$` expansion) are covered in S9–15.
+Quoting rules (single vs double quotes, `$` expansion) are covered in [quoting & control operators](../shell-and-command-line/quoting-and-control-operators.md).
 
 ### 3.3 Heredocs **[RHCSA Core technique]**
 
@@ -151,7 +151,7 @@ EOF
 - Create config and repo files with a **heredoc** or `tee`; it's fast and exact. Verify with `cat -A` if whitespace matters.
 - `>` vs `>>`: tasks often say "append." Overwriting `/etc/hosts` or `/etc/fstab` can break other tasks.
 - Logs under `/var/log` need root: `sudo tail`, `sudo less`, or `journalctl` (S55).
-- Count things exactly: `grep -c pattern file` or `… | wc -l` (S17).
+- Count things exactly: `grep -c pattern file` or `… | wc -l`.
 
 ## 5. Production Practices **[Production Practice]**
 
@@ -210,5 +210,5 @@ cmd | sudo tee [-a] /etc/file      # write root-owned files
 ## 10. Cross-References
 
 - [Archiving & compression](archiving-and-compression.md) (`zcat`, `zless`, `xzgrep`)
-- Redirection & pipes (S16), filters & grep (S17), `vi` (S20): planned in this folder
+- [Redirection & pipes](io-redirection-and-pipes.md) · [Text filters](text-filters.md) · [grep & regex](grep-and-regular-expressions.md) · [vi & vim](vi-and-vim.md)
 - Journal & logs (S55): `logs-scheduling-and-packages/` (planned)
