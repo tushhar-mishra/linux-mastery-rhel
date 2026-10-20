@@ -1,7 +1,7 @@
 # UNIX/Linux History & Architecture
 
 > **Sessions:** S2 (history portion) · **Scope:** [Interview Knowledge], not tested on EX200
-> **Related:** [Filesystem hierarchy](filesystem-hierarchy.md) · [Virtualization](virtualization-and-lab-setup.md)
+> **Related:** [Filesystem hierarchy](filesystem-hierarchy.md) · [Virtualization](virtualization-and-lab-setup.md) · [Shell basics](../shell-and-command-line/shell-basics-and-command-syntax.md)
 
 ## 1. Overview
 
@@ -156,4 +156,5 @@ C is sometimes called "middle-level" because it gives low-level memory control w
 ## 11. Cross-References
 
 - [Filesystem hierarchy](filesystem-hierarchy.md)
-- Kernel modules: `boot-systemd-and-kernel/` (S53)
+- [Shell basics (how bash runs commands)](../shell-and-command-line/shell-basics-and-command-syntax.md)
+- Kernel modules: `boot-systemd-and-kernel/` (S53, planned)
