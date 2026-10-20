@@ -10,18 +10,17 @@
 
 | Objective | Sessions | Notes |
 |---|---|---|
-| Access a shell prompt and issue commands with correct syntax | 4–6, 9–15 | `shell-and-command-line/` |
+| Access a shell prompt and issue commands with correct syntax | 4–6, 9–15 | [shell-basics-and-command-syntax.md](../shell-and-command-line/shell-basics-and-command-syntax.md) |
 | Use input-output redirection (`>`, `>>`, `\|`, `2>`, etc.) | 16 | `files-and-text-processing/` |
 | Use grep and regular expressions to analyze text | 17, 20 | `files-and-text-processing/` |
 | Access remote systems using SSH | 3, 64–65 | [ssh-remote-access.md](../networking-and-ssh/ssh-remote-access.md) |
-| Log in and switch users in multi-user targets | 3, 21, 50 | [ssh-remote-access.md](../networking-and-ssh/ssh-remote-access.md#7-logging-in-and-switching-users-rhcsa-core) |
+| Log in and switch users in multi-user targets | 3, 21, 50 | [ssh-remote-access.md](../networking-and-ssh/ssh-remote-access.md#4-logging-in-and-switching-users-rhcsa-core) |
 | Archive, compress, unpack, uncompress (tar, gzip, bzip2) | 8 | `files-and-text-processing/` |
 | Create and edit text files | 7, 20 | `files-and-text-processing/` |
-| Create, delete, copy, move files and directories | 6 | `shell-and-command-line/` |
+| Create, delete, copy, move files and directories | 6 | [files-and-directories.md](../shell-and-command-line/files-and-directories.md) |
 | Create hard and soft links | 28 | `users-groups-and-permissions/` |
 | List, set, change standard ugo/rwx permissions | 25 | `users-groups-and-permissions/` |
-| Locate, read, use docs: man, info, `/usr/share/doc` | 5 | `shell-and-command-line/` |
-
+| Locate, read, use docs: man, info, `/usr/share/doc` | 4–5 | [getting-help-and-documentation.md](../shell-and-command-line/getting-help-and-documentation.md) |
 ## 2. Manage software
 
 | Objective | Sessions | Notes |
