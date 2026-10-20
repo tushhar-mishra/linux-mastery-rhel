@@ -30,6 +30,11 @@ Topic-organized notes for **RHCSA (EX200, RHEL 10)**, Linux administration inter
 - [Shell basics & command syntax](shell-and-command-line/shell-basics-and-command-syntax.md)
 - [Getting help & system documentation](shell-and-command-line/getting-help-and-documentation.md)
 - [Working with files & directories](shell-and-command-line/files-and-directories.md)
+- [Quoting, arguments & control operators](shell-and-command-line/quoting-and-control-operators.md)
+- [Shell variables, environment & positional parameters](shell-and-command-line/shell-variables-and-environment.md)
+- [Command substitution, subshells & shell options](shell-and-command-line/command-substitution-and-shell-options.md)
+- [Command history](shell-and-command-line/command-history.md)
+- [Shell expansion & globbing](shell-and-command-line/shell-expansion-and-globbing.md)
 
 ### Files & text processing
 - [Viewing & creating file contents](files-and-text-processing/viewing-and-creating-file-contents.md)
@@ -68,7 +73,8 @@ linux-rhcsa-notes/
 | 2 | UNIX/Linux history, virtualization, installation | `unix-linux-history-and-architecture.md`, `virtualization-and-lab-setup.md` | Done (installation supplemented) |
 | 3 | Remote access, filesystem hierarchy | `networking-and-ssh/ssh-remote-access.md`, `linux-fundamentals/filesystem-hierarchy.md` | Done |
 | 4–6 | Shells, man pages, directories, files | `shell-and-command-line/shell-basics-and-command-syntax.md`, `getting-help-and-documentation.md`, `files-and-directories.md` | Done (S6 theory supplemented) |
-| 7–8 | File contents, compression, archives | `files-and-text-processing/viewing-and-creating-file-contents.md`, `archiving-and-compression.md` | Done (S7 theory supplemented) || 9–15 | Expansion, variables, history, globbing | `shell-and-command-line/` | Pending |
+| 7–8 | File contents, compression, archives | `files-and-text-processing/viewing-and-creating-file-contents.md`, `archiving-and-compression.md` | Done (S7 theory supplemented) |
+| 9–15 | Expansion, control operators, variables, positional parameters, substitution/options, history, globbing | `shell-and-command-line/` (5 files) | Done (S13 & expansion order supplemented) |
 | 16–20 | Redirection, filters, find, awk, regex, vi | `files-and-text-processing/` | Pending |
 | 21–28 | Users, groups, permissions, sudo, links | `users-groups-and-permissions/` | Pending |
 | 29–30 | Processes, priorities | `processes-and-resource-management/` | Pending |
