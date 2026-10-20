@@ -1,7 +1,7 @@
 # SSH Remote Access, Login & Switching Users
 
 > **Sessions:** S3 (basics) · **To be extended:** S64–68 (SSH options, login restrictions, recovery, rsync backups)
-> **Related:** [Filesystem hierarchy](../linux-fundamentals/filesystem-hierarchy.md) · [Lab setup](../linux-fundamentals/virtualization-and-lab-setup.md) · firewalld (`firewall-and-selinux/`) · users/sudo (`users-groups-and-permissions/`)
+> **Related:** [Filesystem hierarchy](../linux-fundamentals/filesystem-hierarchy.md) · [Lab setup](../linux-fundamentals/virtualization-and-lab-setup.md) · [Shell basics](../shell-and-command-line/shell-basics-and-command-syntax.md) · firewalld (`firewall-and-selinux/`, planned) · users/sudo (`users-groups-and-permissions/`, planned)
 
 ## 1. Overview
 
@@ -220,8 +220,10 @@ su - user | sudo -i | id | who | w | last
 
 ## 10. Cross-References
 
-- Firewall rules: `firewall-and-selinux/` (S69–70)
-- SELinux port labels for a non-standard SSH port: `firewall-and-selinux/` (S76)
-- sudo and the wheel group: `users-groups-and-permissions/` (S27)
+- [Shell basics (first commands, `whoami` vs `who am i`)](../shell-and-command-line/shell-basics-and-command-syntax.md)
+- [I/O redirection (`sudo tee`)](../files-and-text-processing/io-redirection-and-pipes.md)
+- Firewall rules: `firewall-and-selinux/` (S69–70, planned)
+- SELinux port labels for a non-standard SSH port: `firewall-and-selinux/` (S76, planned)
+- sudo and the wheel group: `users-groups-and-permissions/` (S27, planned)
 - Advanced SSH options, login restrictions, rsync backups: this file, extended in S64–68
-- SSH port forwarding: `containers-and-virtualization/` or this file (S84) **[Advanced/Optional]**
+- SSH port forwarding: this file (S84) **[Advanced/Optional]**
