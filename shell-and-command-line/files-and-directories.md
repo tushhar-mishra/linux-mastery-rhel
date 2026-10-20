@@ -1,7 +1,7 @@
 # Working with Files & Directories
 
 > **Sessions:** S6 (practice) · theory supplemented · **Objective:** *Create, delete, copy, and move files and directories* **[RHCSA Core]**
-> **Related:** [Filesystem hierarchy](../linux-fundamentals/filesystem-hierarchy.md) · [Shell basics](shell-basics-and-command-syntax.md) · Links (S28) · `find` (S18) · Globbing (S15) · SELinux contexts (S72–76)
+> **Related:** [Filesystem hierarchy](../linux-fundamentals/filesystem-hierarchy.md) · [Shell basics](shell-basics-and-command-syntax.md) · [Expansion & globbing](shell-expansion-and-globbing.md) · [Finding files](../files-and-text-processing/finding-files.md) · Links (S28, planned) · SELinux contexts (S72–76, planned)
 
 ## 1. Overview
 
@@ -79,7 +79,7 @@ cd /etc ; cd ; cd ~ ; cd - ; cd .. ; cd ~alice
 mkdir dir1 dir2                       # several at once
 mkdir -p ~/testdir/newdir/mydir       # create parents; no error if it exists
 mkdir -m 750 /srv/project             # set mode at creation (ignores umask)
-mkdir -p proj/{src,docs,tests}        # brace expansion (S9)
+mkdir -p proj/{src,docs,tests}        # brace expansion
 rmdir dir                             # ONLY removes empty directories
 rmdir -p a/b/c                        # remove c, then b, then a, if each is empty
 rm -r dir                             # remove a directory and its contents
@@ -136,7 +136,7 @@ rm -- -weird-name   or   rm ./-weird-name   # names starting with "-"
 rm "my file.txt"                      # quote spaces
 ```
 
-> ⚠️ **Destructive:** There's no recycle bin. `rm -rf` is irreversible. Double-check paths, especially with variables or globs (see §6).
+> ⚠️ **Destructive:** There's no recycle bin. `rm -rf` is irreversible. Double-check paths, especially with variables or globs (see §5).
 
 ### 3.7 Download and basic search
 
@@ -144,10 +144,12 @@ rm "my file.txt"                      # quote spaces
 curl -O https://host/path/file.pdf    # save with the remote name (curl is in minimal installs)
 curl -L -o out.pdf URL                # follow redirects, choose the name
 wget URL                              # if the wget package is installed
-find ~ -name newdir                   # search by name from an explicit start point (S18)
+find ~ -name newdir                   # search by name from an explicit start point
 find ~ -type f -name 'RHCSA10.pdf'    # regular files only
 find / -name sshd_config 2>/dev/null  # hide "Permission denied" noise
 ```
+
+Full `find` coverage: [finding files](../files-and-text-processing/finding-files.md).
 
 ## 4. RHCSA Exam Focus **[RHCSA Core]**
 
@@ -237,7 +239,8 @@ mv into service dirs → restorecon -Rv
 ## 10. Cross-References
 
 - [Filesystem hierarchy](../linux-fundamentals/filesystem-hierarchy.md)
+- [Expansion & globbing](shell-expansion-and-globbing.md)
+- [Finding files](../files-and-text-processing/finding-files.md)
 - Permissions & sticky bit (S25–26), hard/soft links and inodes (S28): `users-groups-and-permissions/` (planned)
-- `find` in depth (S18), globbing (S15): planned
 - SELinux contexts & `restorecon` (S72–76): `firewall-and-selinux/` (planned)
 - rsync (S68): `networking-and-ssh/` (planned)
