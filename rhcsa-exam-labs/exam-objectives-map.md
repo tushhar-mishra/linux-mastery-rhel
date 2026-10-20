@@ -15,9 +15,8 @@
 | Use grep and regular expressions to analyze text | 17, 20 | `files-and-text-processing/` |
 | Access remote systems using SSH | 3, 64–65 | [ssh-remote-access.md](../networking-and-ssh/ssh-remote-access.md) |
 | Log in and switch users in multi-user targets | 3, 21, 50 | [ssh-remote-access.md](../networking-and-ssh/ssh-remote-access.md#4-logging-in-and-switching-users-rhcsa-core) |
-| Archive, compress, unpack, uncompress (tar, gzip, bzip2) | 8 | `files-and-text-processing/` |
-| Create and edit text files | 7, 20 | `files-and-text-processing/` |
-| Create, delete, copy, move files and directories | 6 | [files-and-directories.md](../shell-and-command-line/files-and-directories.md) |
+| Archive, compress, unpack, uncompress (tar, gzip, bzip2) | 8 | [archiving-and-compression.md](../files-and-text-processing/archiving-and-compression.md) |
+| Create and edit text files | 7, 20 | [viewing-and-creating-file-contents.md](../files-and-text-processing/viewing-and-creating-file-contents.md) (vi: S20, planned) || Create, delete, copy, move files and directories | 6 | [files-and-directories.md](../shell-and-command-line/files-and-directories.md) |
 | Create hard and soft links | 28 | `users-groups-and-permissions/` |
 | List, set, change standard ugo/rwx permissions | 25 | `users-groups-and-permissions/` |
 | Locate, read, use docs: man, info, `/usr/share/doc` | 4–5 | [getting-help-and-documentation.md](../shell-and-command-line/getting-help-and-documentation.md) |
