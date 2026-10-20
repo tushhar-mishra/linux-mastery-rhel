@@ -139,5 +139,6 @@ Certification gets interviews; **troubleshooting depth** passes them. Practice e
 - [Objectives map](../rhcsa-exam-labs/exam-objectives-map.md)
 - [RHEL 9 vs RHEL 10](rhel-9-vs-rhel-10.md)
 - [Lab setup](virtualization-and-lab-setup.md)
+- [Getting help & documentation](../shell-and-command-line/getting-help-and-documentation.md)
 
 **Sources:** redhat.com EX200 exam page; Red Hat blog "Validate targeted expertise: Major updates to Red Hat Certification" (11 May 2026).
