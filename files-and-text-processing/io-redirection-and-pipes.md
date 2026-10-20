@@ -39,29 +39,29 @@ The **shell** sets up redirections *before* the command runs, so the command nev
 
 Redirections are processed **left to right**:
 
-`````````bash
+```bash
 ls /etc /nope > out.txt 2>&1   # 1→out.txt, then 2→(where 1 points)=out.txt  ✔ both in file
 ls /etc /nope 2>&1 > out.txt   # 2→terminal (where 1 pointed), then 1→out.txt ✘ errors on screen
-`````````
+```
 
 ### 2.2 Truncation happens before the command runs
 
-`````````bash
+```bash
 echo "Welcome" > example.txt
 fakecmd > example.txt     # bash: fakecmd: command not found … and example.txt is now EMPTY
 sort data.txt > data.txt  # ✘ empty result: the shell truncated data.txt before sort read it
 sort data.txt -o data.txt # ✔ sort can safely write to its input with -o
-`````````
+```
 
 Protect interactive work with `set -o noclobber` (`set -C`); `>|` deliberately overrides it.
 
 ### 2.3 Placement is flexible (readability isn't)
 
-`````````bash
+```bash
 cat file.txt > result.txt 2> error.txt     # conventional, preferred
 2> error.txt cat file.txt > result.txt     # valid
 < file.txt > result.txt 2> error.txt cat   # valid, but hard to read
-`````````
+```
 
 ## 3. Pipes **[RHCSA Core]**
 
@@ -71,28 +71,28 @@ cat file.txt > result.txt 2> error.txt     # conventional, preferred
 
 ### 3.1 `tee`: split the stream
 
-`````````bash
+```bash
 ls -l /etc | tee listing.txt | wc -l          # save AND keep processing
 dnf -y update 2>&1 | tee -a /root/update.log  # watch live and keep a log
 echo "10.0.0.5 web1" | sudo tee -a /etc/hosts # write a root-owned file (sudo + > fails)
-`````````
+```
 
 ## 4. Input Redirection
 
-`````````bash
+```bash
 wc -l < /etc/passwd          # 42  (number only: wc doesn't see a filename)
 tr 'aeiou' 'AEIOU' < msg.txt # tr ONLY reads stdin, so redirection is required
 mail -s "report" root < report.txt   # [if mailx installed]
 grep "Linux" <<< "I love Linux"      # here-string
-`````````
+```
 
 ## 5. Clearing Files Safely
 
-`````````bash
+```bash
 > app.log                 # truncate to 0 bytes (>| app.log under noclobber)
 : > app.log               # same, more explicit
 truncate -s 0 app.log     # same, via coreutils
-`````````
+```
 
 > ⚠️ **Truncate, don't delete, logs that a running process holds open.** `rm` removes only the name; the process keeps writing to the deleted inode and **disk space isn't freed** until it restarts. Find these files with `lsof +L1` (see the [filesystem note](../linux-fundamentals/filesystem-hierarchy.md#7-troubleshooting-production-practice)).
 
@@ -149,10 +149,16 @@ truncate -s 0 app.log     # same, via coreutils
 
 ## 11. Quick Revision
 
-`````````bash
+```bash
 > >> 2> 2>> &> &>> 2>&1 >&2 < << <<< >| | |&    /dev/null
 cmd > f 2>&1 (both)   cmd 2>/dev/null (quiet)   cmd | tee [-a] f   cmd | sudo tee f
 set -C / >|   set -o pipefail   sort -o f f   : > log (truncate)   lsof +L1
-`````````
+```
 
----
+## 12. Cross-References
+
+- [Viewing & creating files](viewing-and-creating-file-contents.md)
+- [Text filters & pipelines](text-filters.md)
+- [Finding files (`2>/dev/null`)](finding-files.md)
+- [Shell options (noclobber, pipefail)](../shell-and-command-line/command-substitution-and-shell-options.md)
+- Logs & journal (S55): planned
