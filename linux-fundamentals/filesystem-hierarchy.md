@@ -1,7 +1,7 @@
 # Filesystem Hierarchy (RHEL 10)
 
 > **Sessions:** S3 · **Verified:** Oct 2026
-> **Related:** [SSH](../networking-and-ssh/ssh-remote-access.md) · storage (`storage-and-filesystems/`) · boot (`boot-systemd-and-kernel/`)
+> **Related:** [SSH](../networking-and-ssh/ssh-remote-access.md) · [Files & directories](../shell-and-command-line/files-and-directories.md) · storage (`storage-and-filesystems/`, planned) · boot (`boot-systemd-and-kernel/`, planned)
 
 ## 1. Overview
 
@@ -152,3 +152,10 @@ systemd-tmpfiles --cat-config | grep -E '^[dDqQ] /(var/)?tmp'   # [Advanced] tmp
 > - `/var/log/syslog` doesn't exist on RHEL.
 > - `/tmp` is not necessarily cleared at reboot.
 > - `/media/cdrom` and `/media/usb` aren't created by default.
+
+## 10. Cross-References
+
+- [Files & directories](../shell-and-command-line/files-and-directories.md)
+- [I/O redirection (truncating open logs)](../files-and-text-processing/io-redirection-and-pipes.md)
+- [Finding files](../files-and-text-processing/finding-files.md)
+- Storage, boot and logs: planned (S31–55)
