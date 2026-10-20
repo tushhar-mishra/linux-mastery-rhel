@@ -1,7 +1,7 @@
 # Quoting, Arguments & Control Operators
 
 > **Sessions:** S9 (commands & arguments), S11 (control operators) · **Baseline:** RHEL 10, bash 5.x
-> **Related:** [Shell basics](shell-basics-and-command-syntax.md) · [Variables](shell-variables-and-environment.md) · [Expansion & globbing](shell-expansion-and-globbing.md) · [History](command-history.md)
+> **Related:** [Shell basics](shell-basics-and-command-syntax.md) · [Variables](shell-variables-and-environment.md) · [Expansion & globbing](shell-expansion-and-globbing.md) · [History](command-history.md) · [I/O redirection](../files-and-text-processing/io-redirection-and-pipes.md)
 
 ## 1. Overview
 
@@ -15,7 +15,7 @@ Unquoted spaces, tabs and newlines separate arguments, and runs of whitespace co
 
 Use `printf '[%s]\n'` to *see* how many arguments the shell produced:
 
-```````bash
+```bash
 $ printf '[%s]\n' '/var/log/x.log' 'document 55.txt' "notes 21.txt"
 [/var/log/x.log]
 [document 55.txt]
@@ -23,7 +23,7 @@ $ printf '[%s]\n' '/var/log/x.log' 'document 55.txt' "notes 21.txt"
 $ printf '[%s]\n' document 55.txt
 [document]
 [55.txt]                       # 2 arguments
-```````
+```
 
 ### 2.2 Quoting rules
 
@@ -35,7 +35,7 @@ $ printf '[%s]\n' document 55.txt
 | `\c` | — | — | Escapes one character |
 | `$'ansi'` | No variables; ANSI escapes like `\n` `\t` `\'` | No | `echo $'a\tb'` **[Advanced]** |
 
-```````bash
+```bash
 var=42
 echo "The answer is $var"      # The answer is 42
 echo 'The answer is $var'      # The answer is $var
@@ -45,19 +45,19 @@ echo 'It'\''s'                 # It's   (close quote, escaped ', reopen)
 echo hello   world             # hello world      (unquoted spaces collapse)
 echo hello\ \ \ world          # hello   world    (escaped spaces are KEPT)
 echo escaping \\ \# \& \" \'   # escaping \ # & " '
-```````
+```
 
 ### 2.3 The `!` trap (interactive shells only)
 
 Bash history expansion replaces `!!`, `!word`, etc., **even inside double quotes**:
 
-```````bash
+```bash
 echo "!!// 202 commands and options"     # ✘ !! becomes your previous command
 echo '!!// 202 commands and options'     # ✔ single quotes
 echo \!\!// 202 commands and options     # ✔ escaped, unquoted
 echo '!!'"// 202 commands and options"   # ✔ mixed quoting
 set +H; echo "!!// 202 …"; set -H        # ✔ history expansion off, then back on
-```````
+```
 
 Scripts aren't affected; history expansion is off in non-interactive shells.
 
@@ -69,46 +69,46 @@ Scripts aren't affected; history expansion is off in non-interactive shells.
 | Escapes (`\n`, `\t`) | Only with `-e` | Always interpreted in the format string |
 | Portability | Varies between shells | Consistent; preferred in scripts |
 
-```````bash
+```bash
 echo World                         # World⏎
 echo -e "World\n"                  # World⏎⏎ (extra blank line)
 echo -e "word1\nword2\nword3"      # three lines
 printf '%s\n' word1 word2 word3    # same, portable
 printf '3+5\t\t=8\n12+18\t=30\n'   # tab stops every 8 columns
 echo "X Y   Z"                     # quoted → spacing preserved
-```````
+```
 
 ## 3. Command Types & Aliases
 
 ### 3.1 What will actually run?
 
-```````bash
+```bash
 type rev                 # rev is /usr/bin/rev  → external, not a builtin
 type -a printf           # printf is a shell builtin / printf is /usr/bin/printf
 type -P grep             # path only, ignores aliases: /usr/bin/grep
 command ls               # skip aliases and functions
 \ls                      # skip aliases only, once
-```````
+```
 
 `printf` runs the **builtin** (it wins in the lookup order). `/usr/bin/printf` forces the external program. The same applies to `echo`, `kill`, `test`/`[` and `pwd`.
 
 ### 3.2 Aliases
 
-```````bash
+```bash
 alias                          # list all
 alias ll                       # show one
 alias country='echo "India"'   # define (current shell only)
 alias mv='mv -i'               # safer mv
 unalias country                # remove
-```````
+```
 
 - Persist aliases in `~/.bashrc`, or system-wide in `/etc/profile.d/*.sh`.
 - Aliases apply only to the **first word**, and only in **interactive** shells. Scripts ignore them unless `shopt -s expand_aliases`.
 - Need arguments? Use a function:
 
-```````bash
+```bash
   mkcd() { mkdir -p -- "$1" && cd -- "$1"; }
-```````
+```
 
 - RHEL ships aliases such as `ls --color=auto`, `ll`, `l.` and color `grep`. Root's `~/.bashrc` adds `rm -i`, `cp -i`, `mv -i`. Run `alias` to see what's active.
 
@@ -120,7 +120,7 @@ unalias country                # remove
 | `&` | Run in the background | `sleep 60 &` |
 | `&&` | Run next **only if** previous succeeded (exit 0) | `mkdir d && cd d` |
 | `\|\|` | Run next **only if** previous failed | `mkdir d \|\| echo "exists"` |
-| `\|` | Pipe stdout → stdin (S16) | `ls -l \| less` |
+| `\|` | Pipe stdout → stdin ([redirection note](../files-and-text-processing/io-redirection-and-pipes.md)) | `ls -l \| less` |
 | `!` | Negate an exit status | `! grep -q root /etc/passwd && echo "no root?"` |
 | `( … )` | Group in a **subshell** | `(cd /etc; ls)` (your cwd is unchanged) |
 | `{ …; }` | Group in the **current** shell (spaces and final `;` required) | `{ date; uptime; } > report.txt` |
@@ -138,29 +138,29 @@ unalias country                # remove
 | `127` | Command not found |
 | `128+N` | Killed by signal N (`130` = Ctrl+C/SIGINT, `137` = SIGKILL) |
 
-```````bash
+```bash
 ls /nonexistent; echo $?      # ls: cannot access '/nonexistent': … → 2
 rc=$?                         # save it immediately; the next command overwrites $?
-```````
+```
 
 ### 4.2 `&& … ||` is NOT a true if/else
 
-```````bash
+```bash
 true && false || echo "runs!"        # prints runs!, because the || reacts to `false`, not to `true`
 cmd1 && cmd2 || cmd3                 # cmd3 runs if cmd1 fails OR cmd2 fails
 if cmd1; then cmd2; else cmd3; fi    # exact if/else (S88)
-```````
+```
 
 ### 4.3 Background jobs (preview of S29)
 
-```````bash
+```bash
 sleep 60 &            # [1] 12345   ← job number, PID
 jobs -l               # list jobs with PIDs
 fg %1                 # bring to the foreground;  Ctrl+Z suspends;  bg %1 resumes in background
 kill %1               # signal a job by number
 echo $!               # PID of the most recent background job
 wait                  # (scripts) wait for background jobs to finish
-```````
+```
 
 Background jobs started from a terminal normally receive SIGHUP when it closes. For long-running work use `nohup`, `disown` or a systemd unit (S29, S50).
 
@@ -214,18 +214,19 @@ Background jobs started from a terminal normally receive SIGHUP when it closes. 
 
 ## 10. Quick Revision
 
-```````bash
+```bash
 printf '[%s]\n' args…        # count/inspect arguments
 'literal'  "expand $var"  \x  $'\t'
 a ; b    a & b    a && b    a || b    ! a    ( a; b )    { a; b; }
 echo $?   rc=$?   126/127/130
 type -a cmd | alias | unalias | \cmd | command cmd
 set +H   # stop ! history expansion
-```````
+```
 
 ## 11. Cross-References
 
 - [Variables & environment](shell-variables-and-environment.md) (variable quoting)
 - [Expansion & globbing](shell-expansion-and-globbing.md) (expansion order)
 - [Command substitution & options](command-substitution-and-shell-options.md) (`set -x`, subshells)
-- Redirection & pipes (S16), job control (S29), scripting conditions (S87–90): planned
+- [I/O redirection & pipes](../files-and-text-processing/io-redirection-and-pipes.md)
+- Job control (S29), scripting conditions (S87–90): planned
