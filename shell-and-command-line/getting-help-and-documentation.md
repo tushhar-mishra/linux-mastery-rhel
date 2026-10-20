@@ -1,7 +1,7 @@
 # Getting Help & System Documentation
 
 > **Sessions:** S4–S5 · **Objective:** *Locate, read, and use system documentation including man, info, and files in /usr/share/doc* **[RHCSA Core]**
-> **Related:** [Shell basics](shell-basics-and-command-syntax.md) · [Exam strategy](../linux-fundamentals/rhcsa-exam-and-certification.md)
+> **Related:** [Shell basics](shell-basics-and-command-syntax.md) · [Exam strategy](../linux-fundamentals/rhcsa-exam-and-certification.md) · [Finding files](../files-and-text-processing/finding-files.md)
 
 ## 1. Overview
 
@@ -161,6 +161,7 @@ dnf provides '*/semanage'                # which package would provide it
 |---|---|---|---|
 | `type -a ls` | Shell's own lookup (builtin) | **Yes**, authoritative for "what will run" | `ls is aliased to 'ls --color=auto'` / `ls is /usr/bin/ls` |
 | `command -v ls` | Same lookup; POSIX | Yes | `alias ls='ls --color=auto'`; use in scripts |
+| `type -P ls` | PATH only | No (path only) | `/usr/bin/ls` |
 | `which ls` | `$PATH` executables | Not inherently | `/usr/bin/ls` |
 | `whereis ls` | Standard binary, source and man directories | No | `ls: /usr/bin/ls /usr/share/man/man1/ls.1.gz` |
 
@@ -211,11 +212,12 @@ dnf provides '*/semanage'                # which package would provide it
 ```bash
 man -k kw | apropos -s 8 kw | man 5 file | /EXAMPLES  n  N  q
 whatis cmd | help builtin | info coreutils | rpm -qd pkg | ls /usr/share/doc
-type -a cmd | command -v cmd | which cmd | whereis cmd | sudo mandb
+type -a cmd | type -P cmd | command -v cmd | which cmd | whereis cmd | sudo mandb
 ```
 
 ## 10. Cross-References
 
 - [Shell basics](shell-basics-and-command-syntax.md)
 - [Exam strategy: docs during the exam](../linux-fundamentals/rhcsa-exam-and-certification.md#4-exam-strategy-rhcsa-core)
+- [Finding files (find, locate, rpm -qf)](../files-and-text-processing/finding-files.md)
 - Package queries (`rpm -q*`, `dnf provides`): S57 (planned)
