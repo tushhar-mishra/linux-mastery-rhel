@@ -1,7 +1,7 @@
 # Local User Accounts
 
 > **Sessions:** S21 · **Objective:** *Create, delete, and modify local user accounts* · *Log in and switch users* **[RHCSA Core]**
-> **Related:** [Passwords & aging](passwords-and-aging.md) · [Groups](groups.md) · [Shell startup files](shell-startup-files.md) · [Login & switching users](../networking-and-ssh/ssh-remote-access.md#4-logging-in-and-switching-users-rhcsa-core) · sudo (S27, planned)
+> **Related:** [Passwords & aging](passwords-and-aging.md) · [Groups](groups.md) · [Shell startup files](shell-startup-files.md) · [Login & switching users](../networking-and-ssh/ssh-remote-access.md#4-logging-in-and-switching-users-rhcsa-core) · [sudo & privileged access](sudo-and-privileged-access.md)
 
 ## 1. Overview
 
@@ -44,7 +44,7 @@ grep -E '^(SYS_)?(UID|GID)_(MIN|MAX)' /etc/login.defs
 
 ### 2.3 User Private Groups (UPG)
 
-On RHEL, `useradd alice` also creates a group `alice` with the same number (`USERGROUPS_ENAB yes`) and makes it alice's **primary group**. Combined with umask `022`/`002`, this keeps files private by default while allowing group collaboration (S25–26).
+On RHEL, `useradd alice` also creates a group `alice` with the same number (`USERGROUPS_ENAB yes`) and makes it alice's **primary group**. Combined with the default umask (`0022` for root, `0002` for regular users), this keeps files private by default while allowing group collaboration (see [file permissions & umask](file-permissions.md)).
 
 ### 2.4 Where `useradd` defaults come from
 
@@ -126,7 +126,7 @@ whoami; who; w; last; lastlog -u alice
 | `sudo -i` | Root login shell | **Your** password (needs sudo rights) |
 | `sudo -u alice cmd` | Run one command as alice | Your password |
 
-Details: [login & switching users](../networking-and-ssh/ssh-remote-access.md#4-logging-in-and-switching-users-rhcsa-core).
+Details: [login & switching users](../networking-and-ssh/ssh-remote-access.md#4-logging-in-and-switching-users-rhcsa-core) and [sudo & privileged access](sudo-and-privileged-access.md).
 
 ## 4. RHCSA Exam Focus **[RHCSA Core]**
 
@@ -207,6 +207,7 @@ id / getent passwd / grep '^user:' ; /etc/{passwd,shadow,group,gshadow} ; /etc/s
 - [Passwords & aging](passwords-and-aging.md)
 - [Groups](groups.md)
 - [Shell startup files (`/etc/skel` contents)](shell-startup-files.md)
+- [File permissions & umask](file-permissions.md)
+- [sudo & privileged access](sudo-and-privileged-access.md)
 - [Shell basics (`/sbin/nologin`)](../shell-and-command-line/shell-basics-and-command-syntax.md)
 - [Finding files (`-nouser`)](../files-and-text-processing/finding-files.md)
-- Permissions & umask (S25–26), sudo (S27): planned
