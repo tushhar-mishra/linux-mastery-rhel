@@ -42,18 +42,18 @@
 
 ## 4. Operate running systems
 
-| Objective | Sessions |
-|---|---|
-| Boot, reboot, shut down normally | 49–50 |
-| Boot into different targets manually | 50 |
-| Interrupt the boot process to gain access | 51, 67 |
-| Identify CPU/memory-intensive processes; kill processes | 29–30 |
-| Adjust process scheduling | 30 |
-| Manage tuning profiles | 83 |
-| Locate and interpret system log files and journals | 55 |
-| Preserve system journals | 55 |
-| Start, stop, check status of network services | 50, 60 |
-| Securely transfer files between systems | 3, 64–68 |
+| Objective | Sessions | Notes |
+|---|---|---|
+| Boot, reboot, shut down normally | 49–50 | `boot-systemd-and-kernel/` (planned) |
+| Boot into different targets manually | 50 | `boot-systemd-and-kernel/` (planned) |
+| Interrupt the boot process to gain access | 51, 67 | `boot-systemd-and-kernel/` (planned) |
+| Identify CPU/memory-intensive processes; kill processes | 29–30 | [processes-and-signals.md](../processes-and-resource-management/processes-and-signals.md) · [top-and-process-monitoring.md](../processes-and-resource-management/top-and-process-monitoring.md) |
+| Adjust process scheduling | 30 | [process-priority-and-nice.md](../processes-and-resource-management/process-priority-and-nice.md) |
+| Manage tuning profiles | 83 | `containers-and-virtualization/` (planned) |
+| Locate and interpret system log files and journals | 55 | `logs-scheduling-and-packages/` (planned) |
+| Preserve system journals | 55 | `logs-scheduling-and-packages/` (planned) |
+| Start, stop, check status of network services | 50, 60 | `boot-systemd-and-kernel/` (planned) |
+| Securely transfer files between systems | 3, 64–68 | [ssh-remote-access.md §3.5](../networking-and-ssh/ssh-remote-access.md#35-secure-file-transfer-rhcsa-core) |
 
 ## 5. Configure local storage
 
