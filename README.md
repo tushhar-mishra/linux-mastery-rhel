@@ -54,6 +54,10 @@ Topic-organized notes for **RHCSA (EX200, RHEL 10)**, Linux administration inter
 - [Passwords, aging & account locking](users-groups-and-permissions/passwords-and-aging.md)
 - [Shell startup (profile) files](users-groups-and-permissions/shell-startup-files.md)
 - [Groups & group membership](users-groups-and-permissions/groups.md)
+- [File permissions, ownership & umask](users-groups-and-permissions/file-permissions.md)
+- [Special permissions (SUID, SGID, sticky) & ACLs](users-groups-and-permissions/special-permissions-and-acls.md)
+- [sudo & privileged access](users-groups-and-permissions/sudo-and-privileged-access.md)
+- [Inodes, hard links & symbolic links](users-groups-and-permissions/links.md)
 
 ## Repository Layout
 
@@ -89,7 +93,7 @@ linux-rhcsa-notes/
 | 9–15 | Expansion, control operators, variables, positional parameters, substitution/options, history, globbing | `shell-and-command-line/` (5 files) | Done (S13 & expansion order supplemented) |
 | 16–20 | Redirection, filters, find/locate, awk, regex, vi | `files-and-text-processing/` (6 files) | Done (S17 theory supplemented) |
 | 21–24 | Local users, passwords & aging, profile files, groups | `users-groups-and-permissions/local-users.md`, `passwords-and-aging.md`, `shell-startup-files.md`, `groups.md` | Done |
-| 25–28 | Permissions, advanced permissions, sudo, links | `users-groups-and-permissions/` | Pending |
+| 25–28 | Permissions & umask, special permissions & ACLs, sudo, links | `users-groups-and-permissions/file-permissions.md`, `special-permissions-and-acls.md`, `sudo-and-privileged-access.md`, `links.md` | Done |
 | 29–30 | Processes, priorities | `processes-and-resource-management/` | Pending |
 | 31–48 | Storage, LVM, swap, RAID, VDO, Stratis, LUKS | `storage-and-filesystems/` | Pending |
 | 49–53 | Boot, systemd, kernel, modules | `boot-systemd-and-kernel/` | Pending |
