@@ -1,7 +1,7 @@
 # Groups & Group Membership
 
 > **Sessions:** S24 · **Objective:** *Create, delete, and modify local groups and group memberships* **[RHCSA Core]**
-> **Related:** [Local users](local-users.md) · [Passwords (gshadow)](passwords-and-aging.md) · Permissions & SGID directories (S25–26, planned) · sudo/wheel (S27, planned)
+> **Related:** [Local users](local-users.md) · [Passwords (gshadow)](passwords-and-aging.md) · [Special permissions (SGID directories)](special-permissions-and-acls.md) · [File permissions](file-permissions.md) · [sudo & the wheel group](sudo-and-privileged-access.md)
 
 ## 1. Overview
 
@@ -77,7 +77,7 @@ touch shared.txt   # group owner: devs
 exit               # back to the original shell
 ```
 
-For permanent shared directories, use a **set-GID directory** instead (S26), so new files inherit the directory's group automatically.
+For permanent shared directories, use a **set-GID directory** instead, so new files inherit the directory's group automatically (see the [collaboration directory recipe](special-permissions-and-acls.md#3-shared-collaboration-directory-recipe-rhcsa-core)).
 
 ## 4. RHCSA Exam Focus **[RHCSA Core]**
 
@@ -146,5 +146,7 @@ groups u | id u | getent group g | newgrp g | vigr [-s] | grpck
 - [Local users](local-users.md)
 - [Passwords & aging](passwords-and-aging.md)
 - [Shell startup files](shell-startup-files.md)
+- [File permissions & umask](file-permissions.md)
+- [Special permissions & ACLs (SGID collaboration directories)](special-permissions-and-acls.md)
+- [sudo & privileged access (wheel)](sudo-and-privileged-access.md)
 - [Finding files (`-nogroup`)](../files-and-text-processing/finding-files.md)
-- Permissions, SGID collaboration directories (S25–26), sudo and the wheel group (S27): planned
