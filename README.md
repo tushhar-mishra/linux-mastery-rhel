@@ -59,6 +59,11 @@ Topic-organized notes for **RHCSA (EX200, RHEL 10)**, Linux administration inter
 - [sudo & privileged access](users-groups-and-permissions/sudo-and-privileged-access.md)
 - [Inodes, hard links & symbolic links](users-groups-and-permissions/links.md)
 
+### Processes & resource management
+- [Processes, signals & job control](processes-and-resource-management/processes-and-signals.md)
+- [top & process monitoring](processes-and-resource-management/top-and-process-monitoring.md) *(extended in S56)*
+- [Process priority & nice/renice](processes-and-resource-management/process-priority-and-nice.md)
+
 ## Repository Layout
 
 ```
@@ -94,7 +99,7 @@ linux-rhcsa-notes/
 | 16–20 | Redirection, filters, find/locate, awk, regex, vi | `files-and-text-processing/` (6 files) | Done (S17 theory supplemented) |
 | 21–24 | Local users, passwords & aging, profile files, groups | `users-groups-and-permissions/local-users.md`, `passwords-and-aging.md`, `shell-startup-files.md`, `groups.md` | Done |
 | 25–28 | Permissions & umask, special permissions & ACLs, sudo, links | `users-groups-and-permissions/file-permissions.md`, `special-permissions-and-acls.md`, `sudo-and-privileged-access.md`, `links.md` | Done |
-| 29–30 | Processes, priorities | `processes-and-resource-management/` | Pending |
+| 29–30 | Processes, signals, top, priorities & nice | `processes-and-resource-management/processes-and-signals.md`, `top-and-process-monitoring.md`, `process-priority-and-nice.md` | Done |
 | 31–48 | Storage, LVM, swap, RAID, VDO, Stratis, LUKS | `storage-and-filesystems/` | Pending |
 | 49–53 | Boot, systemd, kernel, modules | `boot-systemd-and-kernel/` | Pending |
 | 54–59 | Scheduling, logs, monitoring, packages | `logs-scheduling-and-packages/` | Pending |
