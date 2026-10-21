@@ -1,11 +1,11 @@
 # Working with Files & Directories
 
 > **Sessions:** S6 (practice) · theory supplemented · **Objective:** *Create, delete, copy, and move files and directories* **[RHCSA Core]**
-> **Related:** [Filesystem hierarchy](../linux-fundamentals/filesystem-hierarchy.md) · [Shell basics](shell-basics-and-command-syntax.md) · [Expansion & globbing](shell-expansion-and-globbing.md) · [Finding files](../files-and-text-processing/finding-files.md) · Links (S28, planned) · SELinux contexts (S72–76, planned)
+> **Related:** [Filesystem hierarchy](../linux-fundamentals/filesystem-hierarchy.md) · [Shell basics](shell-basics-and-command-syntax.md) · [Expansion & globbing](shell-expansion-and-globbing.md) · [Finding files](../files-and-text-processing/finding-files.md) · [File permissions](../users-groups-and-permissions/file-permissions.md) · [Links & inodes](../users-groups-and-permissions/links.md) · SELinux contexts (S72–76, planned)
 
 ## 1. Overview
 
-All files live in one tree under `/`. Directories are files that map **names → inodes**; the inode holds the metadata (owner, mode, timestamps, data block locations). Understanding this explains why `mv` is instant within a filesystem, why deleting depends on **directory** permissions, and how links work (S28).
+All files live in one tree under `/`. Directories are files that map **names → inodes**; the inode holds the metadata (owner, mode, timestamps, data block locations). Understanding this explains why `mv` is instant within a filesystem, why deleting depends on **directory** permissions, and how [hard and symbolic links](../users-groups-and-permissions/links.md) work.
 
 ## 2. Key Concepts
 
@@ -34,14 +34,16 @@ All files live in one tree under `/`. Directories are files that map **names →
 -rw-r--r--. 1 alice alice 4096 Oct 20 11:05 notes.txt
 │└──┬────┘│ │   │     │     │        │          └ name
 │   │     │ │   │     │     │        └ modification time (mtime)
-│   │     │ │   │     │     └ size in bytes
+│   │     │ │   │     │     └ size in bytes (device files show "major, minor" instead)
 │   │     │ │   │     └ group
 │   │     │ │   └ owner
 │   │     │ └ hard link count
-│   │     └ "." = SELinux context only; "+" = ACL present (S26)
-│   └ permissions user/group/other (S25)
+│   │     └ "." = SELinux context only; "+" = ACL present
+│   └ permissions user/group/other
 └ type: - file, d directory, l symlink, b block dev, c char dev, s socket, p pipe
 ```
+
+Details: [file permissions](../users-groups-and-permissions/file-permissions.md) · [special permissions & ACLs](../users-groups-and-permissions/special-permissions-and-acls.md) · [links](../users-groups-and-permissions/links.md).
 
 ### 2.4 Timestamps
 
@@ -107,7 +109,7 @@ stat file.txt                         # inode, size, perms, SELinux context, all
 |---|---|
 | `-r` / `-R` | Recursive (required for directories) |
 | `-i` / `-n` | Prompt before overwrite / never overwrite |
-| `-p` | Preserve mode, ownership, timestamps |
+| `-p` | Preserve mode (incl. ACLs), ownership, timestamps |
 | `-a` | Archive: `-dR --preserve=all` (incl. links, xattrs, **SELinux context**) |
 | `-u` | Copy only if the source is newer |
 | `-v` | Verbose |
@@ -136,7 +138,7 @@ rm -- -weird-name   or   rm ./-weird-name   # names starting with "-"
 rm "my file.txt"                      # quote spaces
 ```
 
-> ⚠️ **Destructive:** There's no recycle bin. `rm -rf` is irreversible. Double-check paths, especially with variables or globs (see §5).
+> ⚠️ **Destructive:** There's no recycle bin. `rm -rf` is irreversible. Double-check paths, especially with variables or globs (see §5). When removing a symlink to a directory, never add a trailing slash (`rm dirlink`, not `rm -r dirlink/`).
 
 ### 3.7 Download and basic search
 
@@ -187,7 +189,7 @@ Full `find` coverage: [finding files](../files-and-text-processing/finding-files
 |---|---|---|
 | `rmdir: failed to remove 'd': Directory not empty` | Contents, often **hidden** files | `ls -A d`; then `rm -r d` if intended |
 | `cp: -r not specified; omitting directory` | Copying a directory without recursion | `cp -r` / `cp -a` |
-| `mv/rm: cannot remove … Permission denied` (on your own file) | Renaming/deleting needs **write + execute on the directory**, not on the file; sticky bit (`/tmp`); immutable attribute | `ls -ld dir`; `lsattr file` (`chattr -i` as root) |
+| `mv/rm: cannot remove … Permission denied` (on your own file) | Renaming/deleting needs **write + execute on the directory**, not on the file; sticky bit (`/tmp`); immutable attribute | `ls -ld dir`; `lsattr file` (`chattr -i` as root); see [file permissions](../users-groups-and-permissions/file-permissions.md) |
 | `Argument list too long` | Glob expanded beyond ARG_MAX | `find dir -name '*.log' -delete` or `find … -exec rm {} +` |
 | `No such file or directory` with spaces | Unquoted name split into words | Quote: `"my file"` |
 | `rm: cannot remove 'x': Device or resource busy` | Mount point or busy device | `findmnt x`; `umount` first |
@@ -241,6 +243,7 @@ mv into service dirs → restorecon -Rv
 - [Filesystem hierarchy](../linux-fundamentals/filesystem-hierarchy.md)
 - [Expansion & globbing](shell-expansion-and-globbing.md)
 - [Finding files](../files-and-text-processing/finding-files.md)
-- Permissions & sticky bit (S25–26), hard/soft links and inodes (S28): `users-groups-and-permissions/` (planned)
+- [File permissions & umask](../users-groups-and-permissions/file-permissions.md) · [Special permissions & ACLs (sticky bit)](../users-groups-and-permissions/special-permissions-and-acls.md)
+- [Inodes, hard links & symbolic links](../users-groups-and-permissions/links.md)
 - SELinux contexts & `restorecon` (S72–76): `firewall-and-selinux/` (planned)
 - rsync (S68): `networking-and-ssh/` (planned)
