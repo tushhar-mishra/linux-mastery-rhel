@@ -1,7 +1,7 @@
 # Finding Files: `find` & `locate`
 
 > **Sessions:** S18 · Supports multiple objectives (permissions troubleshooting, users, storage cleanup) **[RHCSA Core: find]** · locate **[Advanced/Optional]**
-> **Related:** [Expansion & globbing (quote patterns!)](../shell-and-command-line/shell-expansion-and-globbing.md#52-exam-traps-rhcsa-core) · [Redirection](io-redirection-and-pipes.md) · [Getting help (`which`/`type`)](../shell-and-command-line/getting-help-and-documentation.md#4-locating-commands-type-vs-which-vs-whereis) · Permissions & SUID (S25–26)
+> **Related:** [Expansion & globbing (quote patterns!)](../shell-and-command-line/shell-expansion-and-globbing.md#52-exam-traps-rhcsa-core) · [Redirection](io-redirection-and-pipes.md) · [Getting help (`which`/`type`)](../shell-and-command-line/getting-help-and-documentation.md#4-locating-commands-type-vs-which-vs-whereis) · [File permissions](../users-groups-and-permissions/file-permissions.md) · [Special permissions (SUID/SGID audits)](../users-groups-and-permissions/special-permissions-and-acls.md) · [Links (`-inum`, `-samefile`)](../users-groups-and-permissions/links.md)
 
 ## 1. Overview
 
@@ -41,7 +41,7 @@ The default start is `.`; the default action is `-print`. **Quote glob patterns*
 | `-nouser` / `-nogroup` | Owner/group no longer exists | after deleting users |
 | `-empty` | Empty file or directory | |
 | `-executable` | Executable by you | |
-| `-inum N` / `-links N` | Inode number / hard-link count (S28) | |
+| `-inum N` / `-samefile F` / `-links N` | Inode number / all hard links of F / hard-link count ([links](../users-groups-and-permissions/links.md)) | |
 | `-xtype l` | **Broken** symlinks | |
 | `-maxdepth N` / `-mindepth N` | Limit recursion (**put first**) | `-maxdepth 1` |
 | `-xdev` | Don't cross into other filesystems | `find / -xdev …` |
@@ -112,7 +112,7 @@ find / -xdev \( -nouser -o -nogroup \) 2>/dev/null
 find /etc -type f -mtime -1
 ```
 
-Always verify the result: `ls -l /root/found`, `wc -l /root/bigfiles.txt`.
+Always verify the result: `ls -l /root/found`, `wc -l /root/bigfiles.txt`. More permission audits (SGID, sticky, world-writable): [special permissions & ACLs](../users-groups-and-permissions/special-permissions-and-acls.md#21-auditing).
 
 ## 4. `locate` (plocate) **[Advanced/Optional]**
 
@@ -179,7 +179,7 @@ systemctl list-timers | grep -i updatedb   # automatic refresh timer
 ```bash
 find / -xdev -type f -name '*.conf' -size +1M -mtime -7 -user u -perm -4000 2>/dev/null
 -exec cmd {} \;  |  -exec cmd {} +  |  -print0 | xargs -0 -r  |  -ok  |  -delete (LAST)
-\( A -o B \)   !   -maxdepth 1 (first)   -newer f   -xtype l   -nouser
+\( A -o B \)   !   -maxdepth 1 (first)   -newer f   -samefile f   -xtype l   -nouser
 sudo updatedb; locate -i x; locate -l 5 x    (index: /var/lib/plocate/plocate.db)
 ```
 
@@ -189,4 +189,4 @@ sudo updatedb; locate -i x; locate -l 5 x    (index: /var/lib/plocate/plocate.db
 - [I/O redirection (`2>/dev/null`)](io-redirection-and-pipes.md)
 - [Archiving (find + tar)](archiving-and-compression.md)
 - [Files & directories (`cp -a`)](../shell-and-command-line/files-and-directories.md)
-- Permissions, SUID, links (S25–28): planned
+- [File permissions](../users-groups-and-permissions/file-permissions.md) · [Special permissions & ACLs](../users-groups-and-permissions/special-permissions-and-acls.md) · [Links & inodes](../users-groups-and-permissions/links.md)
