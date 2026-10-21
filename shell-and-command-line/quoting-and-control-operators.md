@@ -1,7 +1,7 @@
 # Quoting, Arguments & Control Operators
 
 > **Sessions:** S9 (commands & arguments), S11 (control operators) · **Baseline:** RHEL 10, bash 5.x
-> **Related:** [Shell basics](shell-basics-and-command-syntax.md) · [Variables](shell-variables-and-environment.md) · [Expansion & globbing](shell-expansion-and-globbing.md) · [History](command-history.md) · [I/O redirection](../files-and-text-processing/io-redirection-and-pipes.md)
+> **Related:** [Shell basics](shell-basics-and-command-syntax.md) · [Variables](shell-variables-and-environment.md) · [Expansion & globbing](shell-expansion-and-globbing.md) · [History](command-history.md) · [I/O redirection](../files-and-text-processing/io-redirection-and-pipes.md) · [Processes & job control](../processes-and-resource-management/processes-and-signals.md)
 
 ## 1. Overview
 
@@ -136,7 +136,7 @@ unalias country                # remove
 | `2` | Misuse / serious error (e.g., `ls` can't access an argument) |
 | `126` | Command found but not executable |
 | `127` | Command not found |
-| `128+N` | Killed by signal N (`130` = Ctrl+C/SIGINT, `137` = SIGKILL) |
+| `128+N` | Killed by signal N (`130` = Ctrl+C/SIGINT, `137` = SIGKILL; see [signals](../processes-and-resource-management/processes-and-signals.md#4-signals)) |
 
 ```bash
 ls /nonexistent; echo $?      # ls: cannot access '/nonexistent': … → 2
@@ -162,7 +162,7 @@ echo $!               # PID of the most recent background job
 wait                  # (scripts) wait for background jobs to finish
 ```
 
-Background jobs started from a terminal normally receive SIGHUP when it closes. For long-running work use `nohup`, `disown` or a systemd unit (S29, S50).
+Background jobs started from a terminal normally receive SIGHUP when it closes. For long-running work use `nohup`, `disown` or a systemd unit. Full coverage: [processes, signals & job control](../processes-and-resource-management/processes-and-signals.md#5-job-control).
 
 ## 5. RHCSA Exam Focus
 
@@ -229,4 +229,5 @@ set +H   # stop ! history expansion
 - [Expansion & globbing](shell-expansion-and-globbing.md) (expansion order)
 - [Command substitution & options](command-substitution-and-shell-options.md) (`set -x`, subshells)
 - [I/O redirection & pipes](../files-and-text-processing/io-redirection-and-pipes.md)
-- Job control (S29), scripting conditions (S87–90): planned
+- [Processes, signals & job control](../processes-and-resource-management/processes-and-signals.md)
+- Scripting conditions (S87–90): planned
