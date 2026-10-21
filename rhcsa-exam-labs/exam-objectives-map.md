@@ -18,8 +18,8 @@
 | Archive, compress, unpack, uncompress (tar, gzip, bzip2) | 8 | [archiving-and-compression.md](../files-and-text-processing/archiving-and-compression.md) |
 | Create and edit text files | 7, 20 | [vi-and-vim.md](../files-and-text-processing/vi-and-vim.md) · [viewing-and-creating-file-contents.md](../files-and-text-processing/viewing-and-creating-file-contents.md) |
 | Create, delete, copy, move files and directories | 6 | [files-and-directories.md](../shell-and-command-line/files-and-directories.md) |
-| Create hard and soft links | 28 | `users-groups-and-permissions/` (planned) |
-| List, set, change standard ugo/rwx permissions | 25 | `users-groups-and-permissions/` (planned) |
+| Create hard and soft links | 28 | [links.md](../users-groups-and-permissions/links.md) |
+| List, set, change standard ugo/rwx permissions | 25 | [file-permissions.md](../users-groups-and-permissions/file-permissions.md) |
 | Locate, read, use docs: man, info, `/usr/share/doc` | 4–5 | [getting-help-and-documentation.md](../shell-and-command-line/getting-help-and-documentation.md) |
 
 ## 2. Manage software
@@ -68,13 +68,13 @@
 
 ## 6. Create and configure file systems
 
-| Objective | Sessions |
-|---|---|
-| Create, mount, unmount, use VFAT, ext4, XFS | 33–34 |
-| Mount and unmount NFS | 97 |
-| Configure autofs | 97 |
-| Extend existing logical volumes | 35–36 |
-| Diagnose and correct file permission problems | 25–27 |
+| Objective | Sessions | Notes |
+|---|---|---|
+| Create, mount, unmount, use VFAT, ext4, XFS | 33–34 | `storage-and-filesystems/` (planned) |
+| Mount and unmount NFS | 97 | `system-services-and-shared-storage/` (planned) |
+| Configure autofs | 97 | `system-services-and-shared-storage/` (planned) |
+| Extend existing logical volumes | 35–36 | `storage-and-filesystems/` (planned) |
+| Diagnose and correct file permission problems | 25–27 | [file-permissions.md §4](../users-groups-and-permissions/file-permissions.md#4-diagnosing-permission-problems-rhcsa-core) · [special-permissions-and-acls.md](../users-groups-and-permissions/special-permissions-and-acls.md) |
 
 ## 7. Deploy, configure, and maintain systems
 
@@ -103,20 +103,20 @@
 | Create, delete, modify local users | 21 | [local-users.md](../users-groups-and-permissions/local-users.md) |
 | Change passwords; adjust password aging | 22 | [passwords-and-aging.md](../users-groups-and-permissions/passwords-and-aging.md) |
 | Create, delete, modify groups and memberships | 24 | [groups.md](../users-groups-and-permissions/groups.md) |
-| Configure privileged access | 27 | `users-groups-and-permissions/` (planned) |
+| Configure privileged access | 27 | [sudo-and-privileged-access.md](../users-groups-and-permissions/sudo-and-privileged-access.md) |
 
 ## 10. Manage security
 
-| Objective | Sessions |
-|---|---|
-| Configure firewall settings using firewall-cmd/firewalld | 69–70 |
-| Manage default file permissions (umask) | 25–26 |
-| Configure key-based SSH authentication | 3, 64–65 |
-| Set SELinux enforcing/permissive modes | 71, 76 |
-| List and identify SELinux file and process contexts | 72 |
-| Restore default file contexts | 76 |
-| Manage SELinux port labels | 76 |
-| Use Booleans to modify SELinux settings | 76 |
+| Objective | Sessions | Notes |
+|---|---|---|
+| Configure firewall settings using firewall-cmd/firewalld | 69–70 | `firewall-and-selinux/` (planned) |
+| Manage default file permissions (umask) | 25–26 | [file-permissions.md §3.3](../users-groups-and-permissions/file-permissions.md#33-umask-default-permissions-rhcsa-core) |
+| Configure key-based SSH authentication | 3, 64–65 | [ssh-remote-access.md](../networking-and-ssh/ssh-remote-access.md) |
+| Set SELinux enforcing/permissive modes | 71, 76 | `firewall-and-selinux/` (planned) |
+| List and identify SELinux file and process contexts | 72 | `firewall-and-selinux/` (planned) |
+| Restore default file contexts | 76 | `firewall-and-selinux/` (planned) |
+| Manage SELinux port labels | 76 | `firewall-and-selinux/` (planned) |
+| Use Booleans to modify SELinux settings | 76 | `firewall-and-selinux/` (planned) |
 
 ## Changes vs. the Course Slides (RHEL 9-era Objectives)
 
