@@ -1,7 +1,7 @@
 # top & Process Monitoring
 
-> **Sessions:** S29 (top) · to be extended in S56 (resource monitoring) · **Objective:** *Identify CPU/memory intensive processes and kill processes* · *Adjust process scheduling* **[RHCSA Core]**
-> **Related:** [Processes & signals](processes-and-signals.md) · [Priority & nice](process-priority-and-nice.md) · [Filesystem hierarchy (`/proc`)](../linux-fundamentals/filesystem-hierarchy.md)
+> **Sessions:** S29 (top), S56 (see [system resource monitoring](system-resource-monitoring.md)) · **Objective:** *Identify CPU/memory intensive processes and kill processes* · *Adjust process scheduling* **[RHCSA Core]**
+> **Related:** [Processes & signals](processes-and-signals.md) · [Priority & nice](process-priority-and-nice.md) · [System resource monitoring](system-resource-monitoring.md) · [Filesystem hierarchy (`/proc`)](../linux-fundamentals/filesystem-hierarchy.md)
 
 ## 1. Overview
 
@@ -9,13 +9,13 @@
 
 ## 2. The Summary Area
 
-```
+````
 top - 15:39:37 up 90 days, 15:26,  2 users,  load average: 0.00, 0.00, 0.00
 Tasks:  27 total,   1 running,  26 sleeping,   0 stopped,   0 zombie
 %Cpu(s):  0.0 us,  0.0 sy,  0.0 ni,100.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st
 MiB Mem :   1984.2 total,    250.1 free,    900.3 used,    833.8 buff/cache
 MiB Swap:   2048.0 total,   2048.0 free,      0.0 used.   1084.0 avail Mem
-```
+````
 
 | Line | Meaning |
 |---|---|
@@ -108,7 +108,7 @@ ps -eo pid,user,%cpu,%mem,cmd --sort=-%cpu | head
 cat /proc/loadavg /proc/meminfo
 ```
 
-`htop` (EPEL), `pidstat`/`sar`/`iostat` (sysstat package) and Cockpit add more detail; covered with resource monitoring in S56.
+`iostat`, `mpstat`, `pidstat`, `sar` (sysstat) and the bottleneck workflow are covered in [system resource monitoring](system-resource-monitoring.md). `htop` (EPEL) and Cockpit offer interactive alternatives.
 
 ## 7. RHCSA Exam Focus **[RHCSA Core]**
 
@@ -127,7 +127,7 @@ cat /proc/loadavg /proc/meminfo
 
 | Observation | Likely meaning | Next step |
 |---|---|---|
-| High load, low `us`/`sy`, high `wa` | Storage/NFS bottleneck | Find `D`-state processes: `ps -eo pid,stat,cmd \| awk '$2 ~ /D/'`; check `dmesg`, `iostat` |
+| High load, low `us`/`sy`, high `wa` | Storage/NFS bottleneck | Find `D`-state processes: `ps -eo pid,stat,cmd \| awk '$2 ~ /D/'`; check `dmesg`, `iostat -xz` |
 | High `us` from one PID | CPU-bound application | Inspect, renice, or stop it |
 | High `sy` | Kernel work (syscalls, interrupts, I/O) | `perf`/`strace` [Advanced] |
 | High `st` | Noisy neighbors on the hypervisor | Escalate to the virtualization team |
@@ -148,16 +148,17 @@ cat /proc/loadavg /proc/meminfo
 
 ## 11. Quick Revision
 
-```
+````
 load ≈ R + D processes, compare to nproc · us sy ni id wa hi si st · avail Mem matters, not free
 PR = 20+NI · VIRT ≠ usage, RES = RAM · %CPU can exceed 100 (per-CPU)
 keys: P M N T R k r u o = c V H 1 t m f d W q · top -o %MEM -u user -p PIDs -H -c -b -n 1
 uptime nproc free -h vmstat 1 ps --sort=-%cpu
-```
+````
 
 ## 12. Cross-References
 
 - [Processes & signals](processes-and-signals.md)
 - [Priority & nice](process-priority-and-nice.md)
+- [System resource monitoring (vmstat, iostat, mpstat, sar)](system-resource-monitoring.md)
 - [Filesystem hierarchy (`/proc`)](../linux-fundamentals/filesystem-hierarchy.md)
-- Resource monitoring (S56), tuned profiles (S83): planned
+- tuned profiles (S83): planned
