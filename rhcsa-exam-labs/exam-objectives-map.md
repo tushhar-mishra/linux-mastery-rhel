@@ -57,20 +57,20 @@
 
 ## 5. Configure local storage
 
-| Objective | Sessions |
-|---|---|
-| List, create, delete partitions on **GPT** disks | 31–33 |
-| Create and remove physical volumes | 35 |
-| Assign physical volumes to volume groups | 35 |
-| Create and delete logical volumes | 35 |
-| Mount file systems at boot by UUID or label | 33–34 |
-| Add partitions, LVs and swap non-destructively | 33, 35, 42 |
+| Objective | Sessions | Notes |
+|---|---|---|
+| List, create, delete partitions on **GPT** disks | 31–33 | [disks-and-partitioning.md](../storage-and-filesystems/disks-and-partitioning.md) |
+| Create and remove physical volumes | 35 | `storage-and-filesystems/` (planned) |
+| Assign physical volumes to volume groups | 35 | `storage-and-filesystems/` (planned) |
+| Create and delete logical volumes | 35 | `storage-and-filesystems/` (planned) |
+| Mount file systems at boot by UUID or label | 33–34 | [mounting-and-fstab.md §4](../storage-and-filesystems/mounting-and-fstab.md#4-etcfstab-rhcsa-core) |
+| Add partitions, LVs and swap non-destructively | 33, 35, 42 | [disks-and-partitioning.md §5](../storage-and-filesystems/disks-and-partitioning.md#5-rhcsa-exam-focus-rhcsa-core) · [mounting-and-fstab.md §5 (swap basics)](../storage-and-filesystems/mounting-and-fstab.md#5-swap-basics-preview-of-s42) · LVM & swap (planned) |
 
 ## 6. Create and configure file systems
 
 | Objective | Sessions | Notes |
 |---|---|---|
-| Create, mount, unmount, use VFAT, ext4, XFS | 33–34 | `storage-and-filesystems/` (planned) |
+| Create, mount, unmount, use VFAT, ext4, XFS | 31–34 | [filesystems-and-mkfs.md](../storage-and-filesystems/filesystems-and-mkfs.md) · [mounting-and-fstab.md](../storage-and-filesystems/mounting-and-fstab.md) |
 | Mount and unmount NFS | 97 | `system-services-and-shared-storage/` (planned) |
 | Configure autofs | 97 | `system-services-and-shared-storage/` (planned) |
 | Extend existing logical volumes | 35–36 | `storage-and-filesystems/` (planned) |
