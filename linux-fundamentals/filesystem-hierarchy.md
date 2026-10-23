@@ -1,7 +1,7 @@
 # Filesystem Hierarchy (RHEL 10)
 
 > **Sessions:** S3 · **Verified:** Oct 2026
-> **Related:** [SSH](../networking-and-ssh/ssh-remote-access.md) · [Files & directories](../shell-and-command-line/files-and-directories.md) · storage (`storage-and-filesystems/`, planned) · boot (`boot-systemd-and-kernel/`, planned)
+> **Related:** [SSH](../networking-and-ssh/ssh-remote-access.md) · [Files & directories](../shell-and-command-line/files-and-directories.md) · [Disks & partitioning](../storage-and-filesystems/disks-and-partitioning.md) · [Mounting & fstab](../storage-and-filesystems/mounting-and-fstab.md) · boot (`boot-systemd-and-kernel/`, planned)
 
 ## 1. Overview
 
@@ -61,7 +61,7 @@ This is why `/usr` can be read-only and why `/var` often gets its own filesystem
 | `/var/tmp` | Temporary files that survive reboot | Age-based cleanup (longer than `/tmp`) |
 | `/tmp` | Temporary files, world-writable with **sticky bit** (`1777`) | **On disk by default on RHEL** (not tmpfs); cleaned by age via `systemd-tmpfiles`, not necessarily on reboot |
 | `/run` | Runtime data since boot: PID files, sockets, `/run/media/<user>` automounts | **tmpfs**, cleared at every boot |
-| `/dev` | Device nodes (devtmpfs, managed by udev) | `sda` (SATA/SCSI/USB), `vda` (virtio VM), `nvme0n1p1` (NVMe), `mapper/*` (LVM/LUKS) |
+| `/dev` | Device nodes (devtmpfs, managed by udev) | `sda` (SATA/SCSI/USB), `vda` (virtio VM), `nvme0n1p1` (NVMe), `mapper/*` (LVM/LUKS), `disk/by-uuid/*` (stable names); see [disks & partitioning](../storage-and-filesystems/disks-and-partitioning.md) |
 | `/proc` | Virtual FS: processes and kernel state | `/proc/<PID>/`, `cpuinfo`, `meminfo`, `mounts`, `cmdline`, `/proc/sys/` (sysctl) |
 | `/sys` | Virtual FS (sysfs): devices, drivers, kernel objects | `/sys/class/net/`, `/sys/block/` |
 | `/media` | Mount points for removable media | GNOME automounts to `/run/media/<user>/<label>` instead |
@@ -73,16 +73,16 @@ This is why `/usr` can be read-only and why `/var` often gets its own filesystem
 
 | File | Purpose | Topic note |
 |---|---|---|
-| `/etc/fstab` | Persistent mounts | storage |
-| `/etc/passwd`, `/etc/shadow`, `/etc/group` | Users, password hashes, groups | users |
-| `/etc/sudoers`, `/etc/sudoers.d/` | Privileged access (`visudo`) | users |
-| `/etc/hostname`, `/etc/hosts`, `/etc/resolv.conf` | Hostname, static names, DNS (resolv.conf is managed by NetworkManager) | networking |
-| `/etc/NetworkManager/system-connections/` | Network keyfiles | networking |
+| `/etc/fstab` | Persistent mounts | [mounting & fstab](../storage-and-filesystems/mounting-and-fstab.md) |
+| `/etc/passwd`, `/etc/shadow`, `/etc/group` | Users, password hashes, groups | [local users](../users-groups-and-permissions/local-users.md) |
+| `/etc/sudoers`, `/etc/sudoers.d/` | Privileged access (`visudo`) | [sudo](../users-groups-and-permissions/sudo-and-privileged-access.md) |
+| `/etc/hostname`, `/etc/hosts`, `/etc/resolv.conf` | Hostname, static names, DNS (resolv.conf is managed by NetworkManager) | networking (planned) |
+| `/etc/NetworkManager/system-connections/` | Network keyfiles | networking (planned) |
 | `/etc/ssh/sshd_config`, `/etc/ssh/sshd_config.d/` | SSH server config | [SSH](../networking-and-ssh/ssh-remote-access.md) |
-| `/etc/yum.repos.d/*.repo` | Repository definitions | packages |
-| `/etc/selinux/config` | SELinux mode at boot | SELinux |
-| `/etc/systemd/system/` | Admin unit files and overrides | systemd |
-| `/etc/default/grub` | GRUB defaults | boot |
+| `/etc/yum.repos.d/*.repo` | Repository definitions | packages (planned) |
+| `/etc/selinux/config` | SELinux mode at boot | SELinux (planned) |
+| `/etc/systemd/system/` | Admin unit files and overrides | systemd (planned) |
+| `/etc/default/grub` | GRUB defaults | boot (planned) |
 | `/etc/os-release`, `/etc/redhat-release` | OS identification | — |
 
 ## 4. Commands
@@ -122,7 +122,7 @@ systemd-tmpfiles --cat-config | grep -E '^[dDqQ] /(var/)?tmp'   # [Advanced] tmp
 | Symptom | Diagnose | Root cause / fix |
 |---|---|---|
 | "No space left on device" but `df -h` shows free space | `df -i` | Inodes exhausted (many small files, e.g., sessions or cache). Find with `find /path -xdev -type f \| wc -l`; clean up |
-| `df` shows full, `du` shows much less | `lsof +L1` | Deleted-but-open files (often rotated logs). Restart the holding process or truncate via `/proc/<pid>/fd/<n>` |
+| `df` shows full, `du` shows much less | `lsof +L1` | Deleted-but-open files (often rotated logs). Restart the holding process or truncate via `/proc/<pid>/fd/<n>`. Also check for data hidden under a mount point |
 | `/` full | `du -xsh /* \| sort -h` then drill down | Usually `/var/log`, `/var/cache/dnf`, core dumps. `dnf clean all`; `journalctl --vacuum-size=200M` |
 | `/boot` full; kernel update fails | `rpm -q kernel`; `df -h /boot` | Too many kernels. `installonly_limit` in `/etc/dnf/dnf.conf` (default 3); remove old kernels with `dnf remove kernel-<old-version>` (**never the running one**: check `uname -r`) |
 | Files disappear from `/tmp` | `systemd-tmpfiles --cat-config` | Age-based cleanup. Use `/var/tmp` or a dedicated directory for longer-lived data |
@@ -158,4 +158,6 @@ systemd-tmpfiles --cat-config | grep -E '^[dDqQ] /(var/)?tmp'   # [Advanced] tmp
 - [Files & directories](../shell-and-command-line/files-and-directories.md)
 - [I/O redirection (truncating open logs)](../files-and-text-processing/io-redirection-and-pipes.md)
 - [Finding files](../files-and-text-processing/finding-files.md)
-- Storage, boot and logs: planned (S31–55)
+- [Disks & partitioning](../storage-and-filesystems/disks-and-partitioning.md) · [Filesystems & mkfs](../storage-and-filesystems/filesystems-and-mkfs.md) · [Mounting & fstab](../storage-and-filesystems/mounting-and-fstab.md)
+- [Links & inodes](../users-groups-and-permissions/links.md)
+- Boot (S49–53), logs (S55), filesystem repair (S48): planned
