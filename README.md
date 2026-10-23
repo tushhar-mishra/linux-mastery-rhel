@@ -64,6 +64,11 @@ Topic-organized notes for **RHCSA (EX200, RHEL 10)**, Linux administration inter
 - [top & process monitoring](processes-and-resource-management/top-and-process-monitoring.md) *(extended in S56)*
 - [Process priority & nice/renice](processes-and-resource-management/process-priority-and-nice.md)
 
+### Storage & filesystems
+- [Disks, device naming & partitioning (GPT)](storage-and-filesystems/disks-and-partitioning.md)
+- [Filesystems: types, creation & tuning (XFS, ext4, VFAT)](storage-and-filesystems/filesystems-and-mkfs.md)
+- [Mounting, mount options & /etc/fstab](storage-and-filesystems/mounting-and-fstab.md)
+
 ## Repository Layout
 
 ```
@@ -100,7 +105,9 @@ linux-rhcsa-notes/
 | 21–24 | Local users, passwords & aging, profile files, groups | `users-groups-and-permissions/local-users.md`, `passwords-and-aging.md`, `shell-startup-files.md`, `groups.md` | Done |
 | 25–28 | Permissions & umask, special permissions & ACLs, sudo, links | `users-groups-and-permissions/file-permissions.md`, `special-permissions-and-acls.md`, `sudo-and-privileged-access.md`, `links.md` | Done |
 | 29–30 | Processes, signals, top, priorities & nice | `processes-and-resource-management/processes-and-signals.md`, `top-and-process-monitoring.md`, `process-priority-and-nice.md` | Done |
-| 31–48 | Storage, LVM, swap, RAID, VDO, Stratis, LUKS | `storage-and-filesystems/` | Pending |
+| 31–34 | Storage devices, partitioning, filesystems, mounting, XFS | `storage-and-filesystems/disks-and-partitioning.md`, `filesystems-and-mkfs.md`, `mounting-and-fstab.md` | Done (GPT focus; swap basics previewed) |
+| 35–41 | LVM fundamentals, snapshots, VG merge/split, migration, thin, striping | `storage-and-filesystems/` | Pending |
+| 42–48 | Swap, RAID, quotas, VDO, Stratis, LUKS, filesystem repair | `storage-and-filesystems/` | Pending |
 | 49–53 | Boot, systemd, kernel, modules | `boot-systemd-and-kernel/` | Pending |
 | 54–59 | Scheduling, logs, monitoring, packages | `logs-scheduling-and-packages/` | Pending |
 | 60–68 | Networking, SSH, recovery, backups | `networking-and-ssh/` | Pending |
