@@ -60,11 +60,11 @@
 | Objective | Sessions | Notes |
 |---|---|---|
 | List, create, delete partitions on **GPT** disks | 31–33 | [disks-and-partitioning.md](../storage-and-filesystems/disks-and-partitioning.md) |
-| Create and remove physical volumes | 35 | `storage-and-filesystems/` (planned) |
-| Assign physical volumes to volume groups | 35 | `storage-and-filesystems/` (planned) |
-| Create and delete logical volumes | 35 | `storage-and-filesystems/` (planned) |
+| Create and remove physical volumes | 35 | [lvm-fundamentals.md §4.1](../storage-and-filesystems/lvm-fundamentals.md#41-prepare-pvs) · [§7 (removal)](../storage-and-filesystems/lvm-fundamentals.md#7-removing-storage) |
+| Assign physical volumes to volume groups | 35, 37–38 | [lvm-fundamentals.md §4.2](../storage-and-filesystems/lvm-fundamentals.md#42-create-a-vg-and-lvs) · [lvm-vg-merge-split-and-migration.md](../storage-and-filesystems/lvm-vg-merge-split-and-migration.md) |
+| Create and delete logical volumes | 35 | [lvm-fundamentals.md](../storage-and-filesystems/lvm-fundamentals.md) |
 | Mount file systems at boot by UUID or label | 33–34 | [mounting-and-fstab.md §4](../storage-and-filesystems/mounting-and-fstab.md#4-etcfstab-rhcsa-core) |
-| Add partitions, LVs and swap non-destructively | 33, 35, 42 | [disks-and-partitioning.md §5](../storage-and-filesystems/disks-and-partitioning.md#5-rhcsa-exam-focus-rhcsa-core) · [mounting-and-fstab.md §5 (swap basics)](../storage-and-filesystems/mounting-and-fstab.md#5-swap-basics-preview-of-s42) · LVM & swap (planned) |
+| Add partitions, LVs and swap non-destructively | 33, 35, 42 | [disks-and-partitioning.md §5](../storage-and-filesystems/disks-and-partitioning.md#5-rhcsa-exam-focus-rhcsa-core) · [lvm-fundamentals.md §8](../storage-and-filesystems/lvm-fundamentals.md#8-rhcsa-exam-patterns-rhcsa-core) · [mounting-and-fstab.md §5 (swap basics)](../storage-and-filesystems/mounting-and-fstab.md#5-swap-basics-preview-of-s42) · swap (S42, planned) |
 
 ## 6. Create and configure file systems
 
@@ -73,7 +73,7 @@
 | Create, mount, unmount, use VFAT, ext4, XFS | 31–34 | [filesystems-and-mkfs.md](../storage-and-filesystems/filesystems-and-mkfs.md) · [mounting-and-fstab.md](../storage-and-filesystems/mounting-and-fstab.md) |
 | Mount and unmount NFS | 97 | `system-services-and-shared-storage/` (planned) |
 | Configure autofs | 97 | `system-services-and-shared-storage/` (planned) |
-| Extend existing logical volumes | 35–36 | `storage-and-filesystems/` (planned) |
+| Extend existing logical volumes | 35–36 | [lvm-fundamentals.md §5](../storage-and-filesystems/lvm-fundamentals.md#5-extending-online-rhcsa-core) |
 | Diagnose and correct file permission problems | 25–27 | [file-permissions.md §4](../users-groups-and-permissions/file-permissions.md#4-diagnosing-permission-problems-rhcsa-core) · [special-permissions-and-acls.md](../users-groups-and-permissions/special-permissions-and-acls.md) |
 
 ## 7. Deploy, configure, and maintain systems
