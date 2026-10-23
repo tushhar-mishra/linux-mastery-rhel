@@ -68,6 +68,9 @@ Topic-organized notes for **RHCSA (EX200, RHEL 10)**, Linux administration inter
 - [Disks, device naming & partitioning (GPT)](storage-and-filesystems/disks-and-partitioning.md)
 - [Filesystems: types, creation & tuning (XFS, ext4, VFAT)](storage-and-filesystems/filesystems-and-mkfs.md)
 - [Mounting, mount options & /etc/fstab](storage-and-filesystems/mounting-and-fstab.md)
+- [LVM fundamentals: PVs, VGs, LVs & resizing](storage-and-filesystems/lvm-fundamentals.md)
+- [LVM snapshots & metadata recovery](storage-and-filesystems/lvm-snapshots-and-recovery.md)
+- [VG merge/split & online disk migration (pvmove)](storage-and-filesystems/lvm-vg-merge-split-and-migration.md)
 
 ## Repository Layout
 
@@ -106,7 +109,8 @@ linux-rhcsa-notes/
 | 25–28 | Permissions & umask, special permissions & ACLs, sudo, links | `users-groups-and-permissions/file-permissions.md`, `special-permissions-and-acls.md`, `sudo-and-privileged-access.md`, `links.md` | Done |
 | 29–30 | Processes, signals, top, priorities & nice | `processes-and-resource-management/processes-and-signals.md`, `top-and-process-monitoring.md`, `process-priority-and-nice.md` | Done |
 | 31–34 | Storage devices, partitioning, filesystems, mounting, XFS | `storage-and-filesystems/disks-and-partitioning.md`, `filesystems-and-mkfs.md`, `mounting-and-fstab.md` | Done (GPT focus; swap basics previewed) |
-| 35–41 | LVM fundamentals, snapshots, VG merge/split, migration, thin, striping | `storage-and-filesystems/` | Pending |
+| 35–38 | LVM fundamentals & resizing, snapshots & recovery, VG merge/split, disk migration | `storage-and-filesystems/lvm-fundamentals.md`, `lvm-snapshots-and-recovery.md`, `lvm-vg-merge-split-and-migration.md` | Done |
+| 39–41 | Thin provisioning, striping, LVM migration between machines | `storage-and-filesystems/` | Pending |
 | 42–48 | Swap, RAID, quotas, VDO, Stratis, LUKS, filesystem repair | `storage-and-filesystems/` | Pending |
 | 49–53 | Boot, systemd, kernel, modules | `boot-systemd-and-kernel/` | Pending |
 | 54–59 | Scheduling, logs, monitoring, packages | `logs-scheduling-and-packages/` | Pending |
