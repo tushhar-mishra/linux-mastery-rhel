@@ -109,4 +109,72 @@ fixfiles -F onboot ; reboot            # same, forcing full contexts
 restorecon -RFv /                      # online full relabel (slow; large systems)
 ```
 
-You need this after re-enabling SELinux, after editing files from rescue mode, and after a policy type
+You need this after re-enabling SELinux, after editing files from rescue mode, and after a policy type change.
+
+## 8. Common File Types
+
+| Type | Used for |
+|---|---|
+| `httpd_sys_content_t` | Web content (read-only for httpd) |
+| `httpd_sys_rw_content_t` | Web content httpd may write (uploads) |
+| `public_content_t` / `public_content_rw_t` | Shared by FTP/HTTP/Samba (read / write) |
+| `samba_share_t` | Samba shares |
+| `nfs_t` | NFS-mounted files |
+| `user_home_t` / `user_home_dir_t` | Home content / home directory |
+| `ssh_home_t` | `~/.ssh` |
+| `etc_t`, `var_log_t`, `tmp_t`, `user_tmp_t` | /etc, logs, temp files |
+| `container_file_t` | Volumes used by containers |
+
+Find the right type: `semanage fcontext -l | grep <standard path>` (e.g., `/var/www`), then copy that type to your custom path.
+
+## 9. RHCSA Exam Focus **[RHCSA Core]**
+
+- Custom web, FTP or Samba directory → `semanage fcontext -a -t TYPE 'DIR(/.*)?'` + `restorecon -Rv DIR`.
+- Files moved into a service directory → `restorecon -Rv DIR`.
+- Verify with `ls -Z`, then test the service (`curl`), and check `ausearch -m avc -ts recent` if it still fails.
+- Don't use `chcon` as the final answer; it won't survive a relabel.
+
+## 10. Production Practices **[Production Practice]**
+
+- Prefer standard locations (`/var/www`, `/srv/<service>` with rules).
+- Document local rules (`semanage fcontext -l -C`) and keep them in configuration management (e.g., Ansible `selinux` system role).
+- Back up and restore with tools that keep xattrs (`tar --selinux --xattrs`, `rsync -aX`), or relabel after restoring.
+
+## 11. Troubleshooting
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| httpd 403 on a file with correct rwx | Wrong type (e.g., `user_home_t` after `mv`, `samba_share_t`) | `restorecon -Rv /var/www/html` |
+| Label "fixed" with chcon reverted later | `restorecon`/autorelabel | Add a `semanage fcontext` rule |
+| `restorecon` changes nothing | No matching rule, or rule added for the wrong path | `semanage fcontext -l -C`; check the regex covers the path |
+| `ValueError: File context for … already defined` | Rule exists | `semanage fcontext -m …` |
+| New dir shows `default_t` | No rule for that path | Add a rule; `restorecon` |
+| Files show `unlabeled_t`/`file_t` | Created with SELinux disabled | `touch /.autorelabel; reboot` |
+
+## 12. Interview Questions
+
+| Question | Answer |
+|---|---|
+| `chcon` vs `semanage fcontext`? | chcon changes a file's label now; semanage fcontext changes the policy rule so `restorecon`/relabels keep the label. |
+| Why do files moved into `/var/www/html` fail? | `mv` keeps the original label (`user_home_t`); httpd isn't allowed to read it. `restorecon` fixes it. |
+| What does `'(/.*)?'` mean? | The directory itself plus everything beneath it. |
+| How do you see only your custom rules? | `semanage fcontext -l -C`. |
+| `default_t` vs `file_t`? | default_t = no matching rule; file_t = no label at all. |
+
+## 13. Course Corrections
+
+| Course | Correction |
+|---|---|
+| `chcon` = "temporary (non-persistent)" | Survives reboot but is undone by `restorecon`/relabel |
+| `ls -lZ /testdir/file.txt` → `user_home_t` | A new top-level `/testdir` is `default_t` (no rule) |
+| tar without `--selinux` → "may revert to default_t" | Files get the default label for their location |
+| `star` for SELinux-aware archives | May not be in RHEL 10 repos; use `tar --selinux --xattrs` |
+| `policycoreutils-python`, `libselinux-python` | `policycoreutils-python-utils`, `python3-libselinux` |
+
+## 14. Quick Revision
+
+```bash
+ls -Z · ls -dZ · matchpathcon -V PATH · restorecon -Rnv DIR (dry run) · semanage fcontext -l [-C]
+semanage fcontext -a|-m -t TYPE 'DIR(/.*)?' → restorecon -Rv DIR · semanage fcontext -d 'REGEX' · -e (equivalence)
+chcon -t TYPE [-R] (testing; undone by restorecon) · cp = dest default · mv / cp -a = keep source · tar --selinux · rsync -X
+mount -o context="…" · touch /.autorelabel · fixfiles -F onboot
