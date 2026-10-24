@@ -1,229 +1,213 @@
-# SSH Remote Access, Login & Switching Users
+# SSH: Remote Access, Keys, File Transfer & Switching Users
 
-> **Sessions:** S3 (basics) · **To be extended:** S64–68 (SSH options, login restrictions, recovery, rsync backups)
-> **Related:** [Filesystem hierarchy](../linux-fundamentals/filesystem-hierarchy.md) · [Lab setup](../linux-fundamentals/virtualization-and-lab-setup.md) · [Shell basics](../shell-and-command-line/shell-basics-and-command-syntax.md) · firewalld (`firewall-and-selinux/`, planned) · users/sudo (`users-groups-and-permissions/`, planned)
+> **Sessions:** S3, S64 · **Objectives:** *Access remote systems using SSH* · *Log in and switch users in multi-user targets* · *Configure key-based authentication for SSH* · *Securely transfer files between systems* **[RHCSA Core]**
+> **Related:** [SSH server hardening](ssh-server-hardening.md) · [Cryptography basics](cryptography-basics.md) · [rsync & remote backups](rsync-and-remote-backups.md) · [NetworkManager](networkmanager-nmcli.md) · [sudo](../users-groups-and-permissions/sudo-and-privileged-access.md) · [Local users](../users-groups-and-permissions/local-users.md)
 
 ## 1. Overview
 
-**SSH** (Secure Shell, OpenSSH on RHEL) provides encrypted remote login, remote command execution and file transfer over TCP **port 22**. The server daemon is `sshd` (package `openssh-server`, unit `sshd.service`); the client is `ssh` (package `openssh-clients`). RHEL 10 ships **OpenSSH 9.9**.
-
-**How a connection works:**
-1. TCP connect to port 22.
-2. Key exchange establishes an encrypted channel.
-3. The client verifies the **server host key** against `~/.ssh/known_hosts`.
-4. The user authenticates (public key, password, …).
-5. A shell or command runs.
+**SSH (Secure Shell)** provides encrypted remote login, remote command execution, file transfer and tunneling over TCP port **22**. It replaced Telnet, rlogin and rsh, which send everything (including passwords) in clear text. RHEL 10 ships **OpenSSH 9.9**: client `openssh-clients`, server `openssh-server` (`sshd.service`, enabled by default).
 
 ## 2. Key Concepts
 
-| Concept | Detail |
-|---|---|
-| Host keys | Server identity: `/etc/ssh/ssh_host_*_key`. Fingerprint shown on first connect, stored in the client's `~/.ssh/known_hosts` |
-| User keys | Private key `~/.ssh/id_ed25519` (keep secret, mode 600). Public key `~/.ssh/id_ed25519.pub`, appended to the server's `~/.ssh/authorized_keys` |
-| Key authentication | The server checks that the client can **sign** a challenge with the private key matching an authorized public key. The private key never leaves the client |
-| Default key type | `ssh-keygen` on RHEL 10 creates **Ed25519** by default (RSA in FIPS mode, where Ed25519 isn't allowed) |
-| Root login | OpenSSH default `PermitRootLogin prohibit-password` (keys only). The RHEL 10 installer also disables password-based root SSH by default |
-| Config layout | `/etc/ssh/sshd_config` begins with `Include /etc/ssh/sshd_config.d/*.conf`. For most options **the first value read wins**, so drop-ins override the main file |
-| Crypto policy | OpenSSH follows RHEL system-wide crypto policies (`update-crypto-policies --show`) |
+### 2.1 Host keys vs user keys
 
-## 3. Commands & Procedures
-
-### 3.1 Prepare the server **[RHCSA Core]**
-
-```bash
-rpm -q openssh-server                     # installed? (default on RHEL)
-sudo dnf install -y openssh-server        # if missing
-sudo systemctl enable --now sshd          # start now + at boot
-systemctl status sshd                     # active (running), enabled
-ss -tlnp | grep ':22'                     # LISTEN 0.0.0.0:22 users:(("sshd",…))
-
-sudo firewall-cmd --list-services         # 'ssh' is allowed in the default zone on RHEL
-sudo firewall-cmd --permanent --add-service=ssh   # only if missing
-sudo firewall-cmd --reload
-```
-
-### 3.2 Find the server's IP
-
-```bash
-ip -br addr                     # compact: ens160  UP  192.168.122.10/24 …
-ip addr show                    # full detail
-hostname -I                     # just the addresses
-nmcli -g IP4.ADDRESS device show ens160
-```
-
-Interface names depend on the hypervisor: `ens160`/`ens192` (VMware), `enp0s3` (VirtualBox), `enp1s0` (KVM virtio). `dynamic` in `ip addr` output means the address came from DHCP.
-
-### 3.3 Connect
-
-```bash
-ssh user@192.168.122.10                 # interactive login
-ssh -p 2222 user@127.0.0.1              # non-default port (e.g., VirtualBox port-forward)
-ssh user@host 'df -h; uptime'           # run a command remotely, then exit
-ssh -v user@host                        # verbose; -vvv for maximum detail when debugging
-exit                                    # or Ctrl+D to log out
-```
-
-**First connection:** verify the fingerprint, then type `yes`. It's saved in `~/.ssh/known_hosts`.
-
-**Windows clients:** Windows 10/11 include the OpenSSH client (`ssh` in PowerShell). PuTTY also works but uses its own `.ppk` key format (convert keys with PuTTYgen).
-
-### 3.4 Key-based authentication **[RHCSA Core]**
-
-Run these on the **client**, as the user who will log in:
-
-```bash
-ssh-keygen                               # Ed25519 by default on RHEL 10 (OpenSSH 9.x)
-ssh-keygen -t ed25519 -C "user@laptop"   # explicit type + comment
-ssh-keygen -t rsa -b 4096                # only when RSA is required (FIPS, legacy systems)
-
-ssh-copy-id user@server                  # appends pubkey to server ~/.ssh/authorized_keys; sets perms
-ssh user@server                          # should log in without the account password
-```
-
-If `ssh-copy-id` isn't available:
-
-```bash
-cat ~/.ssh/id_ed25519.pub | ssh user@server \
-  'mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys'
-```
-
-**Passphrase vs. "passwordless":** an empty passphrase means anyone who copies the private key gets access. Use a passphrase together with `ssh-agent`:
-
-```bash
-eval "$(ssh-agent -s)"; ssh-add          # passphrase typed once per session
-```
-
-**Required permissions** (sshd's `StrictModes` refuses keys if these are too open):
-
-| Path | Mode | Owner |
+| | Host keys | User keys |
 |---|---|---|
-| `~` (home) | not group/world-writable | user |
-| `~/.ssh/` | `700` | user |
-| `~/.ssh/authorized_keys` | `600` | user |
-| `~/.ssh/id_*` (private) | `600` | user |
+| Belong to | The **server** | A **user** |
+| Location | `/etc/ssh/ssh_host_{ed25519,ecdsa}_key` (+ `.pub`) | `~/.ssh/id_ed25519` (+ `.pub`) |
+| Prove | "This really is server X" (anti-MITM) | "This really is user Y" (login without a password) |
+| Client side record | `~/.ssh/known_hosts` | Server side record: `~/.ssh/authorized_keys` |
 
-### 3.5 Secure file transfer **[RHCSA Core]**
+### 2.2 Files
 
-```bash
-scp file.txt user@server:/tmp/              # copy to remote
-scp -r user@server:/etc/ssh ./ssh-backup    # recursive copy from remote
-sftp user@server                            # interactive: put, get, ls, cd, lcd
-rsync -avz --progress dir/ user@server:/backup/dir/   # incremental, resumable (S68)
-```
+| File | Purpose | Mode |
+|---|---|---|
+| `~/.ssh/` | User's SSH directory | `700` |
+| `~/.ssh/id_ed25519` / `.pub` | Private / public key | `600` / `644` |
+| `~/.ssh/authorized_keys` | Public keys allowed to log in **as this user** | `600` |
+| `~/.ssh/known_hosts` | Trusted host keys of servers you've connected to | `600`/`644` |
+| `~/.ssh/config` | Per-user client settings (aliases, ports, keys) | `600` |
+| `/etc/ssh/ssh_config`, `/etc/ssh/ssh_config.d/` | System-wide client settings | |
+| `/etc/ssh/sshd_config`, `/etc/ssh/sshd_config.d/` | Server settings (see [hardening](ssh-server-hardening.md)) | |
 
-On OpenSSH 9.0+, `scp` uses the SFTP protocol internally (`scp -O` forces the legacy protocol for old servers).
+### 2.3 What happens on connect
 
-### 3.6 Change sshd settings safely **[Production Practice]**
+1. TCP connection; key exchange creates shared **session keys** (all traffic is then encrypted symmetrically).
+2. The server proves its identity with its **host key**; the client checks `known_hosts`.
+3. The user authenticates: **public key**, password, or other methods.
+4. An encrypted session runs a shell, a command, file transfer, or tunnels.
 
-```bash
-sudo tee /etc/ssh/sshd_config.d/40-local.conf >/dev/null <<'EOF'
-PasswordAuthentication no
-EOF
-sudo sshd -t                                     # syntax check: no output = OK
-sudo sshd -T | grep -i passwordauthentication    # confirm the EFFECTIVE value
-sudo systemctl reload sshd
-```
+## 3. Using the SSH Client
 
-> ⚠️ **Lock-out risk:** Before disabling password authentication or changing the port, **keep your current session open** and test key login from a second terminal. Changing the port also requires SELinux (`semanage port -a -t ssh_port_t -p tcp <port>`) and firewalld updates (S64–65, S76).
+### 3.1 Connecting
+
+````bash
+ssh alice@192.168.1.20                 # login (user@host)
+ssh -p 2222 alice@server               # non-default port
+ssh -i ~/.ssh/deploy_key alice@server  # specific key
+ssh alice@server 'uptime; df -h /'     # run a remote command and return
+ssh -t alice@server 'sudo systemctl restart httpd'   # force a TTY (sudo prompt)
+exit   # or Ctrl+D / logout
+````
+
+### 3.2 Host key verification (`known_hosts`)
+
+The first connection shows the server's key fingerprint (usually **ED25519** on RHEL 10) and asks for confirmation; answering `yes` stores it.
+
+````bash
+ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub   # on the SERVER: show its fingerprint to compare
+ssh-keygen -R server.example.com                   # remove a stale entry after a legitimate reinstall
+````
+
+`WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!` means the key differs from the stored one: a reinstalled server, or a man-in-the-middle. Verify before removing the old entry.
+
+### 3.3 Key-based authentication **[RHCSA Core]**
+
+````bash
+ssh-keygen                               # RHEL 10 default: Ed25519 → ~/.ssh/id_ed25519(.pub); set a passphrase
+ssh-keygen -t rsa -b 4096                # RSA if required by policy/legacy systems
+ssh-copy-id alice@server                 # appends the public key to ~alice/.ssh/authorized_keys with correct modes
+ssh alice@server                         # logs in with the key (passphrase if set, no account password)
+````
+
+**Manual alternative** (when `ssh-copy-id` isn't available):
+
+````bash
+cat ~/.ssh/id_ed25519.pub | ssh alice@server \
+  'mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys && restorecon -Rv ~/.ssh'
+````
+
+Never copy a public key *over* `authorized_keys` with `scp`; that deletes existing keys.
+
+### 3.4 ssh-agent (passphrase once per session)
+
+````bash
+eval "$(ssh-agent -s)"         # usually started automatically in desktop sessions
+ssh-add                        # add default keys (asks the passphrase once)
+ssh-add -l                     # fingerprints of loaded keys   (ssh-add -L: full public keys)
+ssh -A alice@jump              # agent forwarding: use only with trusted hosts [Advanced]
+````
+
+### 3.5 Secure File Transfer **[RHCSA Core]**
+
+````bash
+# scp — copy (OpenSSH 9 uses the SFTP protocol underneath)
+scp report.txt alice@server:/tmp/                 # local → remote
+scp alice@server:/etc/hosts ./hosts.server        # remote → local
+scp -r project/ alice@server:~/                   # directory
+scp -P 2222 file alice@server:/tmp/               # port: capital -P
+
+# sftp — interactive / batch
+sftp alice@server            # ls, cd, lcd, get, put, mkdir, bye
+
+# rsync over SSH — efficient, resumable (see rsync note)
+rsync -av project/ alice@server:/srv/project/
+````
+
+### 3.6 Client configuration (`~/.ssh/config`)
+
+````
+Host web1
+    HostName 192.168.1.20
+    User alice
+    Port 2222
+    IdentityFile ~/.ssh/id_ed25519
+````
+
+Then just `ssh web1`, `scp file web1:/tmp/`.
+
+### 3.7 Forwarding **[Advanced]**
+
+````bash
+ssh -L 8080:localhost:80 alice@server     # local forward: http://localhost:8080 → server's port 80
+ssh -R 9000:localhost:22 alice@public      # remote forward: public:9000 → this machine's port 22
+ssh -D 1080 alice@server                   # dynamic SOCKS proxy
+ssh -J alice@bastion alice@internal        # jump host (ProxyJump)
+ssh -X alice@server xclock                 # X11 forwarding (server needs xauth; RHEL enables X11Forwarding)
+````
 
 ## 4. Logging In and Switching Users **[RHCSA Core]**
 
-Objective: *Log in and switch users in multi-user targets.*
+| Method | How |
+|---|---|
+| Local text console | `Ctrl+Alt+F2`…`F6` (tty2–6), log in; `tty` shows the terminal |
+| Graphical login | GDM (`graphical.target`) |
+| Remote | `ssh user@host` |
 
-| Action | Command | Notes |
+````bash
+whoami ; id ; who ; w ; last | head      # identity, sessions, history
+su - alice          # switch to alice with a full LOGIN environment (needs alice's password, none if root)
+su alice            # switch user but keep the caller's environment (non-login)
+sudo -i             # root login shell using YOUR password (wheel/sudoers)
+sudo -u alice cmd   # one command as alice
+exit                # return to the previous user
+````
+
+On RHEL 10 the root account is often **disabled** (no password) at installation; administrators use `sudo`. Direct root SSH login is controlled by `PermitRootLogin` (see [hardening](ssh-server-hardening.md)).
+
+## 5. Server Basics
+
+````bash
+dnf install -y openssh-server            # normally preinstalled
+systemctl enable --now sshd ; systemctl status sshd
+ss -tlnp | grep sshd                     # listening on 0.0.0.0:22 / [::]:22
+firewall-cmd --list-services             # 'ssh' allowed in the public zone by default
+sshd -t                                  # syntax check after config changes ; systemctl reload sshd
+````
+
+## 6. RHCSA Exam Focus **[RHCSA Core]**
+
+- "Configure key-based login from serverA (user X) to serverB (user Y)": `ssh-keygen` as X on A → `ssh-copy-id Y@serverB` → test `ssh Y@serverB` without a password prompt.
+- Transfer files with `scp`/`sftp`/`rsync`, and verify on the other side (`ls -l`, checksums).
+- Know `su -` vs `su` vs `sudo -i`.
+
+## 7. Production Practices **[Production Practice]**
+
+- Use keys with passphrases + agent; disable password authentication on internet-facing servers ([hardening](ssh-server-hardening.md)).
+- Distribute and rotate keys centrally (IdM, configuration management); remove keys of departed users.
+- Use a bastion/jump host and `~/.ssh/config` instead of exposing every server.
+- Verify host fingerprints out of band for first connections to critical systems.
+
+## 8. Troubleshooting
+
+| Symptom | Cause | Fix |
 |---|---|---|
-| Console login | Text console on `multi-user.target`; `Ctrl+Alt+F2`…`F6` switches virtual terminals on GUI systems | `tty` shows your terminal |
-| Who am I? | `whoami`, `id` | `id` shows UID, GID and groups (check for `wheel`) |
-| Who's logged in? | `who`, `w` | `pts/N` = SSH or terminal emulator; `ttyN` = console |
-| Login history | `last`, `sudo lastb` (failed logins) | Also `/var/log/secure`, `journalctl -u sshd` |
-| Switch user, login shell | `su - alice` | Fresh environment, home directory, profile files (**preferred**) |
-| Switch user, keep environment | `su alice` | Keeps the caller's environment and `PATH` (source of confusing errors) |
-| Root login shell via sudo | `sudo -i` | Uses **your** password; requires `wheel`/sudoers |
-| One command as another user | `sudo -u alice cmd` | |
-| Return | `exit` or `Ctrl+D` | |
-| Current target | `systemctl get-default` | `multi-user.target` (text) vs `graphical.target` (S50) |
+| `Connection refused` | sshd not running / wrong port | `systemctl status sshd`; `ss -tlnp`; `-p PORT` |
+| `Connection timed out` | Firewall / routing | `firewall-cmd --list-all`; network path |
+| `Permission denied (publickey)` | Key not in `authorized_keys`, wrong modes/owner, or SELinux label | `ssh -v`; `chmod 700 ~/.ssh; chmod 600 ~/.ssh/authorized_keys`; `restorecon -Rv ~/.ssh`; check `/var/log/secure` on the server |
+| Still asks for a password with keys | Wrong key offered / key not loaded | `ssh -v` (which keys are tried); `-i`; `ssh-add` |
+| `REMOTE HOST IDENTIFICATION HAS CHANGED` | Host key changed | Verify; then `ssh-keygen -R host` |
+| `Too many authentication failures` | Agent offers too many keys | `ssh -o IdentitiesOnly=yes -i KEY …` |
+| scp fails with odd output | Remote shell startup files print text | Guard interactive output in `~/.bashrc` |
 
-> **RHEL 10:** if root was left disabled at install, `su -` fails with an authentication failure. Use `sudo -i`, or set a root password (`sudo passwd root`) if your lab or a task requires it.
+Debugging: `ssh -v` / `-vvv` on the client; `journalctl -u sshd` or `/var/log/secure` on the server.
 
-## 5. RHCSA Exam Focus
-
-- Key-based auth for a **specific user** to a **specific host**, with key permissions correct.
-- `sshd` enabled and the firewall allowing `ssh`. Verify with an actual login.
-- Use `su - user` (not `su user`) when testing user environments, umask and permissions.
-- Trap: generating keys as **root** when the task says user `alice`. The keys end up in `/root/.ssh`.
-- Trap: `authorized_keys` created by root (wrong owner). Fix with `chown -R alice:alice ~alice/.ssh`.
-
-## 6. Troubleshooting **[Production Practice]**
-
-Diagnostic sequence: **client verbose → reachability → service → firewall → auth logs → effective config.**
-
-```bash
-ssh -vvv user@host                       # client side: where does it stop?
-ping -c2 host; nc -zv host 22            # reachability and port (nc from the nmap-ncat package)
-sudo systemctl status sshd; sudo ss -tlnp | grep sshd
-sudo firewall-cmd --list-all
-sudo journalctl -u sshd -e               # or: sudo tail -f /var/log/secure
-sudo sshd -T | less                      # effective server configuration
-```
-
-| Error | Meaning | Fix |
-|---|---|---|
-| `Connection refused` | Host reachable, nothing listening on that port | Start/enable `sshd`; check `Port` and `ss -tlnp` |
-| `Connection timed out` / `No route to host` | Packets dropped or unroutable | Firewall (`firewall-cmd`), wrong IP, VM network mode, routing |
-| `Permission denied (publickey)` | Key not accepted and passwords disabled | Wrong user, key not in `authorized_keys`, bad perms/ownership, wrong SELinux context on `~/.ssh` (`restorecon -Rv ~/.ssh`) |
-| `Permission denied, please try again` (as root) | Root password login disabled by policy | Log in as the admin user, then `sudo -i`; or use keys |
-| `WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!` | Host key differs from `known_hosts` | If expected (reinstall), `ssh-keygen -R host`; if not, **investigate a possible MITM** |
-| Login hangs about 10–30 s before the prompt | Reverse-DNS or GSSAPI delays | Fix DNS or `/etc/hosts`; set `UseDNS no` or `GSSAPIAuthentication no` as appropriate |
-
-Server-side clues for key failures appear in `journalctl -u sshd`, e.g. `Authentication refused: bad ownership or modes for directory /home/alice/.ssh`.
-
-## 7. Tips & Best Practices
-
-- Prefer **Ed25519** keys with passphrases plus `ssh-agent`. Use one key per device or person.
-- Disable password authentication on internet-facing servers **after** confirming key access works.
-- Use `~/.ssh/config` aliases:
-
-```
-  Host lab
-      HostName 192.168.122.10
-      User alice
-      Port 22
-```
-
-  Then just run `ssh lab`.
-- Never copy private keys between machines casually; never put them in Git.
-- Treat host key change warnings as security events.
-
-## 8. Interview Questions
+## 9. Interview Questions
 
 | Question | Answer |
 |---|---|
-| How does SSH key authentication work? | The server holds the public key in `authorized_keys`. The client proves possession of the private key by signing a challenge; the private key never crosses the network. |
-| What is `known_hosts` for? | It pins server host keys so the client detects impersonation (MITM) on later connections. |
-| "Connection refused" vs "timed out"? | Refused: host reachable, port closed (service down). Timed out: packets dropped (firewall, routing, host down). |
-| You get `Permission denied (publickey)`. Steps? | `ssh -vvv` to see which keys were offered → check the server's `authorized_keys` contents, ownership and modes (700/600) → SELinux context → `journalctl -u sshd` → `sshd -T` for `PubkeyAuthentication`/`AuthorizedKeysFile`. |
-| `su` vs `su -` vs `sudo -i`? | `su` keeps the environment; `su -` starts a clean login shell; `sudo -i` gives a root login shell using your own password and is auditable via sudo logs. |
-| Why disable root password SSH? | Root is a known username for brute-force attacks. Keys plus named admin accounts give accountability and stronger authentication. |
-| scp vs rsync? | scp copies everything every time. rsync transfers only differences, preserves attributes (`-a`), can resume and delete — better for backups and syncs. |
+| How does key-based SSH login work? | The server holds your public key in `authorized_keys`; you prove possession of the private key by signing a challenge. The private key never leaves your machine. |
+| Host key vs user key? | Host keys authenticate the server (`known_hosts`); user keys authenticate the user (`authorized_keys`). |
+| What do you do when the host key changed? | Verify why (reinstall vs attack) via a trusted channel before removing the old entry. |
+| `scp -P` vs `ssh -p`? | Same purpose (port); scp uses capital `-P` because `-p` preserves times/modes. |
+| `su -` vs `su`? | `su -` starts a login shell with the target user's environment; `su` keeps the current environment. |
 
-## 9. Quick Revision
+## 10. Course Corrections
 
-```bash
-systemctl enable --now sshd; firewall-cmd --list-services
-ssh-keygen; ssh-copy-id user@host; ssh user@host
-chmod 700 ~/.ssh; chmod 600 ~/.ssh/authorized_keys
-scp / sftp / rsync -avz
-sshd -t && sshd -T | grep -i <option>; systemctl reload sshd
-ssh-keygen -R host        # stale host key
-su - user | sudo -i | id | who | w | last
-```
+| Course | Correction |
+|---|---|
+| "First connection asks to trust the server's RSA fingerprint" | RHEL 10 has ECDSA/Ed25519 host keys; typically an ED25519 fingerprint |
+| scp headings swapped ("remote to local" shows local → remote) | Fixed in §3.5 |
+| `ssh-keygen -t rsa -b 4096` as the default | RHEL 10 defaults to Ed25519 |
+| "Leave passphrase empty" | Prefer a passphrase + `ssh-agent` (empty only for tightly restricted automation keys) |
+| `scp ~/.ssh/id_rsa.pub user@remote:~/.ssh/authorized_keys` | Overwrites existing keys; use `ssh-copy-id` or append (§3.3) |
+| X11 test with `firefox &` | Firefox is a Flatpak on RHEL 10; use a simple X client; server needs `xauth` |
 
-## 10. Cross-References
+## 11. Quick Revision
 
-- [Shell basics (first commands, `whoami` vs `who am i`)](../shell-and-command-line/shell-basics-and-command-syntax.md)
-- [I/O redirection (`sudo tee`)](../files-and-text-processing/io-redirection-and-pipes.md)
-- Firewall rules: `firewall-and-selinux/` (S69–70, planned)
-- SELinux port labels for a non-standard SSH port: `firewall-and-selinux/` (S76, planned)
-- sudo and the wheel group: `users-groups-and-permissions/` (S27, planned)
-- Advanced SSH options, login restrictions, rsync backups: this file, extended in S64–68
-- SSH port forwarding: this file (S84) **[Advanced/Optional]**
+````bash
+ssh [-p P] [-i KEY] user@host ['cmd'] · ssh -v · ssh-keygen [-t ed25519] · ssh-copy-id user@host · ssh-keygen -R host · ssh-keygen -lf KEY.pub
+~/.ssh 700 · authorized_keys 600 · private key 600 · restorecon -Rv ~/.ssh
+scp f u@h:/dir/ · scp u@h:/f . · scp -r -P P · sftp u@h · rsync -av src/ u@h:/dst/
+ssh-agent / ssh-add [-l] · ~/.ssh/config Host alias · -L -R -D -J -X
+su - user · su user · sudo -i · who · w · last · tty
