@@ -1,7 +1,7 @@
 # Swap: Partitions, LVs, Swap Files & Swappiness
 
 > **Sessions:** S42 · **Objective:** *Add new partitions, logical volumes, and swap to a system non-destructively* **[RHCSA Core]**
-> **Related:** [Disks & partitioning](disks-and-partitioning.md) · [LVM fundamentals](lvm-fundamentals.md) · [Mounting & fstab](mounting-and-fstab.md) · [top & monitoring](../processes-and-resource-management/top-and-process-monitoring.md)
+> **Related:** [Disks & partitioning](disks-and-partitioning.md) · [LVM fundamentals](lvm-fundamentals.md) · [Mounting & fstab](mounting-and-fstab.md) · [top & monitoring](../processes-and-resource-management/top-and-process-monitoring.md) · [Memory management](../processes-and-resource-management/memory-management.md)
 
 ## 1. Overview
 
@@ -140,18 +140,7 @@ Prefer a drop-in in `/etc/sysctl.d/` over editing `/etc/sysctl.conf`. If a tuned
 | Why does `mkswap` matter for fstab? | It creates a new UUID; fstab entries must match. |
 | How do you persist swappiness? | A file in `/etc/sysctl.d/` (or a tuned profile). |
 
-## 11. Course Corrections
-
-| Course | Correction |
-|---|---|
-| Default swappiness "60 older, 30 RHEL 8+" | Kernel default 60; tuned profiles set 30 (virtual-guest) or 10 (throughput-performance) |
-| Range 0–100 | 0–200 on RHEL 10's kernel |
-| "Swappiness = how often swap is used" | It weights anonymous-memory reclaim vs page-cache reclaim |
-| `fallocate` first | `dd` is the documented, hole-free method |
-| Tested on Ubuntu 18.04 / CentOS 7 | Outdated; procedure verified for RHEL 10 |
-| `epel-release-latest-9` / `yum install stress` | RHEL 10 → EPEL 10, `dnf`; check `dnf info stress-ng` first |
-
-## 12. Quick Revision
+## 11. Quick Revision
 
 ```bash
 swapon --show | free -h | vmstat 1 | /proc/swaps
@@ -161,8 +150,8 @@ grow LV swap: swapoff → lvextend → mkswap (new UUID!) → swapon
 sysctl vm.swappiness ; /etc/sysctl.d/99-swappiness.conf ; sysctl --system ; pri=N
 ```
 
-## 13. Cross-References
+## 12. Cross-References
 
 - [Disks & partitioning](disks-and-partitioning.md) · [LVM fundamentals](lvm-fundamentals.md) · [Mounting & fstab](mounting-and-fstab.md)
 - [top & process monitoring](../processes-and-resource-management/top-and-process-monitoring.md)
-- tuned profiles (S83), kernel parameters/sysctl (S53): planned
+- [tuned profiles](../containers-and-virtualization/tuned-profiles.md) · [Kernel parameters (sysctl)](../boot-systemd-and-kernel/kernel-modules-and-parameters.md) · [Memory management](../processes-and-resource-management/memory-management.md)

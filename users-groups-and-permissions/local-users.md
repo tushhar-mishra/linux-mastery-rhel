@@ -1,7 +1,7 @@
 # Local User Accounts
 
 > **Sessions:** S21 · **Objective:** *Create, delete, and modify local user accounts* · *Log in and switch users* **[RHCSA Core]**
-> **Related:** [Passwords & aging](passwords-and-aging.md) · [Groups](groups.md) · [Shell startup files](shell-startup-files.md) · [Login & switching users](../networking-and-ssh/ssh-remote-access.md#4-logging-in-and-switching-users-rhcsa-core) · [sudo & privileged access](sudo-and-privileged-access.md)
+> **Related:** [Passwords & aging](passwords-and-aging.md) · [Groups](groups.md) · [Shell startup files](shell-startup-files.md) · [Login & switching users](../networking-and-ssh/ssh-remote-access.md#4-logging-in-and-switching-users-rhcsa-core) · [sudo & privileged access](sudo-and-privileged-access.md) · [Central identity (NSS/SSSD)](central-identity-nss-sssd.md)
 
 ## 1. Overview
 
@@ -44,7 +44,7 @@ grep -E '^(SYS_)?(UID|GID)_(MIN|MAX)' /etc/login.defs
 
 ### 2.3 User Private Groups (UPG)
 
-On RHEL, `useradd alice` also creates a group `alice` with the same number (`USERGROUPS_ENAB yes`) and makes it alice's **primary group**. Combined with the default umask (`0022` for root, `0002` for regular users), this keeps files private by default while allowing group collaboration (see [file permissions & umask](file-permissions.md)).
+On RHEL, `useradd alice` also creates a group `alice` with the same number (`USERGROUPS_ENAB yes`) and makes it alice's **primary group**. Because each user has a private group, a group-writable umask (`0002`) would be safe, and older RHEL releases gave regular users `0002`. **RHEL 10 gives everyone `0022` by default** (verified: `pam_umask` reads `UMASK 022` from `/etc/login.defs`; `/etc/profile` no longer switches users to `002`). Collaboration therefore relies on SGID directories plus default ACLs or an explicit umask (see [file permissions & umask](file-permissions.md#33-umask-default-permissions-rhcsa-core)).
 
 ### 2.4 Where `useradd` defaults come from
 
@@ -79,7 +79,7 @@ sudo useradd -c "Diana Prince" diana
 sudo useradd -u 2001 -G wheel,devs -c "Clark Kent" clark
 sudo useradd -s /sbin/nologin svc_backup        # service/FTP-style account, no shell login
 sudo useradd -r -s /sbin/nologin -d /var/lib/app appsvc   # system account
-sudo passwd diana                               # account is unusable until a password is set (!! in shadow)
+sudo passwd diana                               # account is unusable until a password is set (`!` in shadow on RHEL 10; `!!` on RHEL 9)
 ```
 
 ### 3.2 Modify: `usermod`
@@ -163,7 +163,7 @@ id harry; getent passwd harry                 # verify UID, groups, shell
 | User lost supplementary groups | `usermod -G` without `-a` | Re-add: `usermod -aG g1,g2 user` |
 | Home dir missing | `-M`, or `CREATE_HOME no` | `mkhomedir_helper user` or create + `cp -a /etc/skel/. ~user`, `chown -R` |
 | Files show a number instead of a name | Owner deleted | `find / -nouser`; `chown` |
-| `su: Authentication failure` | Wrong password, locked/expired account, or `!!` (never set) | `passwd -S user`; `chage -l user` |
+| `su: Authentication failure` | Wrong password, locked/expired account, or never set (`!`/`!!` in shadow) | `passwd -S user`; `chage -l user` |
 
 ## 7. Interview Questions
 

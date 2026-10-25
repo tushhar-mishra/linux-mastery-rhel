@@ -1,7 +1,7 @@
 # PAM & authselect: Authentication Policy on RHEL 10
 
 > **Sessions:** S93 · **[Advanced/Optional]** (supports password policy and privileged-access topics) · **[Production Practice]**
-> **Related:** [Passwords & aging (pwquality)](passwords-and-aging.md) · [sudo](sudo-and-privileged-access.md) · [SSH hardening](../networking-and-ssh/ssh-server-hardening.md) · [System logging (`/var/log/secure`)](../logs-scheduling-and-packages/system-logging.md)
+> **Related:** [Passwords & aging (pwquality)](passwords-and-aging.md) · [sudo](sudo-and-privileged-access.md) · [SSH hardening](../networking-and-ssh/ssh-server-hardening.md) · [System logging (`/var/log/secure`)](../logs-scheduling-and-packages/system-logging.md) · [Central identity (NSS/SSSD)](central-identity-nss-sssd.md) · [auditd](../firewall-and-selinux/auditd.md)
 
 ## 1. Overview
 
@@ -194,22 +194,18 @@ auth  required  pam_wheel.so use_uid
 | How do you enable account lockout on RHEL? | `authselect enable-feature with-faillock` + `/etc/security/faillock.conf`. |
 | Does PAM auth run for SSH key logins? | No; auth is skipped, but account and session still run. |
 
-## 9. Course Corrections
-
-| Course | Correction |
-|---|---|
-| `authselect select sssd with-faillock --force` | Replaces the profile/feature set; use `enable-feature with-faillock` (RHEL 10 may use the `local` profile) |
-| pam_listfile in sshd's **auth** section | Key logins skip auth; use the **account** section |
-| "Restart sshd" after PAM changes | Not needed; PAM files are read per login |
-| `optional`: "only used if no other modules exist" | Its result matters only if it's the only module of that type |
-| Control flags table | Add `include`, `substack`, bracket syntax |
-| `dnf install pamtester` | EPEL package |
-| Editing `/etc/security/pwquality.conf` directly | Prefer `/etc/security/pwquality.conf.d/` drop-ins |
-
-## 10. Quick Revision
+## 9. Quick Revision
 
 ````
 type control module args · auth/account/password/session · required requisite sufficient optional include
 /etc/pam.d/SERVICE · system-auth & password-auth = authselect · authselect current|list|enable-feature with-faillock
 pwquality.conf(.d): minlen dcredit=-1 … enforce_for_root · faillock.conf deny unlock_time · faillock --user U [--reset]
 limits.d (systemd: Limit*=) · time.conf svc;tty;user;Wk0900-1700 · pam_wheel use_uid · keys skip auth → use account
+````
+
+## 10. Cross-References
+
+- [Passwords & aging (pwquality)](passwords-and-aging.md)
+- [sudo](sudo-and-privileged-access.md)
+- [SSH hardening](../networking-and-ssh/ssh-server-hardening.md)
+- [System logging (`/var/log/secure`)](../logs-scheduling-and-packages/system-logging.md)

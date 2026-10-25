@@ -142,20 +142,17 @@ nmcli con up path2 ; multipath -ll    # path reinstated
 | Why not use `/dev/sdb` directly? | It's a single path; if it fails, I/O fails. Use `/dev/mapper/mpathX`. |
 | `user_friendly_names`? | Names like `mpatha` instead of WWIDs (mapping kept in `/etc/multipath/bindings`). |
 
-## 11. Course Corrections
-
-| Course | Correction |
-|---|---|
-| Both paths in 192.168.1.0/24 | Use separate subnets per path |
-| `losetup` before the fileio backstore | Not needed |
-| Demo-mode ACL attributes (sample `lsblk` shows `RO 1`) | Add `demo_mode_write_protect=0`, or use ACLs |
-| `blacklist { devnode "^sda" }` | Blacklist by WWID |
-| Custom `devices` block (readsector0, rr_min_io…) | Built-in LIO defaults are fine; legacy options |
-| `multipath -F` as routine step | Flushes unused maps; only when needed |
-
-## 12. Quick Revision
+## 11. Quick Revision
 
 ````bash
 dnf install device-mapper-multipath · mpathconf --enable --with_multipathd y · multipath -ll · multipathd show paths
 /etc/multipath.conf: defaults{user_friendly_names find_multipaths} blacklist{wwid} multipaths{multipath{wwid alias}}
 use /dev/mapper/mpathX (LVM on top) · fstab _netdev,nofail · separate subnets per path · scsi_id -g -u /dev/sdX
+````
+
+## 12. Cross-References
+
+- [iSCSI](iscsi.md)
+- [LVM fundamentals (devices file)](../storage-and-filesystems/lvm-fundamentals.md)
+- [Network bonding (path redundancy at L2)](../networking-and-ssh/network-bonding.md)
+- [NetworkManager](../networking-and-ssh/networkmanager-nmcli.md)

@@ -91,18 +91,16 @@ A higher clearance **isn't** administrative privilege; it only controls data acc
 | What does `s0-s0:c0.c1023` mean? | A range from s0 (no categories) up to s0 with all categories. |
 | Does SELinux MLS replace DAC? | No; both must allow access. |
 
-## 7. Course Corrections
-
-| Course | Correction |
-|---|---|
-| Alice "categories {ProjectA, Engineering}" with range `s2:c100` | Two categories need two category numbers (e.g., `s2:c100,c101`) |
-| Bob "categories {Engineering}" with range `s1` | `s1` has no categories; use `s1:c101` |
-| MLS presented without MCS | Targeted policy uses MCS by default (containers, VMs) |
-| Enabling MLS steps | Add `fixfiles -F onboot` (or `/.autorelabel`) and user range mappings; test environment only |
-
-## 8. Quick Revision
+## 7. Quick Revision
 
 ````
 level = sN[:cX,cY | :cA.cB] · range = low-high · MLS: no read up, no write down (+ categories) · DAC still applies
 targeted = MCS (s0 + categories) → containers/VMs: container_t:s0:cX,cY
 MLS policy: selinux-policy-mls → SELINUXTYPE=mls + permissive → fixfiles -F onboot → reboot → review → enforcing
+````
+
+## 8. Cross-References
+
+- [SELinux fundamentals](selinux-fundamentals.md)
+- [Confined users](selinux-confined-users-and-domains.md)
+- [File contexts](selinux-file-contexts.md)

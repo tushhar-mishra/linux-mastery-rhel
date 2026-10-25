@@ -288,4 +288,4 @@ PS0 PS1 PS2 PS3('#? ') PS4('+ ')   \[ \] around colors
 - [Command substitution & shell options (`set -u`, `set -a`)](command-substitution-and-shell-options.md)
 - [Command history (HIST* variables)](command-history.md)
 - [Expansion & globbing (locale)](shell-expansion-and-globbing.md)
-- Profile files (S23), scripting (S85–92): planned
+- [Profile files](../users-groups-and-permissions/shell-startup-files.md) · [Scripting](../bash-scripting-and-automation/script-basics-and-variables.md)

@@ -1,7 +1,7 @@
 # firewalld: Zones, Services, Ports, NAT & Rich Rules
 
 > **Sessions:** S69–S70 · **Objectives:** *Configure firewall settings using firewall-cmd/firewalld* · *Restrict network access using firewall-cmd/firewalld* **[RHCSA Core]**
-> **Related:** [SELinux fundamentals](selinux-fundamentals.md) · [NetworkManager](../networking-and-ssh/networkmanager-nmcli.md) · [Routing (forwarding)](../networking-and-ssh/routing.md) · [SSH hardening (port change)](../networking-and-ssh/ssh-server-hardening.md) · [systemd services](../boot-systemd-and-kernel/systemd-targets-and-services.md)
+> **Related:** [SELinux fundamentals](selinux-fundamentals.md) · [NetworkManager](../networking-and-ssh/networkmanager-nmcli.md) · [Routing (forwarding)](../networking-and-ssh/routing.md) · [SSH hardening (port change)](../networking-and-ssh/ssh-server-hardening.md) · [systemd services](../boot-systemd-and-kernel/systemd-targets-and-services.md) · [TCP/IP for operators (netfilter, conntrack)](../networking-and-ssh/tcp-ip-for-operators.md#11-netfilter-nftables--conntrack)
 
 ## 1. Overview
 
@@ -218,19 +218,7 @@ Port ranges: 0–1023 well-known (binding needs root), 1024–49151 registered, 
 | `drop` vs `block` zone? | drop silently discards; block rejects with an ICMP message. |
 | What does masquerading do? | Source NAT: rewrites the source address of forwarded traffic to the firewall's own address. |
 
-## 16. Course Corrections
-
-| Course | Correction |
-|---|---|
-| RHEL 8/9/10 "no support for iptables" | RHEL 8/9 ship an iptables-nft compatibility command (deprecated in 9); use firewall-cmd/nft |
-| RHEL 7: "remove firewalld to use iptables" | Install `iptables-services` and mask firewalld |
-| "XDP … under firewalld in RHEL 10" | firewalld manages nftables; XDP is separate eBPF technology |
-| `--change-interface` without `--permanent` | Runtime only; use `nmcli … connection.zone` |
-| Ports "1024–65535 unreserved" | Registered 1024–49151, dynamic 49152–65535 |
-| `dnf remove firewalld` exercise | Lab only; don't remove on servers |
-| ICMP block inversion "reverses allow/block" | With an empty block list it **rejects all ICMP**; listed types become allowed |
-
-## 17. Quick Revision
+## 16. Quick Revision
 
 ````bash
 firewall-cmd --state | --get-default-zone | --set-default-zone=Z | --get-active-zones | --list-all [--zone=Z] | --list-all-zones
@@ -238,3 +226,12 @@ firewall-cmd --state | --get-default-zone | --set-default-zone=Z | --get-active-
 --permanent --zone=Z --add-source=NET · nmcli con mod C connection.zone Z
 --new-service=S ; --service=S --add-port=P/tcp · --add-forward-port=port=A:proto=tcp:toport=B[:toaddr=IP] · --add-masquerade · --add-forward
 --add-rich-rule='rule family="ipv4" source address="NET" service name="ssh" accept|reject|drop' · --add-icmp-block=echo-request
+````
+
+## 17. Cross-References
+
+- [SELinux fundamentals](selinux-fundamentals.md)
+- [NetworkManager](../networking-and-ssh/networkmanager-nmcli.md)
+- [Routing (forwarding)](../networking-and-ssh/routing.md)
+- [SSH hardening (port change)](../networking-and-ssh/ssh-server-hardening.md)
+- [systemd services](../boot-systemd-and-kernel/systemd-targets-and-services.md)

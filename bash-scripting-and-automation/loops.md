@@ -142,17 +142,17 @@ for f in $(find /home -user harry -type f 2>/dev/null); do cp -a "$f" /root/foun
 | Why do variables vanish after `cmd \| while read`? | The loop ran in a subshell; use process substitution or redirection. |
 | `break` vs `continue`? | Exit the loop vs skip to the next iteration. |
 
-## 9. Course Corrections
-
-| Course | Correction |
-|---|---|
-| `for file in *.txt` without a guard | Add `[ -e "$file" ] \|\| continue` |
-| `while [ $i -le 5 ]` (unquoted) | Quote, or use `(( i <= 5 ))` |
-| No `break`/`continue`, file-processing or pipe-subshell coverage | Added (exam objective: process files and command-line input) |
-
-## 10. Quick Revision
+## 9. Quick Revision
 
 ````bash
 for x in LIST; do …; done · for i in {1..5} · for ((i=0;i<n;i++)) · for f in /dir/*.ext · for a in "$@"
 while COND; do …; done · while IFS= read -r line; do …; done < file · done < <(cmd)
 until COND; do …; done · break · continue · select · nullglob
+````
+
+## 10. Cross-References
+
+- [Conditionals & tests](conditionals-and-tests.md)
+- [Script input & arguments](script-input-and-arguments.md)
+- [Arithmetic](arithmetic.md)
+- [Expansion & globbing](../shell-and-command-line/shell-expansion-and-globbing.md)

@@ -1,7 +1,7 @@
 # IP Addressing Fundamentals (IPv4 & IPv6)
 
 > **Sessions:** S60 (theory) · **[Interview Knowledge]** · foundation for *Configure IPv4 and IPv6 addresses* **[RHCSA Core]**
-> **Related:** [NetworkManager & nmcli](networkmanager-nmcli.md) · [Routing](routing.md) · [Virtualization & lab setup](../linux-fundamentals/virtualization-and-lab-setup.md)
+> **Related:** [NetworkManager & nmcli](networkmanager-nmcli.md) · [Routing](routing.md) · [Virtualization & lab setup](../linux-fundamentals/virtualization-and-lab-setup.md) · [TCP/IP for operators](tcp-ip-for-operators.md)
 
 ## 1. Overview
 
@@ -121,19 +121,16 @@ ipcalc 192.168.10.70/26        # network, broadcast, host range (ipcalc package)
 | What's a link-local address? | Valid only on the local link (`169.254/16`, `fe80::/10`), never routed. |
 | Shorten `2001:0db8:0000:0000:0000:0000:0000:0001`. | `2001:db8::1`. |
 
-## 9. Course Corrections
-
-| Course | Correction |
-|---|---|
-| Class A "128 networks" | 126 usable (0 and 127 reserved) |
-| "Anycast (IPv6)", example 8.8.8.8 | Anycast works in both; 8.8.8.8 is IPv4 anycast |
-| "IPv6: IPsec mandatory / security built-in" | Optional in current standards; not enabled by default |
-| VM table: NAT "talks to host and other VMs" | True for VMware NAT / VirtualBox NAT Network, not VirtualBox plain NAT |
-| Garbled adapter diagram labels | Use the table above |
-
-## 10. Quick Revision
+## 9. Quick Revision
 
 `````
 RFC1918: 10/8 172.16/12 192.168/16 · loopback 127/8 ::1 · link-local 169.254/16 fe80::/10 · ULA fd00::/8 · multicast 224/4 ff00::/8
 hosts = 2^(32-prefix) - 2 · /24=254 /25=126 /26=62 /27=30 /30=2
 IPv6: drop leading zeros, one :: · SLAAC / DHCPv6 / static · no broadcast, ND instead of ARP
+`````
+
+## 10. Cross-References
+
+- [NetworkManager & nmcli](networkmanager-nmcli.md)
+- [Routing](routing.md)
+- [Virtualization & lab setup](../linux-fundamentals/virtualization-and-lab-setup.md)

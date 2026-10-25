@@ -55,7 +55,7 @@ ls -ld /shared/projects              # drwxrws--T. root projects   (T: sticky wi
 su - alice -c 'touch /shared/projects/a.txt; ls -l /shared/projects/a.txt'   # group = projects
 ```
 
-With RHEL's default user umask (`0002`), new files are group-writable. To force group `rw` regardless of each user's umask, add a **default ACL** (§4.4).
+With RHEL 10's default umask (`0022`, verified), new files are **not** group-writable, so team members can read but not edit each other's files. To give the group `rw` regardless of each user's umask, add a **default ACL** (§4.4), or set `umask 0002` for the team's users.
 
 ## 4. ACLs (POSIX Access Control Lists)
 
@@ -192,4 +192,4 @@ cp -a / tar --acls / rsync -aA preserve ACLs · lsattr / chattr +i
 - [Groups](groups.md)
 - [sudo & privileged access (instead of SUID scripts)](sudo-and-privileged-access.md)
 - [Finding files](../files-and-text-processing/finding-files.md)
-- SELinux (S71–77): planned
+- [SELinux fundamentals](../firewall-and-selinux/selinux-fundamentals.md) · [SELinux file contexts](../firewall-and-selinux/selinux-file-contexts.md)

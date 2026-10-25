@@ -51,18 +51,18 @@ Path macros (use instead of hard-coded paths): `%{_bindir}` = `/usr/bin`, `%{_sb
 ## 4. Example: Packaging a Shell Command
 
 ```bash
-mkdir -p ~/work/nehra-classes-snake-1.0
-cp nehra-classes-snake.sh ~/work/nehra-classes-snake-1.0/
-tar -czf ~/rpmbuild/SOURCES/nehra-classes-snake-1.0.tar.gz -C ~/work nehra-classes-snake-1.0
+mkdir -p ~/work/snake-game-1.0
+cp snake-game.sh ~/work/snake-game-1.0/
+tar -czf ~/rpmbuild/SOURCES/snake-game-1.0.tar.gz -C ~/work snake-game-1.0
 ```
 
 ```spec
-Name:           nehra-classes-snake
+Name:           snake-game
 Version:        1.0
 Release:        1%{?dist}
 Summary:        Snake game for the terminal
 License:        GPL-3.0-or-later
-URL:            https://www.nehraclasses.in
+URL:            https://example.com/snake-game
 Source0:        %{name}-%{version}.tar.gz
 BuildArch:      noarch
 Requires:       bash, ncurses
@@ -77,13 +77,13 @@ An ASCII snake game for the Linux terminal (W A S D to move, Q to quit).
 # nothing to build for a shell script
 
 %install
-install -D -m 0755 nehra-classes-snake.sh %{buildroot}%{_bindir}/nehra-classes-snake
+install -D -m 0755 snake-game.sh %{buildroot}%{_bindir}/snake-game
 
 %files
-%{_bindir}/nehra-classes-snake
+%{_bindir}/snake-game
 
 %changelog
-* Mon Aug 18 2025 Vikas Nehra <nehraclasses@gmail.com> - 1.0-1
+* Mon Aug 18 2025 Jane Admin <jane@example.com> - 1.0-1
 - First release
 ```
 
@@ -92,29 +92,29 @@ install -D -m 0755 nehra-classes-snake.sh %{buildroot}%{_bindir}/nehra-classes-s
 Files in `/etc/profile.d/*.sh` are **sourced** by login shells, so they need mode `0644`, not executable. They must also stay quiet for non-interactive sessions (scp, sftp, automation):
 
 ```bash
-# nehra-login.sh — first lines
+# login-banner.sh — first lines
 [[ $- == *i* && -t 1 ]] || return 0
 ```
 
 ```spec
 %install
-install -D -m 0644 nehra-login.sh %{buildroot}%{_sysconfdir}/profile.d/nehra-login.sh
+install -D -m 0644 login-banner.sh %{buildroot}%{_sysconfdir}/profile.d/login-banner.sh
 
 %files
-%{_sysconfdir}/profile.d/nehra-login.sh
+%{_sysconfdir}/profile.d/login-banner.sh
 ```
 
 ## 5. Build, Inspect, Test
 
 ```bash
-rpmbuild -ba ~/rpmbuild/SPECS/nehra-classes-snake.spec   # -bb binary only, -bs SRPM only, -bp prep only
+rpmbuild -ba ~/rpmbuild/SPECS/snake-game.spec   # -bb binary only, -bs SRPM only, -bp prep only
 ls ~/rpmbuild/RPMS/noarch/ ~/rpmbuild/SRPMS/
-rpm -qpi ~/rpmbuild/RPMS/noarch/nehra-classes-snake-1.0-1.el10.noarch.rpm   # metadata
-rpm -qpl ~/rpmbuild/RPMS/noarch/nehra-classes-snake-1.0-1.el10.noarch.rpm   # files
-rpmlint ~/rpmbuild/SPECS/nehra-classes-snake.spec ~/rpmbuild/RPMS/noarch/*.rpm   # quality checks
-sudo dnf install ./nehra-classes-snake-1.0-1.el10.noarch.rpm   # resolves Requires (better than rpm -ivh)
-nehra-classes-snake
-sudo dnf remove nehra-classes-snake
+rpm -qpi ~/rpmbuild/RPMS/noarch/snake-game-1.0-1.el10.noarch.rpm   # metadata
+rpm -qpl ~/rpmbuild/RPMS/noarch/snake-game-1.0-1.el10.noarch.rpm   # files
+rpmlint ~/rpmbuild/SPECS/snake-game.spec ~/rpmbuild/RPMS/noarch/*.rpm   # quality checks
+sudo dnf install ./snake-game-1.0-1.el10.noarch.rpm   # resolves Requires (better than rpm -ivh)
+snake-game
+sudo dnf remove snake-game
 rpmbuild --rebuild package.src.rpm                               # rebuild someone else's SRPM
 ```
 
@@ -152,19 +152,16 @@ createrepo_c /srv/repo                             # builds repodata/
 | Why `Release: 1%{?dist}`? | Adds the distribution tag (`.el10`) so builds for different releases don't collide. |
 | How do clients get your RPMs? | `createrepo_c` repo over HTTP + `.repo` file + signed packages. |
 
-## 9. Course Corrections
-
-| Course | Correction |
-|---|---|
-| `install -m 0755 … /etc/profile.d/nehra-login.sh` | Mode `0644` (sourced) + interactive guard |
-| `License: GPL` | SPDX identifier, e.g. `GPL-3.0-or-later` |
-| `sudo rpm -ivh …rpm` | `sudo dnf install ./…rpm` resolves `Requires` |
-| Hard-coded `/usr/bin`, `/etc` in `%install`/`%files` | Use `%{_bindir}`, `%{_sysconfdir}` |
-| "RPMS/x86_64/…" for a `noarch` build | Output goes to `RPMS/noarch/` |
-
-## 10. Quick Revision
+## 9. Quick Revision
 
 ```bash
 dnf install rpm-build rpmdevtools rpmlint ; rpmdev-setuptree ; SOURCES/ SPECS/ BUILD/ BUILDROOT/ RPMS/ SRPMS/
 spec: Name Version Release:1%{?dist} Summary License(SPDX) Source0 BuildArch Requires | %prep %setup -q | %build | %install %{buildroot} | %files | %changelog
 rpmbuild -ba|-bb|-bs SPEC · rpm -qpi/-qpl F.rpm · rpmlint · dnf install ./F.rpm · rpm --addsign · createrepo_c DIR
+```
+
+## 10. Cross-References
+
+- [RPM & DNF](rpm-and-dnf-package-management.md)
+- [Shell startup files (profile.d)](../users-groups-and-permissions/shell-startup-files.md)
+- [Archiving (tarballs)](../files-and-text-processing/archiving-and-compression.md)

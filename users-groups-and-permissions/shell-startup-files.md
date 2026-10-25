@@ -1,7 +1,7 @@
 # Shell Startup (Profile) Files
 
 > **Sessions:** S23 · Supports user environment tasks (PATH, umask, aliases, variables) **[RHCSA Core]**
-> **Related:** [Variables & environment](../shell-and-command-line/shell-variables-and-environment.md) · [Command history](../shell-and-command-line/command-history.md) · [Local users (`/etc/skel`)](local-users.md) · umask (S25–26, planned)
+> **Related:** [Variables & environment](../shell-and-command-line/shell-variables-and-environment.md) · [Command history](../shell-and-command-line/command-history.md) · [Local users (`/etc/skel`)](local-users.md) · [umask](file-permissions.md#33-umask-default-permissions-rhcsa-core)
 
 ## 1. Overview
 
@@ -154,4 +154,4 @@ source ~/.bashrc | su - user | bash -lx -c exit | bash --noprofile --norc | shop
 - [Command history (HIST* settings)](../shell-and-command-line/command-history.md)
 - [Shell basics (prompt)](../shell-and-command-line/shell-basics-and-command-syntax.md)
 - [Local users (`/etc/skel`)](local-users.md)
-- umask (S25–26), PAM (S93): planned
+- [umask](file-permissions.md#33-umask-default-permissions-rhcsa-core) · [PAM & authselect](pam-and-authselect.md)

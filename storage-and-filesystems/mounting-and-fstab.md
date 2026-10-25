@@ -1,7 +1,7 @@
 # Mounting, Mount Options & /etc/fstab
 
 > **Sessions:** S32–S34 · **Objectives:** *Configure systems to mount file systems at boot by UUID or label* · *Create, mount, unmount, and use VFAT, ext4, and XFS file systems* **[RHCSA Core]**
-> **Related:** [Disks & partitioning](disks-and-partitioning.md) · [Filesystems & mkfs](filesystems-and-mkfs.md) · [Filesystem hierarchy](../linux-fundamentals/filesystem-hierarchy.md) · [Special permissions (nosuid)](../users-groups-and-permissions/special-permissions-and-acls.md) · NFS/autofs (S97, planned)
+> **Related:** [Disks & partitioning](disks-and-partitioning.md) · [Filesystems & mkfs](filesystems-and-mkfs.md) · [Filesystem hierarchy](../linux-fundamentals/filesystem-hierarchy.md) · [Special permissions (nosuid)](../users-groups-and-permissions/special-permissions-and-acls.md) · [NFS & autofs](../system-services-and-shared-storage/nfs-and-autofs.md) · [Storage I/O path](storage-io-path.md)
 
 ## 1. Overview
 
@@ -140,18 +140,7 @@ umount -l /data               # lazy unmount: detach now, finish when idle (use 
 | `noexec` vs `nosuid`? | noexec blocks direct execution; nosuid ignores SUID/SGID bits. |
 | How do you find what's keeping a filesystem busy? | `lsof +f -- MNT` or `fuser -vm MNT`. |
 
-## 11. Course Corrections
-
-| Course | Correction |
-|---|---|
-| `/dev/sdd /newdir xfs defaults 0 0` | Use `UUID=`/`LABEL=` (objective requirement; device names can change) |
-| `/etc/mtab` "maintained by mount, don't edit" | It's a symlink to `/proc/self/mounts` |
-| `fisk /dev/sda` | Typo: `fdisk` |
-| `noacl` (deprecated) | Not supported on XFS; ACLs are always on |
-| `mkswap` + `swapon` only | Not persistent; add an fstab swap line and `swapon -a` |
-| fstab `ext2 defaults 0 0` | ext filesystems should normally use fsck order `2` (non-root) |
-
-## 12. Quick Revision
+## 11. Quick Revision
 
 ```bash
 mount [-t T] [-o opts] DEV|UUID=|LABEL= MNT · umount MNT · mount -o remount,ro MNT
@@ -162,9 +151,9 @@ options: ro noexec nosuid nodev noatime nofail _netdev uid= gid= umask= (vfat)
 busy: lsof +f -- MNT · fuser -vm MNT · umount -l
 ```
 
-## 13. Cross-References
+## 12. Cross-References
 
 - [Disks & partitioning](disks-and-partitioning.md)
 - [Filesystems & mkfs](filesystems-and-mkfs.md)
 - [Filesystem hierarchy](../linux-fundamentals/filesystem-hierarchy.md)
-- LVM mounts (S35), swap (S42), NFS & autofs (S97), boot recovery (S51, S67): planned
+- [LVM fundamentals](lvm-fundamentals.md) · [Swap](swap.md) · [NFS & autofs](../system-services-and-shared-storage/nfs-and-autofs.md) · [Boot recovery (broken fstab)](../boot-systemd-and-kernel/boot-recovery.md#5-fix-a-broken-etcfstab)

@@ -90,17 +90,18 @@ openssl s_client -connect www.redhat.com:443 </dev/null | head   # inspect a TLS
 | What's a digital signature? | A hash encrypted (signed) with a private key, verifiable with the public key. |
 | Why salt password hashes? | Identical passwords produce different hashes; precomputed tables become useless. |
 
-## 8. Course Corrections
-
-| Course | Correction |
-|---|---|
-| DES, 3DES, Blowfish listed as examples | DES/3DES broken/deprecated; Blowfish legacy. Use AES or ChaCha20 |
-| DSA listed for asymmetric | Obsolete; removed from modern OpenSSH |
-| "Public key encrypts, private key decrypts" (only) | For **signatures** it's the reverse: sign with private, verify with public |
-
-## 9. Quick Revision
+## 8. Quick Revision
 
 ````
 CIA: confidentiality (encryption) · integrity (hash/MAC/signature) · authentication (keys/certs)
 symmetric: AES, ChaCha20 (fast; shared key) · asymmetric: RSA, Ed25519/ECDSA, X25519 (key pair) · hybrid = both
 hash: SHA-256 (MD5/SHA-1 broken) · passwords: salted yescrypt/SHA-512 · update-crypto-policies --show
+````
+
+## 9. Cross-References
+
+- [SSH remote access](ssh-remote-access.md)
+- [SSH hardening (crypto policies)](ssh-server-hardening.md)
+- [LUKS](../storage-and-filesystems/luks-encryption.md)
+- [Passwords & hashing](../users-groups-and-permissions/passwords-and-aging.md)
+- [RPM signatures](../logs-scheduling-and-packages/rpm-and-dnf-package-management.md)

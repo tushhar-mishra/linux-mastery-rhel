@@ -85,23 +85,17 @@ grubby --default-kernel               # confirm a RHEL kernel is default
 | What does `make modules_install` do? | Installs `.ko` files into `/lib/modules/<version>/` and runs `depmod`. |
 | How do you base a custom build on the distro config? | `cp /boot/config-$(uname -r) .config; make olddefconfig`. |
 
-## 9. Course Corrections
-
-| Course | Correction |
-|---|---|
-| `dnf groupinstall` | `dnf group install` |
-| `cd linux-6.8` vs `linux-6.15.8` | Use the version you downloaded |
-| `make menuconfig` from scratch | Start from `/boot/config-$(uname -r)` + `make olddefconfig` |
-| Dependencies list | Add `dwarves` and `perl` |
-| No Secure Boot mention | Unsigned custom kernels won't boot with Secure Boot on |
-| `make install` "updates GRUB" | On RHEL it creates a BLS entry via `kernel-install` |
-| Removal not covered | `kernel-install remove <ver>` + delete `/lib/modules/<ver>` |
-| "Add as many CPU cores as possible (e.g. 24)" | `make -j"$(nproc)"` uses whatever is available |
-
-## 10. Quick Revision
+## 9. Quick Revision
 
 ```bash
 dnf group install "Development Tools" ; dnf install ncurses-devel bc flex bison openssl-devel elfutils-libelf-devel dwarves perl
 tar xf linux-X.tar.xz ; cp /boot/config-$(uname -r) .config ; make olddefconfig ; make -j$(nproc)
 make modules_install ; make install ; grubby --info=ALL ; reboot ; uname -r
 remove: kernel-install remove X ; rm -rf /lib/modules/X · Secure Boot needs signing
+```
+
+## 10. Cross-References
+
+- [GRUB2 & kernel management](grub2-and-kernel-management.md)
+- [Kernel modules & parameters](kernel-modules-and-parameters.md)
+- [Boot recovery](boot-recovery.md)

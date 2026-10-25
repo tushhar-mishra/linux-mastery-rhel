@@ -1,7 +1,7 @@
 # SELinux Fundamentals: Modes, Contexts & Domain Transitions
 
 > **Sessions:** S71–S72 · **Objectives:** *Set enforcing and permissive modes for SELinux* · *List and identify SELinux file and process context* **[RHCSA Core]**
-> **Related:** [firewalld](firewalld.md) · [File permissions (DAC)](../users-groups-and-permissions/file-permissions.md) · [Boot recovery (/.autorelabel)](../boot-systemd-and-kernel/boot-recovery.md) · [Files & directories (cp vs mv contexts)](../shell-and-command-line/files-and-directories.md) · file contexts, booleans, ports (S73–77, planned)
+> **Related:** [firewalld](firewalld.md) · [File permissions (DAC)](../users-groups-and-permissions/file-permissions.md) · [Boot recovery (/.autorelabel)](../boot-systemd-and-kernel/boot-recovery.md) · [Files & directories (cp vs mv contexts)](../shell-and-command-line/files-and-directories.md) · [File contexts](selinux-file-contexts.md) · [Booleans, ports & troubleshooting](selinux-booleans-ports-troubleshooting.md)
 
 ## 1. Overview
 
@@ -74,7 +74,7 @@ id -Z                        # your own context (unconfined_u:unconfined_r:uncon
 stat -c '%C %n' /etc/hosts   # context via stat
 ```
 
-New files inherit the **type of the parent directory** (e.g., created in `/tmp` → `user_tmp_t`). That's why `cp` into `/var/www/html` gets the right label but `mv` keeps the old one (fixed with `restorecon`, S76).
+By default a new file inherits the **type of its parent directory** (create a file in `/var/www/html` → `httpd_sys_content_t`). The policy can override that with a **type-transition rule**: for example, a file an unconfined user creates in `/tmp` (`tmp_t`) is labeled `user_tmp_t`. That's why `cp` into `/var/www/html` gets the right label but `mv` keeps the old one (fixed with `restorecon`; see [file contexts](selinux-file-contexts.md#5-how-operations-affect-labels)).
 
 ## 4. Domain Transitions
 
@@ -151,20 +151,20 @@ Typical fixes (detailed in S73–77): **relabel files** (`restorecon`, `semanage
 | What's a domain transition? | A process entering a new domain by executing an entry-point type (e.g., `passwd_exec_t` → `passwd_t`). |
 | Where are denials logged? | `/var/log/audit/audit.log` (AVC records); read with `ausearch`/`sealert`. |
 
-## 11. Course Corrections
-
-| Course | Correction |
-|---|---|
-| Disabled = "edit /etc/selinux/config" | On RHEL 9/10 use the `selinux=0` kernel argument to fully disable; relabel when re-enabling |
-| `dnf install selinux-policy … policycoreutils` | Already installed; `semanage` needs `policycoreutils-python-utils`, `sealert` needs `setroubleshoot-server` |
-| Staff mapping Step 4 "verify in a new SSH session" using `su - student` | `su` inherits the caller's context; use `ssh student@localhost` |
-| "unconfined_t by default on Fedora" | Same on RHEL (targeted policy) |
-| `semanage login -m` for a new user | `-a` adds; `-m` modifies an existing mapping |
-
-## 12. Quick Revision
+## 11. Quick Revision
 
 ```bash
 getenforce · sestatus · setenforce 0|1 · /etc/selinux/config SELINUX=enforcing · enforcing=0 / selinux=0 (kernel args)
 user:role:type:level · ls -Z · ls -dZ · ps -eZ · id -Z · new files inherit parent dir type · mv keeps, cp relabels
 passwd: unconfined_t --exec passwd_exec_t--> passwd_t --writes--> shadow_t
 semanage login -l / -a -s staff_u USER · ausearch -m AVC -ts recent · sealert -a /var/log/audit/audit.log
+```
+
+## 12. Cross-References
+
+- [firewalld](firewalld.md)
+- [File permissions (DAC)](../users-groups-and-permissions/file-permissions.md)
+- [Boot recovery (/.autorelabel)](../boot-systemd-and-kernel/boot-recovery.md)
+- [Files & directories (cp vs mv contexts)](../shell-and-command-line/files-and-directories.md)
+- [File contexts](selinux-file-contexts.md)
+- [Booleans, ports & troubleshooting](selinux-booleans-ports-troubleshooting.md)

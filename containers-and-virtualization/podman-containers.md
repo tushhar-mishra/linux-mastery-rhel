@@ -1,7 +1,7 @@
 # Podman Containers on RHEL 10
 
 > **Sessions:** S82 · **[Advanced/Optional]** (containers were removed from the RHEL 10 objectives; still essential for RHEL admins)
-> **Related:** [Virtualization vs containers](virtualization-vs-containers.md) · [SELinux file contexts (:Z)](../firewall-and-selinux/selinux-file-contexts.md) · [SELinux MCS](../firewall-and-selinux/selinux-mls-and-mcs.md) · [systemd services](../boot-systemd-and-kernel/systemd-targets-and-services.md) · [firewalld](../firewall-and-selinux/firewalld.md)
+> **Related:** [Virtualization vs containers](virtualization-vs-containers.md) · [SELinux file contexts (:Z)](../firewall-and-selinux/selinux-file-contexts.md) · [SELinux MCS](../firewall-and-selinux/selinux-mls-and-mcs.md) · [systemd services](../boot-systemd-and-kernel/systemd-targets-and-services.md) · [firewalld](../firewall-and-selinux/firewalld.md) · [Namespaces & cgroups](namespaces-and-cgroups.md) · [Linux → Kubernetes bridge](../advanced-rhel-and-career-notes/linux-foundations-of-kubernetes.md)
 
 ## 1. Overview
 
@@ -113,7 +113,7 @@ podman kube generate webpod > webpod.yaml ; podman kube play webpod.yaml   # Kub
 ```dockerfile
 FROM registry.access.redhat.com/ubi10/ubi
 RUN dnf -y install httpd && dnf clean all
-RUN echo 'Nehra Classes Are Awesome' > /var/www/html/index.html
+RUN echo 'Hello from RHEL' > /var/www/html/index.html
 EXPOSE 80
 CMD ["/usr/sbin/httpd", "-DFOREGROUND"]
 ```
@@ -198,26 +198,7 @@ Rootful Quadlets go in `/etc/containers/systemd/` and use plain `systemctl daemo
 | How do you run a container as a service on RHEL 10? | A Quadlet `.container` file + daemon-reload (+ linger for rootless). |
 | What's a pod? | Containers sharing network (and other) namespaces, managed as one unit. |
 
-## 13. Course Corrections
-
-| Course | Correction |
-|---|---|
-| "Podman version 3+ / Podman2" | RHEL 10 ships Podman 5.x |
-| CNI "still supported"; rootless via slirp4netns | Podman 5: netavark only; rootless default networking is pasta |
-| "Rootless is the default mode on RHEL 10" | Depends on who runs podman |
-| `/run/user/1000` fix by `chown` + exporting `XDG_RUNTIME_DIR` | Use a real login session |
-| `yum module install container-tools` (RHEL 8 & 9) | No module on RHEL 9/10: `dnf install container-tools` |
-| `subscription-manager attach --auto` | Not needed (Simple Content Access) |
-| `-v /html/:/usr/local/apache2/htdocs/` | Add `:Z` |
-| `podman stop -a` / `rm -a` "for pods" | `podman pod stop -a` / `podman pod rm -a` |
-| `podman generate systemd … --new` while the container still exists | Deprecated; use Quadlet; remove the manual container first |
-| `journalctl --user` run as root | Run as the user |
-| `podman generate kube` | `podman kube generate` |
-| `buildah bud`; `yum` inside images; UBI 8 images; short names | `buildah build`; `dnf`/`microdnf`; UBI 10; fully qualified names |
-| Rootless "cannot mount container filesystems" | `podman unshare podman mount` |
-| Third-party rsyslog images | Prefer trusted images (UBI, official) |
-
-## 14. Quick Revision
+## 13. Quick Revision
 
 ```bash
 podman pull|images|rmi|tag|push|save|load · podman run -d|-it|--rm --name N -p H:C -v vol:/p | -v /dir:/p:Z
@@ -225,3 +206,12 @@ podman ps -a|logs -f|exec -it|top|stats|port|inspect|stop|start|rm -f · podman 
 podman pod create -p H:C · run --pod · pod stop|rm -a · kube generate|play
 podman build -t img . · buildah from|run|copy|config|commit|build
 Quadlet: ~/.config/containers/systemd/X.container → systemctl --user daemon-reload → start X ; loginctl enable-linger USER
+```
+
+## 14. Cross-References
+
+- [Virtualization vs containers](virtualization-vs-containers.md)
+- [SELinux file contexts (:Z)](../firewall-and-selinux/selinux-file-contexts.md)
+- [SELinux MCS](../firewall-and-selinux/selinux-mls-and-mcs.md)
+- [systemd services](../boot-systemd-and-kernel/systemd-targets-and-services.md)
+- [firewalld](../firewall-and-selinux/firewalld.md)

@@ -107,22 +107,18 @@ wipefs -a /dev/vdb             # remove the LUKS signature to reuse the disk
 | Why back up the header? | Header damage makes the data unrecoverable even with the right passphrase. |
 | How do servers unlock without a person at the console? | NBDE (Clevis + Tang) or TPM2 binding. |
 
-## 9. Course Corrections
-
-| Course | Correction |
-|---|---|
-| "LUKS2 stores keys in the kernel" | The master key is stored **encrypted in the on-disk header**; it's only in kernel memory while open |
-| crypttab `myfiles /dev/sdb /etc/crypt_file` | Use `UUID=<luks uuid>` (device names can change) |
-| Key file made in `/tmp`, then moved | Create it directly in `/etc` with `umask 077`, mode `0400` |
-| `luksOpen` / `luksClose` | Still valid; modern form `cryptsetup open` / `close` |
-| `luksRemoveKey` without checks | Check `luksDump` first; never remove the last key |
-| No header backup | Add `luksHeaderBackup` |
-| `chmod 777 /myfiles` | Lab only |
-
-## 10. Quick Revision
+## 9. Quick Revision
 
 ````bash
 cryptsetup luksFormat DEV | open DEV NAME | status NAME | close NAME | luksDump DEV | isLuks DEV
 luksAddKey DEV KEYFILE | luksChangeKey DEV | luksRemoveKey DEV | luksHeaderBackup DEV --header-backup-file F
 crypttab: NAME UUID=<luksUUID> /etc/key luks ; fstab: /dev/mapper/NAME MNT xfs defaults 0 0 ; daemon-reload
 key file: umask 077 ; dd if=/dev/urandom … ; chmod 0400 · erase + wipefs to decommission
+````
+
+## 10. Cross-References
+
+- [Disks & partitioning](disks-and-partitioning.md)
+- [Mounting & fstab](mounting-and-fstab.md)
+- [LVM fundamentals](lvm-fundamentals.md)
+- [Stratis](stratis.md)

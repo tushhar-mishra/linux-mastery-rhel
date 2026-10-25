@@ -1,8 +1,9 @@
 # EX200 Objectives Map (RHEL 10)
 
-> Source: Red Hat EX200 exam page (verified Oct 2026; page states the exam is based on RHEL 10).
+> Source: Red Hat EX200 exam page (re-checked 26 Oct 2026: 62 objectives in 10 categories, exam based on RHEL 10; the page doesn't state a duration).
 > Red Hat may add, modify or remove objectives at any time, so re-check the official page before booking.
-> Practice: [lab setup](practice-lab-setup.md) · [sample exam with solutions](sample-exam-with-solutions.md)
+> Practice: [lab setup](practice-lab-setup.md) · [sample exam](sample-exam-with-solutions.md) · [mock exam 2 (full coverage, graded)](mock-exam-2.md) · [mock exam 3 (break-fix, graded)](mock-exam-3.md)
+> Track your readiness per objective, with practice tasks for each, in [COVERAGE](../COVERAGE.md); study order is in the [CURRICULUM](../CURRICULUM.md).
 
 **Exam rules that apply to every task:** no internet, no personal notes, product documentation (man, info, `/usr/share/doc`) available, and **all configuration must persist after reboot without intervention.**
 

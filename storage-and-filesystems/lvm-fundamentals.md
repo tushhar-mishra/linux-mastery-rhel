@@ -176,18 +176,7 @@ lvextend -r -L 850M /dev/vgdb/database    # aim at the middle; extent rounding s
 | `-L` vs `-l`? | Size in units vs number of extents (or a percentage like `100%FREE`). |
 | `/dev/VG/LV` vs `/dev/mapper/VG-LV`? | Same device (symlinks to `/dev/dm-N`); mapper names double internal hyphens. |
 
-## 12. Course Corrections
-
-| Course | Correction |
-|---|---|
-| `vgextend VG1 /dev/sdb2` then `lvextend … /dev/VG2/LV2` | Extend the VG that holds the LV: `vgextend VG2 /dev/sdb2` |
-| Partition type `8e` | MBR code; on GPT use "Linux LVM" (fdisk alias `lvm`; gdisk `8e00`) |
-| `yum install lvm2` / `apt` | RHEL uses `dnf`; `lvm2` is preinstalled |
-| fstab `/dev/vgdata/lvdata …` | Stable, but the objective wants `UUID=`/`LABEL=` |
-| Dump field discussion | `dump` isn't used on RHEL; field 5 is always `0` |
-| fsck pass "always 0 for vfat" | VFAT can use `2` (dosfstools provides `fsck.vfat`); XFS/swap/network → `0` |
-
-## 13. Quick Revision
+## 12. Quick Revision
 
 ```bash
 pvcreate DEV | vgcreate [-s 16M] VG PVs | lvcreate -n LV -L SIZE|-l EXTENTS|-l 100%FREE VG
@@ -198,6 +187,8 @@ umount → fstab → lvremove → vgremove → pvremove
 /dev/VG/LV = /dev/mapper/VG-LV · fstab: UUID=… · default PE 4 MiB
 ```
 
-## 14. Cross-References
+## 13. Cross-References
 
-- [Disks & partitioning](disks-and-partitioning.md) · [Filesystems & mkfs](filesystems-and-mkfs.md) · [Mounting
+- [Disks & partitioning](disks-and-partitioning.md) · [Filesystems & mkfs](filesystems-and-mkfs.md) · [Mounting & fstab](mounting-and-fstab.md)
+- [LVM snapshots & recovery](lvm-snapshots-and-recovery.md) · [VG merge/split & pvmove](lvm-vg-merge-split-and-migration.md) · [Thin provisioning & striping](lvm-thin-provisioning-and-striping.md)
+- [Swap on LVM](swap.md) · [Storage I/O path (device-mapper)](storage-io-path.md)

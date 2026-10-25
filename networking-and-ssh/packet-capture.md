@@ -1,7 +1,7 @@
 # Packet Capture & Network Sniffing: tcpdump, tshark, Wireshark
 
 > **Sessions:** S63 · **[Advanced/Optional]** · essential production troubleshooting and security awareness
-> **Related:** [Routing](routing.md) · [Bonding](network-bonding.md) · [SSH (encrypted vs plaintext)](ssh-remote-access.md) · firewalld (S69–70, planned)
+> **Related:** [Routing](routing.md) · [Bonding](network-bonding.md) · [SSH (encrypted vs plaintext)](ssh-remote-access.md) · [firewalld](../firewall-and-selinux/firewalld.md) · [TCP/IP for operators](tcp-ip-for-operators.md)
 
 ## 1. Overview
 
@@ -121,19 +121,17 @@ Telnet demonstrates the same point (`telnet-server`/`telnet` packages), but it m
 | How do you prove a service receives traffic? | `tcpdump -nn -i any port <port>` on the server and look for SYN/SYN-ACK. |
 | Why is HTTPS safe from simple sniffing? | Payload is encrypted with TLS; only metadata (IPs, ports, SNI) is visible. |
 
-## 9. Course Corrections
-
-| Course | Correction |
-|---|---|
-| `tcpdump -i ens160 -f "tcp port 22"` | `-f` isn't a filter flag in tcpdump: `tcpdump -i ens160 tcp port 22` |
-| `tshark -I ens160 -w capture.pcap` | `-i` (lowercase) selects the interface; `-I` = monitor mode |
-| ettercap/ngrep as standard tools | ettercap isn't in RHEL repos; ngrep is EPEL |
-| Telnet server lab | `telnet-server` may be missing on RHEL 10; HTTP/FTP demonstrate plaintext equally |
-| "Promiscuous mode captures all packets on the segment" | On switched networks you mostly see your own traffic |
-
-## 10. Quick Revision
+## 9. Quick Revision
 
 ```bash
 tcpdump -D · tcpdump -i IF|any -nn [-c N] [-w F|-r F] [-A|-X] [-e] 'host H and port P and not port 22'
 tshark -i IF -f "BPF" | -r F -Y 'display filter' | -V | -x | -T fields -e FIELD
 dnf install tcpdump wireshark-cli [wireshark] · root or wireshark group · authorized captures only
+```
+
+## 10. Cross-References
+
+- [Routing](routing.md)
+- [Bonding](network-bonding.md)
+- [SSH (encrypted vs plaintext)](ssh-remote-access.md)
+- [firewalld](../firewall-and-selinux/firewalld.md)

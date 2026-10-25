@@ -1,7 +1,7 @@
 # System Logging: journald, rsyslog & logrotate
 
 > **Sessions:** S55 · **Objectives:** *Locate and interpret system log files and journals* · *Preserve system journals* **[RHCSA Core]**
-> **Related:** [Job scheduling](job-scheduling.md) · [Filesystem hierarchy (/var/log)](../linux-fundamentals/filesystem-hierarchy.md) · [systemd targets & services](../boot-systemd-and-kernel/systemd-targets-and-services.md) · [grep & regex](../files-and-text-processing/grep-and-regular-expressions.md)
+> **Related:** [Job scheduling](job-scheduling.md) · [Filesystem hierarchy (/var/log)](../linux-fundamentals/filesystem-hierarchy.md) · [systemd targets & services](../boot-systemd-and-kernel/systemd-targets-and-services.md) · [grep & regex](../files-and-text-processing/grep-and-regular-expressions.md) · [auditd](../firewall-and-selinux/auditd.md)
 
 ## 1. Overview
 
@@ -189,20 +189,7 @@ faillock --user alice          # pam_faillock counters ; faillock --user alice -
 | `.crit` vs `.=crit`? | crit and above vs exactly crit. |
 | How does logrotate run on RHEL 9/10? | Via `logrotate.timer`. |
 
-## 12. Course Corrections
-
-| Course | Correction |
-|---|---|
-| "journalctl shows newest first" | Oldest first; `-r` newest first, `-e` jump to end |
-| `journalctl -xe` = "recent errors" | `-x` explanations + `-e` end; errors only = `-p err` |
-| logrotate "via /etc/cron.daily/logrotate" | `logrotate.timer` on RHEL 9/10 |
-| Rotated names `messages.1`, `.2.gz` | RHEL uses `dateext`: `messages-YYYYMMDD` |
-| `/var/log/dmesg`, `faillog`, `tallylog`, `pam_tally2`, `auth.log`, `kern.log`, `dpkg.log`, `yum.log`, `/var/log/syslog` | Not RHEL 10 defaults (see §2) |
-| `/var/log/utmp`; "who uses wtmp" | utmp is `/run/utmp` (who/w); wtmp is read by `last` |
-| `-/path` "better performance" | Legacy, ignored by rsyslog v8 |
-| "rsyslog uses TCP instead of UDP" | Supports both (`@` UDP, `@@` TCP) |
-
-## 13. Quick Revision
+## 12. Quick Revision
 
 ```bash
 journalctl -e|-r|-f|-n N|-u U|-b [-1]|--list-boots|-k|-p err|--since …|-g PATTERN|-o json-pretty|--disk-usage|--vacuum-size=
@@ -210,3 +197,11 @@ persistent: mkdir /var/log/journal ; systemd-tmpfiles --create --prefix /var/log
 rsyslog: facility.priority action · .=crit .none · @udp @@tcp · rsyslogd -N1 · logger -p local4.crit "msg"
 logrotate: /etc/logrotate.conf + .d/ · logrotate -d / -f · logrotate.timer · dateext
 /var/log: messages secure cron maillog boot.log dnf.log audit/audit.log · who w last lastb faillock
+```
+
+## 13. Cross-References
+
+- [Job scheduling](job-scheduling.md)
+- [Filesystem hierarchy (/var/log)](../linux-fundamentals/filesystem-hierarchy.md)
+- [systemd targets & services](../boot-systemd-and-kernel/systemd-targets-and-services.md)
+- [grep & regex](../files-and-text-processing/grep-and-regular-expressions.md)

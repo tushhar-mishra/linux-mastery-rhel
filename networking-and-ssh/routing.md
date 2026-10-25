@@ -1,7 +1,7 @@
 # Routing on RHEL 10: Routes, Gateways & Static Routing
 
 > **Sessions:** S62 · supports *Configure IPv4 and IPv6 addresses* (default gateway) **[RHCSA Core]** · static/policy routing **[Production Practice]**
-> **Related:** [NetworkManager & nmcli](networkmanager-nmcli.md) · [IP fundamentals](ip-addressing-fundamentals.md) · [Kernel parameters (sysctl)](../boot-systemd-and-kernel/kernel-modules-and-parameters.md) · [Packet capture](packet-capture.md) · firewalld (S69–70, planned)
+> **Related:** [NetworkManager & nmcli](networkmanager-nmcli.md) · [IP fundamentals](ip-addressing-fundamentals.md) · [Kernel parameters (sysctl)](../boot-systemd-and-kernel/kernel-modules-and-parameters.md) · [Packet capture](packet-capture.md) · [firewalld](../firewall-and-selinux/firewalld.md) · [TCP/IP for operators](tcp-ip-for-operators.md)
 
 ## 1. Overview
 
@@ -140,22 +140,19 @@ A second default route in the **main** table with a higher metric is **not** fai
 | What's `ip route get` for? | Shows the exact route, interface and source address the kernel would use. |
 | When do you need policy routing? | When the routing decision depends on something other than the destination (e.g., source address). |
 
-## 10. Course Corrections
-
-| Course | Correction |
-|---|---|
-| Keyfile `routes1=10.10.10.0/24,192.168.229.1` | Key is `route1=`; gateway should match the example (`.2`) |
-| Second default route "used if 192.168.229.2 becomes unreachable" | No reachability-based failover; only if the preferred route disappears |
-| Table 201 "for traffic from 192.168.229.133" | Rule is for `192.168.1.100` |
-| Diagram `via 100.0.1` | `via 10.0.0.1` |
-| `/etc/sysctl.conf` + `sysctl -p` | Drop-in in `/etc/sysctl.d/`, `sysctl --system` |
-| firewalld fix: `--add-masquerade` + `--add-icmp-block-inversion` | Use `--add-forward`. Masquerade NATs (hides) sources. icmp-block-inversion **blocks** all ICMP unless listed |
-| `route -n` throughout | Legacy; `ip route` |
-
-## 11. Quick Revision
+## 10. Quick Revision
 
 ````bash
 ip route [show|get DEST] · ip -6 route · ip route add|replace|del NET via GW [dev D] · default via GW
 nmcli con mod C ipv4.gateway GW | +ipv4.routes "NET/P GW [METRIC]" | ipv4.never-default yes ; nmcli con up C
 keyfile: route1=NET/P,GW · router: /etc/sysctl.d/…ip_forward=1 ; firewall-cmd --permanent --add-forward
 policy: ip rule add from SRC table N ; ip route add default via GW table N · nmcli ipv4.routing-rules
+````
+
+## 11. Cross-References
+
+- [NetworkManager & nmcli](networkmanager-nmcli.md)
+- [IP fundamentals](ip-addressing-fundamentals.md)
+- [Kernel parameters (sysctl)](../boot-systemd-and-kernel/kernel-modules-and-parameters.md)
+- [Packet capture](packet-capture.md)
+- [firewalld](../firewall-and-selinux/firewalld.md)

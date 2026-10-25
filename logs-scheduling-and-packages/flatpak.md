@@ -122,20 +122,16 @@ flatpak uninstall -y Y
 | System vs user install? | System: `/var/lib/flatpak`, root, for all users. User: `~/.local/share/flatpak`, no root. |
 | How do you remove leftover runtimes? | `flatpak uninstall --unused`. |
 
-## 8. Course Corrections
-
-| Course | Correction |
-|---|---|
-| "RHEL Workstation may have the Fedora remote" | RHEL provides the `rhel` remote (`redhat-flatpak-repo`) |
-| `flatpak export …` / install from the exported path | No such command; offline transfer: `flatpak create-usb` or `flatpak build-bundle` [Advanced] |
-| `flatpak --default-system=true` / `--default-user=true` | Not real options; system scope is the default, `--user` selects user scope |
-| Q14: `flatpak uninstall --unused` removes VLC and its deps | Uninstall VLC first, then `--unused` |
-| Flathub URL `https://flathub.org/repo/flathub.flatpakrepo` | Canonical: `https://dl.flathub.org/repo/flathub.flatpakrepo` |
-
-## 9. Quick Revision
+## 8. Quick Revision
 
 ````bash
 flatpak remote-add [--user] --if-not-exists NAME URL · remotes -d · remote-ls NAME · remote-modify --disable · remote-delete
 flatpak search X · install [--user] -y REMOTE APPID · run APPID · list --app|--runtime · info · update -y
 flatpak uninstall -y APPID ; flatpak uninstall -y --unused · override [--reset] · repair
 system: /var/lib/flatpak · user: ~/.local/share/flatpak · rhel remote: oci+https://flatpaks.redhat.io/rhel/
+````
+
+## 9. Cross-References
+
+- [RPM & DNF](rpm-and-dnf-package-management.md)
+- [RHEL 9 vs 10 (desktop apps moved to Flatpak)](../linux-fundamentals/rhel-9-vs-rhel-10.md)

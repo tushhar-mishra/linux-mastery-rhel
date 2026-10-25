@@ -1,7 +1,7 @@
 # Process Priority & nice/renice
 
 > **Sessions:** S30 · **Objective:** *Adjust process scheduling* **[RHCSA Core]**
-> **Related:** [top & monitoring](top-and-process-monitoring.md) · [Processes & signals](processes-and-signals.md) · tuned profiles (S83, planned)
+> **Related:** [top & monitoring](top-and-process-monitoring.md) · [Processes & signals](processes-and-signals.md) · [tuned profiles](../containers-and-virtualization/tuned-profiles.md) · [cgroups (CPU weight & quota)](../containers-and-virtualization/namespaces-and-cgroups.md) · [systemd unit files](../boot-systemd-and-kernel/systemd-unit-files.md)
 
 ## 1. Overview
 
@@ -117,4 +117,4 @@ ionice -c3 · chrt (RT, careful) · systemd Nice=/CPUWeight= for persistence
 
 - [top & process monitoring](top-and-process-monitoring.md)
 - [Processes & signals](processes-and-signals.md)
-- systemd units (S50), tuned profiles (S83): planned
+- [systemd unit files (`Nice=`, `CPUWeight=`)](../boot-systemd-and-kernel/systemd-unit-files.md) · [tuned profiles](../containers-and-virtualization/tuned-profiles.md)

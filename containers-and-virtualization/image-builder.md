@@ -123,17 +123,16 @@ Build data lives under `/var/lib/osbuild-composer/` (and caches under `/var/cach
 | How do you download a finished image? | `composer-cli compose image <UUID>`. |
 | Why golden images? | Consistent, fast, auditable deployments across VMs/clouds. |
 
-## 9. Course Corrections
-
-| Course | Correction |
-|---|---|
-| `composer-cli compose download <UUID>` | No such command; `composer-cli compose image <UUID>` |
-| `net-tools` in the blueprint | Deprecated; use `iproute` tools |
-| Password hash in the blueprint with the clear-text password in a comment | Never record the clear-text password; prefer SSH keys |
-| `edge-installer.iso` as an example type | RHEL for Edge types belong to RHEL 8/9; check `compose types` |
-
-## 10. Quick Revision
+## 9. Quick Revision
 
 ````bash
 dnf install osbuild-composer composer-cli cockpit-image-builder ; systemctl enable --now osbuild-composer.socket
 blueprints push|list|show|depsolve|save|delete · compose types|start BP TYPE|status|log|logs|image|info|delete UUID
+````
+
+## 10. Cross-References
+
+- [Cockpit](cockpit-web-console.md)
+- [KVM](kvm-virtualization.md)
+- [RPM & DNF](../logs-scheduling-and-packages/rpm-and-dnf-package-management.md)
+- [Passwords & hashing](../users-groups-and-permissions/passwords-and-aging.md)

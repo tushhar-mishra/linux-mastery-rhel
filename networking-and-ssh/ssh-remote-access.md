@@ -192,18 +192,7 @@ Debugging: `ssh -v` / `-vvv` on the client; `journalctl -u sshd` or `/var/log/se
 | `scp -P` vs `ssh -p`? | Same purpose (port); scp uses capital `-P` because `-p` preserves times/modes. |
 | `su -` vs `su`? | `su -` starts a login shell with the target user's environment; `su` keeps the current environment. |
 
-## 10. Course Corrections
-
-| Course | Correction |
-|---|---|
-| "First connection asks to trust the server's RSA fingerprint" | RHEL 10 has ECDSA/Ed25519 host keys; typically an ED25519 fingerprint |
-| scp headings swapped ("remote to local" shows local → remote) | Fixed in §3.5 |
-| `ssh-keygen -t rsa -b 4096` as the default | RHEL 10 defaults to Ed25519 |
-| "Leave passphrase empty" | Prefer a passphrase + `ssh-agent` (empty only for tightly restricted automation keys) |
-| `scp ~/.ssh/id_rsa.pub user@remote:~/.ssh/authorized_keys` | Overwrites existing keys; use `ssh-copy-id` or append (§3.3) |
-| X11 test with `firefox &` | Firefox is a Flatpak on RHEL 10; use a simple X client; server needs `xauth` |
-
-## 11. Quick Revision
+## 10. Quick Revision
 
 ````bash
 ssh [-p P] [-i KEY] user@host ['cmd'] · ssh -v · ssh-keygen [-t ed25519] · ssh-copy-id user@host · ssh-keygen -R host · ssh-keygen -lf KEY.pub
@@ -211,3 +200,13 @@ ssh [-p P] [-i KEY] user@host ['cmd'] · ssh -v · ssh-keygen [-t ed25519] · ss
 scp f u@h:/dir/ · scp u@h:/f . · scp -r -P P · sftp u@h · rsync -av src/ u@h:/dst/
 ssh-agent / ssh-add [-l] · ~/.ssh/config Host alias · -L -R -D -J -X
 su - user · su user · sudo -i · who · w · last · tty
+````
+
+## 11. Cross-References
+
+- [SSH server hardening](ssh-server-hardening.md)
+- [Cryptography basics](cryptography-basics.md)
+- [rsync & remote backups](rsync-and-remote-backups.md)
+- [NetworkManager](networkmanager-nmcli.md)
+- [sudo](../users-groups-and-permissions/sudo-and-privileged-access.md)
+- [Local users](../users-groups-and-permissions/local-users.md)

@@ -200,19 +200,7 @@ Background jobs started from a terminal normally receive SIGHUP when it closes. 
 | Alias vs function? | An alias is a text substitution for the first word. A function takes arguments and logic, and works in scripts. |
 | Why can `printf` and `/usr/bin/printf` behave differently? | The first is the bash builtin, the second the coreutils binary; their option and escape support differ slightly. |
 
-## 9. Course Corrections
-
-| Item | Course says | Correct |
-|---|---|---|
-| S9 Q14 | `echo World` prints no newline | `echo` always adds a newline; `echo -e "World\n"` adds an **extra blank line** |
-| S9 Q17 | Double-quoted and unquoted `!!` work | Interactive bash expands `!!` there; use the forms in §2.3 |
-| S9 Q8–9 | `set -v` shows the expanded alias | `set -v` shows the line **as typed**; `set -x` shows the expanded command |
-| S9 Q12 | `which ls` → `/bin/ls` | `/usr/bin/ls` on RHEL (`/bin` is a symlink) |
-| S11 `\` example | Escaped spaces "merge multiple spaces into one" | Escaped spaces are **preserved** (output has 3 spaces) |
-| S11 `&& \|\|` | "Ternary-like" | Not equivalent to if/else (§4.2) |
-| S11 summary table | `\|\|` rows garbled | Rebuilt in §4 |
-
-## 10. Quick Revision
+## 9. Quick Revision
 
 ```bash
 printf '[%s]\n' args…        # count/inspect arguments
@@ -223,11 +211,11 @@ type -a cmd | alias | unalias | \cmd | command cmd
 set +H   # stop ! history expansion
 ```
 
-## 11. Cross-References
+## 10. Cross-References
 
 - [Variables & environment](shell-variables-and-environment.md) (variable quoting)
 - [Expansion & globbing](shell-expansion-and-globbing.md) (expansion order)
 - [Command substitution & options](command-substitution-and-shell-options.md) (`set -x`, subshells)
 - [I/O redirection & pipes](../files-and-text-processing/io-redirection-and-pipes.md)
 - [Processes, signals & job control](../processes-and-resource-management/processes-and-signals.md)
-- Scripting conditions (S87–90): planned
+- [Scripting conditions](../bash-scripting-and-automation/conditionals-and-tests.md)

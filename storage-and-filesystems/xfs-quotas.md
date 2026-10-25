@@ -124,17 +124,7 @@ ext4 uses the `quota` package: mount with `usrquota,grpquota`, then `quotacheck 
 | How do you enable XFS quotas? | Mount options (`uquota`, `gquota`, `pquota`) in fstab, then unmount/mount. |
 | `disable` vs `off`? | `disable` stops enforcement; `off` stops accounting too and requires a remount to re-enable. |
 
-## 10. Course Corrections
-
-| Course | Correction |
-|---|---|
-| fstab `/dev/sda1 /xfsquota …` | Use `UUID=` |
-| `chmod 777 /xfsquota` | Lab only; `1777` (sticky) at least |
-| Project quota on the mount point itself | Normally a subdirectory |
-| `usermod -g admin testuser` "add to group" | Changes the **primary** group, which is what makes group quotas apply |
-| Re-enable after `off` | Not possible until remount |
-
-## 11. Quick Revision
+## 10. Quick Revision
 
 ```bash
 fstab: defaults,uquota,gquota,pquota → umount/mount (not remount) → xfs_quota -x -c 'state' MNT
@@ -143,7 +133,7 @@ limit [-u|-g|-p] bsoft= bhard= isoft= ihard= NAME | report -ugph | quota -h USER
 disable/enable (enforcement) · off (needs remount)
 ```
 
-## 12. Cross-References
+## 11. Cross-References
 
 - [Filesystems & mkfs](filesystems-and-mkfs.md) · [Mounting & fstab](mounting-and-fstab.md)
 - [Local users](../users-groups-and-permissions/local-users.md) · [Groups](../users-groups-and-permissions/groups.md) · [Special permissions (SGID)](../users-groups-and-permissions/special-permissions-and-acls.md)

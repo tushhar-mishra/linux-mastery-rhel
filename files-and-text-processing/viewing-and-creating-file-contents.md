@@ -106,8 +106,8 @@ CRLF line endings in scripts cause errors like `/bin/bash^M: bad interpreter`.
 ### 3.2 `echo` vs `printf`
 
 ```bash
-echo "Nehra Classes Are Awesome." > nehraclasses.txt
-echo '"Igniting the Minds"' >> nehraclasses.txt    # single quotes keep the double quotes literally
+echo "Hello from RHEL." > greeting.txt
+echo '"Quotes preserved"' >> greeting.txt    # single quotes keep the double quotes literally
 echo -n "no newline"            # suppress the trailing newline
 echo -e "a\tb\nc"               # interpret escapes (bash builtin echo)
 printf '%s\n' line1 line2 > f   # one argument per line, predictable everywhere
@@ -195,8 +195,8 @@ EOF
 | 6 | Reverse it | `tac ten.txt` | |
 | 7 | Count lines | `wc -l ten.txt` | |
 | 8 | Count characters | `wc -m ten.txt` | `wc -c` counts **bytes** |
-| 9 | Create with echo | `echo "Nehra Classes Are Awesome." > nehraclasses.txt` | |
-| 10 | Append a quoted line | `echo '"Igniting the Minds"' >> nehraclasses.txt` | Single quotes keep the inner `"` |
+| 9 | Create with echo | `echo "Hello from RHEL." > greeting.txt` | |
+| 10 | Append a quoted line | `echo '"Quotes preserved"' >> greeting.txt` | Single quotes keep the inner `"` |
 
 ## 9. Quick Revision
 
@@ -211,4 +211,4 @@ cmd | sudo tee [-a] /etc/file      # write root-owned files
 
 - [Archiving & compression](archiving-and-compression.md) (`zcat`, `zless`, `xzgrep`)
 - [Redirection & pipes](io-redirection-and-pipes.md) · [Text filters](text-filters.md) · [grep & regex](grep-and-regular-expressions.md) · [vi & vim](vi-and-vim.md)
-- Journal & logs (S55): `logs-scheduling-and-packages/` (planned)
+- [System logging & journal](../logs-scheduling-and-packages/system-logging.md)

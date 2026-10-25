@@ -1,7 +1,7 @@
 # Filesystem Check & Repair (e2fsck, fsck, xfs_repair)
 
 > **Sessions:** S48 · **[Advanced/Optional]** (not a named RHEL 10 objective) · essential production troubleshooting
-> **Related:** [Filesystems & mkfs](filesystems-and-mkfs.md) · [Mounting & fstab](mounting-and-fstab.md) · [Filesystem hierarchy (read-only remounts)](../linux-fundamentals/filesystem-hierarchy.md) · boot & rescue (S49–51, planned)
+> **Related:** [Filesystems & mkfs](filesystems-and-mkfs.md) · [Mounting & fstab](mounting-and-fstab.md) · [Filesystem hierarchy (read-only remounts)](../linux-fundamentals/filesystem-hierarchy.md) · [Boot recovery & rescue](../boot-systemd-and-kernel/boot-recovery.md)
 
 ## 1. Overview
 
@@ -123,17 +123,7 @@ Rescue and emergency procedures are covered in S51/S67.
 | How do you repair a damaged ext4 superblock? | Find backups (`dumpe2fs`), then `e2fsck -b <backup>`. |
 | How do you check the root filesystem? | ext4: `fsck.mode=force` at boot; XFS: repair from rescue media. |
 
-## 10. Course Corrections
-
-| Course | Correction |
-|---|---|
-| "Force unmount (`umount -l`) before repair" | Dangerous; lazy unmount leaves it in use. Fully unmount instead |
-| fstab `/dev/sdb /ext3_data ext3 defaults 0 1` | Pass `1` is for root only; data uses `2` (and `UUID=`) |
-| One options table for `fsck` | `-A -R -M -t` are front-end options; `-n -y -p -f -c -b` belong to e2fsck |
-| "NEVER run fsck on XFS: will damage data" | `fsck.xfs` is a harmless no-op; use `xfs_repair` |
-| `xfs_repair -L` as an optional step | Try mounting (log replay) first; `-L` is the last resort |
-
-## 11. Quick Revision
+## 10. Quick Revision
 
 ```bash
 UNMOUNT FIRST (no -l) → read-only check → repair → mount → check lost+found
@@ -141,3 +131,11 @@ ext: e2fsck -n | -f | -f -y | -p | -b BACKUP ; dumpe2fs | grep -i superblock ; m
 fsck -A -R -M -t TYPE -N (front end) · fstab pass 1 root / 2 others / 0 xfs
 xfs: mount+umount (replay) → xfs_repair -n → xfs_repair → -L last resort
 root: fsck.mode=force (ext4) · rescue media (XFS)
+```
+
+## 11. Cross-References
+
+- [Filesystems & mkfs](filesystems-and-mkfs.md)
+- [Mounting & fstab](mounting-and-fstab.md)
+- [Filesystem hierarchy (read-only remounts)](../linux-fundamentals/filesystem-hierarchy.md)
+- [Boot recovery & rescue](../boot-systemd-and-kernel/boot-recovery.md)

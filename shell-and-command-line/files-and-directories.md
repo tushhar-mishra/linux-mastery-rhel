@@ -1,7 +1,7 @@
 # Working with Files & Directories
 
 > **Sessions:** S6 (practice) · theory supplemented · **Objective:** *Create, delete, copy, and move files and directories* **[RHCSA Core]**
-> **Related:** [Filesystem hierarchy](../linux-fundamentals/filesystem-hierarchy.md) · [Shell basics](shell-basics-and-command-syntax.md) · [Expansion & globbing](shell-expansion-and-globbing.md) · [Finding files](../files-and-text-processing/finding-files.md) · [File permissions](../users-groups-and-permissions/file-permissions.md) · [Links & inodes](../users-groups-and-permissions/links.md) · SELinux contexts (S72–76, planned)
+> **Related:** [Filesystem hierarchy](../linux-fundamentals/filesystem-hierarchy.md) · [Shell basics](shell-basics-and-command-syntax.md) · [Expansion & globbing](shell-expansion-and-globbing.md) · [Finding files](../files-and-text-processing/finding-files.md) · [File permissions](../users-groups-and-permissions/file-permissions.md) · [Links & inodes](../users-groups-and-permissions/links.md) · [SELinux file contexts](../firewall-and-selinux/selinux-file-contexts.md)
 
 ## 1. Overview
 
@@ -245,5 +245,5 @@ mv into service dirs → restorecon -Rv
 - [Finding files](../files-and-text-processing/finding-files.md)
 - [File permissions & umask](../users-groups-and-permissions/file-permissions.md) · [Special permissions & ACLs (sticky bit)](../users-groups-and-permissions/special-permissions-and-acls.md)
 - [Inodes, hard links & symbolic links](../users-groups-and-permissions/links.md)
-- SELinux contexts & `restorecon` (S72–76): `firewall-and-selinux/` (planned)
-- rsync (S68): `networking-and-ssh/` (planned)
+- [SELinux contexts & `restorecon`](../firewall-and-selinux/selinux-file-contexts.md)
+- [rsync](../networking-and-ssh/rsync-and-remote-backups.md)

@@ -72,7 +72,7 @@ systemctl restart vsftpd
 `````bash
 ftp localhost                 # log in as a local user → lands in /home/<user>
 # vsftpd.conf: chroot_local_user=YES  (and allow_writeable_chroot=YES if the home is writable)
-echo vikasnehra >> /etc/vsftpd/user_list      # with userlist_deny=YES → denied
+echo alice >> /etc/vsftpd/user_list      # with userlist_deny=YES → denied
 # userlist_deny=NO → ONLY users in user_list may log in
 `````
 
@@ -132,21 +132,17 @@ Modern web browsers no longer support `ftp://`. Use a CLI or GUI client (e.g., F
 | `ftpusers` vs `user_list`? | ftpusers always denies (PAM); user_list is a configurable allow/deny list. |
 | SELinux types for shared content? | `public_content_t` (read), `public_content_rw_t` (write, with booleans). |
 
-## 12. Course Corrections
-
-| Course | Correction |
-|---|---|
-| `listen_port=3434` + firewall only | Also `semanage port -a -t ftp_port_t -p tcp 3434` |
-| `semanage fcontext -a -t public_content_t "/ftp"` | `'/ftp(/.*)?'` + `restorecon -Rv /ftp`; chroot root not writable |
-| `chcon` (option 1) | Not persistent |
-| Anonymous `put test.txt` works by default | Needs upload options, a writable labeled dir and `ftpd_anon_write` |
-| Testing via browser (`ftp://`) | Browsers removed FTP support |
-| "Data port 20" only | Port 20 is active mode only; passive uses high ports |
-| Local users see the whole filesystem | Use `chroot_local_user=YES` |
-
-## 13. Quick Revision
+## 12. Quick Revision
 
 `````bash
 dnf install vsftpd ; systemctl enable --now vsftpd ; firewall ftp · /etc/vsftpd/{vsftpd.conf,ftpusers,user_list}
 anonymous_enable · local_enable · write_enable · anon_upload_enable · anon_root · chroot_local_user · userlist_deny · listen_port
 SELinux: public_content_t / public_content_rw_t · ftpd_anon_write · ftpd_full_access · ftp_port_t
+`````
+
+## 13. Cross-References
+
+- [SELinux file contexts](../firewall-and-selinux/selinux-file-contexts.md)
+- [SELinux booleans & ports](../firewall-and-selinux/selinux-booleans-ports-troubleshooting.md)
+- [firewalld](../firewall-and-selinux/firewalld.md)
+- [SSH (SFTP alternative)](../networking-and-ssh/ssh-remote-access.md)

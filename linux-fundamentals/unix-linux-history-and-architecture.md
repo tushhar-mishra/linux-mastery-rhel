@@ -157,4 +157,4 @@ C is sometimes called "middle-level" because it gives low-level memory control w
 
 - [Filesystem hierarchy](filesystem-hierarchy.md)
 - [Shell basics (how bash runs commands)](../shell-and-command-line/shell-basics-and-command-syntax.md)
-- Kernel modules: `boot-systemd-and-kernel/` (S53, planned)
+- [Kernel modules & parameters](../boot-systemd-and-kernel/kernel-modules-and-parameters.md) · [Processes & system calls](../processes-and-resource-management/processes-and-system-calls.md)

@@ -113,20 +113,17 @@ rsync -avh backup@192.168.229.130:/backupdestination/ /restore/                 
 | Why is `--delete` dangerous? | It removes destination files missing from the source; mistakes propagate. |
 | How do you schedule rsync securely? | Dedicated user and restricted key, cron/systemd timer, logs, locking, monitoring. |
 
-## 10. Course Corrections
-
-| Course | Correction |
-|---|---|
-| `yum install rsync`, `yum repolist all` | `dnf` |
-| `rsync -v ~/backup/* /tmp/backup/` | Use `-a`; `~/backup/` (the glob skips dotfiles) |
-| `ssh-keygen` then copy `/root/.ssh/id_rsa.pub` | RHEL 10 default key is `id_ed25519.pub` |
-| `scp id_rsa.pub root@…:/root/.ssh/authorized_keys` | Overwrites existing keys; use `ssh-copy-id` |
-| `* * * * * bash /root/backup.sh` | Every minute only for tests; add `flock`, logging, a real schedule |
-| Root-to-root SSH | Prefer a dedicated backup user with a restricted key |
-
-## 11. Quick Revision
+## 10. Quick Revision
 
 ````bash
 rsync -avhP SRC/ user@host:/DST/ · -n (dry run) · --delete (mirror) · --exclude · -e "ssh -p P -i KEY" · -aAXH · --link-dest
 src/ = contents · src = directory · src/* skips dotfiles
 key: ssh-keygen -t ed25519 -f KEY -N '' ; ssh-copy-id -i KEY.pub user@host · cron/timer + flock + log + test restores
+````
+
+## 11. Cross-References
+
+- [SSH remote access](ssh-remote-access.md)
+- [Job scheduling (cron, timers)](../logs-scheduling-and-packages/job-scheduling.md)
+- [Archiving & compression](../files-and-text-processing/archiving-and-compression.md)
+- [LVM snapshots](../storage-and-filesystems/lvm-snapshots-and-recovery.md)

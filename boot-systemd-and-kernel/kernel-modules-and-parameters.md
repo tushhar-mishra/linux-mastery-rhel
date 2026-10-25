@@ -157,21 +157,17 @@ make ; insmod hello.ko ; dmesg | tail -2 ; lsmod | grep hello ; rmmod hello
 | How do you make a sysctl persistent? | A file in `/etc/sysctl.d/`, then `sysctl --system`. |
 | What's in `/proc/sys`? | Runtime kernel tunables, one file per parameter. |
 
-## 9. Course Corrections
-
-| Course | Correction |
-|---|---|
-| `/etc/modules` for boot loading | Debian; RHEL uses `/etc/modules-load.d/*.conf` |
-| `blacklist` "prevents loading" | Only automatic loading; add `install … /bin/false` |
-| `modules_disabled` as a toggle | One-way until reboot |
-| `update-grub` / "quiet splash" | Ubuntu; RHEL uses `grubby` and `rhgb quiet` |
-| `MODULE_LICENSE("Nehra Classes")`, `init_module()`/`cleanup_module()` | Use `"GPL"` and `module_init()`/`module_exit()` |
-| `ftp ftp.kernel.org` | FTP service retired; use https://www.kernel.org |
-| `yum install kernel-devel kernel-headers` | `dnf install kernel-devel-$(uname -r) kernel-headers` |
-
-## 10. Quick Revision
+## 9. Quick Revision
 
 ````bash
 lsmod | modinfo [-p|-F] M | modprobe [-r] M | insmod F.ko | rmmod M | depmod -a | modprobe --show-depends M
 /etc/modules-load.d/*.conf (boot) · /etc/modprobe.d/*.conf: options / blacklist / install M /bin/false · dracut -f
 sysctl -a | sysctl KEY | sysctl -w KEY=V | /etc/sysctl.d/99-x.conf + sysctl --system · /proc/sys
+````
+
+## 10. Cross-References
+
+- [GRUB2 & kernel arguments](grub2-and-kernel-management.md)
+- [Boot process](boot-process.md)
+- [Swap (vm.swappiness)](../storage-and-filesystems/swap.md)
+- [Kernel compilation](kernel-compilation.md)

@@ -102,20 +102,17 @@ nmcli con add type bridge con-name br0 ifname br0          # for VMs; add ports 
 | Does bonding double the speed of a single download? | No; a single flow uses one port (except balance-rr). |
 | How do you see which port is active? | `cat /proc/net/bonding/bond0`. |
 
-## 9. Course Corrections
-
-| Course | Correction |
-|---|---|
-| Failover test disconnects `ens160` (not a bond port) | Disconnect the active **port** shown in `/proc/net/bonding/bond0` |
-| Existing NIC profiles not mentioned | Delete/disable them so they don't compete with the port profiles |
-| `master bond0` syntax only | Still accepted; current terms: `port-type bond controller bond0` |
-| Modes 5 and 6 missing | Added (balance-tlb, balance-alb) |
-| No `miimon` | Set `bond.options "mode=…,miimon=100"` |
-
-## 10. Quick Revision
+## 9. Quick Revision
 
 ```bash
 nmcli con add type bond con-name bond0 ifname bond0 bond.options "mode=active-backup,miimon=100" ipv4.method manual ipv4.addresses …
 nmcli con add type ethernet con-name bond0-portN ifname NIC port-type bond controller bond0
 nmcli con up bond0 · cat /proc/net/bonding/bond0 · nmcli dev disconnect ACTIVE_PORT (test)
 modes: 0 rr · 1 active-backup · 2 xor · 3 broadcast · 4 802.3ad(LACP) · 5 tlb · 6 alb
+```
+
+## 10. Cross-References
+
+- [NetworkManager & nmcli](networkmanager-nmcli.md)
+- [Routing](routing.md)
+- [Packet capture](packet-capture.md)

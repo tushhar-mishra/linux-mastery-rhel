@@ -151,20 +151,17 @@ if [ -d "$1" ]; then echo yes; else echo no; exit 1; fi
 | `-e` vs `-f`? | Exists (any type) vs is a regular file. |
 | When use `case`? | Multiple choices on one value: menus, options, patterns. |
 
-## 11. Course Corrections
-
-| Course | Correction |
-|---|---|
-| `if [20 -eq 12]`, `if [$num -gt 25]` … | Spaces required inside brackets |
-| `[ -e $filename ]` (unquoted) throughout file tests | Quote; empty input wrongly reports "exists" |
-| `[ $var1 == $var2 ]` | `[ "$var1" = "$var2" ]` |
-| "You MUST quote the right side" for `<`/`>` | Quoting matters for `==` patterns; `<`/`>` compare either way |
-| `-a` / `-o` as alternatives | Obsolescent; use `&&`/`\|\|` |
-| `echo -e "…\c"` prompts | `read -rp "…"` |
-
-## 12. Quick Revision
+## 11. Quick Revision
 
 ```bash
 if CMD; then …; elif CMD; then …; else …; fi · [ ] needs spaces · quote "$vars"
 strings: = != -z -n · ints: -eq -ne -gt -ge -lt -le · (( a > b )) · [[ $x == pat* ]] [[ $x =~ re ]]
 files: -e -f -d -L -r -w -x -s -b -c -p -nt -ot · && || ! · case $v in a|b) …;; *) …;; esac
+```
+
+## 12. Cross-References
+
+- [Script input](script-input-and-arguments.md)
+- [Loops](loops.md)
+- [Arithmetic](arithmetic.md)
+- [Control operators & exit codes](../shell-and-command-line/quoting-and-control-operators.md)

@@ -1,7 +1,7 @@
 # RHCSA Practice Lab Setup (VirtualBox/KVM + Vagrant)
 
 > **Sessions:** S102 · Supports all objectives (practice environment)
-> **Related:** [Virtualization & lab setup](../linux-fundamentals/virtualization-and-lab-setup.md) · [Sample exam with solutions](sample-exam-with-solutions.md) · [Objectives map](exam-objectives-map.md) · [KVM](../containers-and-virtualization/kvm-virtualization.md)
+> **Related:** [Virtualization & lab setup](../linux-fundamentals/virtualization-and-lab-setup.md) · [Sample exam with solutions](sample-exam-with-solutions.md) · [Objectives map](exam-objectives-map.md) · [KVM](../containers-and-virtualization/kvm-virtualization.md) · [Mock exam 2](mock-exam-2.md) · [Mock exam 3](mock-exam-3.md)
 
 ## 1. Goal
 
@@ -89,10 +89,3 @@ Halt the VMs, then add two virtual disks to `server1` (VirtualBox: Settings → 
 | RHEL 10 kernel panic / "CPU not supported" | CPU lacks x86-64-v3 | Newer host CPU, or a distribution build for older CPUs |
 | `vagrant up` can't find the box | Wrong box name | `vagrant box list`; check the catalog |
 | Private network unreachable | Host-only adapter issue | Recreate the host-only network; `ip a` in guests |
-
-## 8. Course Corrections
-
-| Course | Correction |
-|---|---|
-| Rocky Linux 9 "most close to RHEL 9/10" | Use 10.x images (or RHEL 10 via a Developer Subscription) for RHEL 10 practice |
-| Extra disks for "Stratis, VDO, RAID" | Not RHEL 10 objectives; focus on GPT, LVM, swap, filesystems |

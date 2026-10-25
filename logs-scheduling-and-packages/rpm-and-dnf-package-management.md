@@ -181,26 +181,18 @@ dnf install -y <pkg>             # proves the repos work
 | How do you undo a bad update? | `dnf history`, then `dnf history undo <id>` (or rollback). |
 | What does `rpm -V` tell you? | Which files changed since installation (size, digest, mode, owner…). |
 
-## 10. Course Corrections
-
-| Course | Correction |
-|---|---|
-| `dnf module list/enable` as a feature | No modularity on RHEL 10 |
-| `yum update all` | Not a command; `dnf upgrade` |
-| `yum upgrade` "also removes obsoletes, update doesn't" | In dnf they're the same command |
-| `yum upgrade –refresh` | `dnf upgrade --refresh` |
-| `rpm -e package.rpm` | `rpm -e <name>` |
-| `mount -o loop /dev/sr0 /mnt` | `-o loop` is for ISO files; `mount -o ro /dev/sr0 /mnt` |
-| `yum grouplist` / `groupinstall` | `dnf group list` / `dnf group install` |
-| `--exclude=openssh*` | Quote it: `--exclude='openssh*'` |
-| `subscription-manager attach --auto` / `--pool` | Not needed with Simple Content Access |
-| `rhel-9-for-x86_64-…-rpms` | RHEL 10: `rhel-10-for-x86_64-baseos-rpms` / `…-appstream-rpms` |
-| Repo name "Red Hat Enterprise Linux 9" / expected `LocalRepo` | Inconsistent with the repo defined; names are free text, IDs must match your file |
-
-## 11. Quick Revision
+## 10. Quick Revision
 
 ```bash
 /etc/yum.repos.d/*.repo: [id] name baseurl enabled gpgcheck gpgkey · dnf repolist [all] · dnf config-manager --add-repo URL
 dnf search|info|provides|list|install|install ./f.rpm|remove|autoremove|upgrade|check-update|history [undo N]|group install|clean all
 rpm -qa|-q|-qi|-ql|-qc|-qd|-qf FILE|-qpl F.rpm|-qR|-V|-K|-e NAME|--import KEY
 subscription-manager register ; repos --list-enabled · DVD: mount -o ro /dev/sr0 /mnt/iso + file:///mnt/iso/{BaseOS,AppStream}
+```
+
+## 11. Cross-References
+
+- [Flatpak](flatpak.md)
+- [RPM package building](rpm-package-building.md)
+- [Lab setup (local DVD repo)](../linux-fundamentals/virtualization-and-lab-setup.md)
+- [GRUB2 & kernel packages](../boot-systemd-and-kernel/grub2-and-kernel-management.md)

@@ -1,7 +1,7 @@
 # Filesystem Hierarchy (RHEL 10)
 
 > **Sessions:** S3 · **Verified:** Oct 2026
-> **Related:** [SSH](../networking-and-ssh/ssh-remote-access.md) · [Files & directories](../shell-and-command-line/files-and-directories.md) · [Disks & partitioning](../storage-and-filesystems/disks-and-partitioning.md) · [Mounting & fstab](../storage-and-filesystems/mounting-and-fstab.md) · boot (`boot-systemd-and-kernel/`, planned)
+> **Related:** [SSH](../networking-and-ssh/ssh-remote-access.md) · [Files & directories](../shell-and-command-line/files-and-directories.md) · [Disks & partitioning](../storage-and-filesystems/disks-and-partitioning.md) · [Mounting & fstab](../storage-and-filesystems/mounting-and-fstab.md) · [Boot process](../boot-systemd-and-kernel/boot-process.md)
 
 ## 1. Overview
 
@@ -76,13 +76,13 @@ This is why `/usr` can be read-only and why `/var` often gets its own filesystem
 | `/etc/fstab` | Persistent mounts | [mounting & fstab](../storage-and-filesystems/mounting-and-fstab.md) |
 | `/etc/passwd`, `/etc/shadow`, `/etc/group` | Users, password hashes, groups | [local users](../users-groups-and-permissions/local-users.md) |
 | `/etc/sudoers`, `/etc/sudoers.d/` | Privileged access (`visudo`) | [sudo](../users-groups-and-permissions/sudo-and-privileged-access.md) |
-| `/etc/hostname`, `/etc/hosts`, `/etc/resolv.conf` | Hostname, static names, DNS (resolv.conf is managed by NetworkManager) | networking (planned) |
-| `/etc/NetworkManager/system-connections/` | Network keyfiles | networking (planned) |
+| `/etc/hostname`, `/etc/hosts`, `/etc/resolv.conf` | Hostname, static names, DNS (resolv.conf is managed by NetworkManager) | [nmcli §9](../networking-and-ssh/networkmanager-nmcli.md#9-hostname--name-resolution-supplemented-rhcsa-core) |
+| `/etc/NetworkManager/system-connections/` | Network keyfiles | [nmcli](../networking-and-ssh/networkmanager-nmcli.md) |
 | `/etc/ssh/sshd_config`, `/etc/ssh/sshd_config.d/` | SSH server config | [SSH](../networking-and-ssh/ssh-remote-access.md) |
-| `/etc/yum.repos.d/*.repo` | Repository definitions | packages (planned) |
-| `/etc/selinux/config` | SELinux mode at boot | SELinux (planned) |
-| `/etc/systemd/system/` | Admin unit files and overrides | systemd (planned) |
-| `/etc/default/grub` | GRUB defaults | boot (planned) |
+| `/etc/yum.repos.d/*.repo` | Repository definitions | [RPM & DNF](../logs-scheduling-and-packages/rpm-and-dnf-package-management.md) |
+| `/etc/selinux/config` | SELinux mode at boot | [SELinux](../firewall-and-selinux/selinux-fundamentals.md) |
+| `/etc/systemd/system/` | Admin unit files and overrides | [systemd units](../boot-systemd-and-kernel/systemd-unit-files.md) |
+| `/etc/default/grub` | GRUB defaults | [GRUB2](../boot-systemd-and-kernel/grub2-and-kernel-management.md) |
 | `/etc/os-release`, `/etc/redhat-release` | OS identification | — |
 
 ## 4. Commands
@@ -160,4 +160,4 @@ systemd-tmpfiles --cat-config | grep -E '^[dDqQ] /(var/)?tmp'   # [Advanced] tmp
 - [Finding files](../files-and-text-processing/finding-files.md)
 - [Disks & partitioning](../storage-and-filesystems/disks-and-partitioning.md) · [Filesystems & mkfs](../storage-and-filesystems/filesystems-and-mkfs.md) · [Mounting & fstab](../storage-and-filesystems/mounting-and-fstab.md)
 - [Links & inodes](../users-groups-and-permissions/links.md)
-- Boot (S49–53), logs (S55), filesystem repair (S48): planned
+- [Boot process](../boot-systemd-and-kernel/boot-process.md) · [System logging](../logs-scheduling-and-packages/system-logging.md) · [Filesystem repair](../storage-and-filesystems/filesystem-check-and-repair.md)

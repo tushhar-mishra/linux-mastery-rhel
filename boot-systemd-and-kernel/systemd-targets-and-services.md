@@ -1,7 +1,7 @@
 # systemd Targets & Service Management
 
 > **Sessions:** S50 (targets; service essentials **supplemented**) · **Objectives:** *Boot systems into different targets manually* · *Configure systems to boot into a specific target automatically* · *Start, stop, and check the status of network services* · *Start and stop services and configure services to start automatically at boot* **[RHCSA Core]**
-> **Related:** [Boot process](boot-process.md) · [Boot recovery](boot-recovery.md) · [Processes & signals](../processes-and-resource-management/processes-and-signals.md)
+> **Related:** [Boot process](boot-process.md) · [Boot recovery](boot-recovery.md) · [Processes & signals](../processes-and-resource-management/processes-and-signals.md) · [systemd unit files (writing & hardening units)](systemd-unit-files.md)
 
 ## 1. Overview
 
@@ -109,19 +109,17 @@ firewall-cmd --permanent --add-service=http ; firewall-cmd --reload   # network 
 | What does `mask` do? | Links the unit to `/dev/null` so it can't be started, even as a dependency. |
 | Why `daemon-reload`? | systemd re-reads unit files only when told to. |
 
-## 8. Course Corrections
-
-| Course | Correction |
-|---|---|
-| "Runlevel 2 = multi-user, no network" | On RHEL, runlevels 2/3/4 all map to `multi-user.target` |
-| Boot-loop fix via `rescue.target` / `emergency.target` | Needs root's password (locked by default on RHEL 10); `systemd.unit=multi-user.target` is simpler |
-| "Find the line starting with linux or linux16" | RHEL 10 uses `linux`; `linux16` was BIOS-era |
-| Chroot from live media to fix `default.target` | Works, but the GRUB override is faster |
-
-## 9. Quick Revision
+## 8. Quick Revision
 
 ````bash
 systemctl get-default | set-default multi-user.target | isolate graphical.target | rescue | emergency
 GRUB: e → linux … systemd.unit=multi-user.target → Ctrl+X
 systemctl status|start|stop|restart|reload|enable|disable [--now] svc | is-active | is-enabled | mask | unmask
 systemctl edit svc ; daemon-reload ; --failed ; journalctl -u svc
+````
+
+## 9. Cross-References
+
+- [Boot process](boot-process.md)
+- [Boot recovery](boot-recovery.md)
+- [Processes & signals](../processes-and-resource-management/processes-and-signals.md)

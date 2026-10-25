@@ -1,7 +1,7 @@
 # Disks, Device Naming & Partitioning (GPT)
 
 > **Sessions:** S31, S33 · **Objectives:** *List, create, and delete partitions on GPT disks* · *Add new partitions … non-destructively* **[RHCSA Core]**
-> **Related:** [Filesystems & mkfs](filesystems-and-mkfs.md) · [Mounting & fstab](mounting-and-fstab.md) · [Filesystem hierarchy](../linux-fundamentals/filesystem-hierarchy.md) · LVM (S35–41, planned) · swap (S42, planned)
+> **Related:** [Filesystems & mkfs](filesystems-and-mkfs.md) · [Mounting & fstab](mounting-and-fstab.md) · [Filesystem hierarchy](../linux-fundamentals/filesystem-hierarchy.md) · [LVM fundamentals](lvm-fundamentals.md) · [Swap](swap.md)
 
 ## 1. Overview
 
@@ -154,17 +154,7 @@ wipefs -a /dev/vdb      # remove the partition table signature from a lab disk �
 | Name for partition 1 on the first NVMe disk? | `/dev/nvme0n1p1`. |
 | Does `mkfs` erase data? | No; it writes new metadata. Old data can often be recovered. |
 
-## 9. Course Corrections
-
-| Course | Correction |
-|---|---|
-| `mke2fs /dev/sda` / `mount /dev/sda /testdir` | `sda` is often the OS disk; verify with `lsblk`. Exam tasks use partitions/LVs |
-| NVMe "up to 32 GB/s (Gen4)" | Typical NVMe SSD (×4 lanes): ~7–8 GB/s Gen4, ~14 GB/s Gen5 |
-| Naming lists only `hd*`/`sd*` | Also `vd*` (virtio), `nvme0n1p1`, `sr0`, `dm-*` / `/dev/mapper/*` |
-| `/proc/scsi/scsi`, `lshw` | May be absent/not installed; use `lsblk`, `lsscsi` |
-| `badblocks -ws`, `dd` to erase | Destructive; on SSDs use `blkdiscard` |
-
-## 10. Quick Revision
+## 9. Quick Revision
 
 ```bash
 lsblk [-f] | blkid | fdisk -l DISK | ls -l /dev/disk/by-uuid/ | partprobe DISK | wipefs [-a]
@@ -173,9 +163,9 @@ parted -s DISK mklabel gpt | mkpart NAME FSTYPE START END | set N lvm on | print
 names: sdX vdX nvme0n1p1 sr0 dm-N /dev/mapper/* · GPT: 128 parts, backup header, ZiB
 ```
 
-## 11. Cross-References
+## 10. Cross-References
 
 - [Filesystems & mkfs](filesystems-and-mkfs.md)
 - [Mounting & fstab](mounting-and-fstab.md)
 - [Filesystem hierarchy](../linux-fundamentals/filesystem-hierarchy.md)
-- LVM (S35–41), swap (S42), RAID (S43): planned
+- [LVM fundamentals](lvm-fundamentals.md) · [Swap](swap.md) · [RAID (mdadm)](raid-mdadm.md)

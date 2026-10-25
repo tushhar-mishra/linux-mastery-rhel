@@ -1,7 +1,7 @@
 # Inodes, Hard Links & Symbolic Links
 
 > **Sessions:** S28 · **Objective:** *Create hard and soft links* **[RHCSA Core]**
-> **Related:** [Files & directories](../shell-and-command-line/files-and-directories.md) · [Filesystem hierarchy (UsrMove symlinks)](../linux-fundamentals/filesystem-hierarchy.md) · [Finding files (`-inum`, `-samefile`)](../files-and-text-processing/finding-files.md) · [File permissions](file-permissions.md)
+> **Related:** [Files & directories](../shell-and-command-line/files-and-directories.md) · [Filesystem hierarchy (UsrMove symlinks)](../linux-fundamentals/filesystem-hierarchy.md) · [Finding files (`-inum`, `-samefile`)](../files-and-text-processing/finding-files.md) · [File permissions](file-permissions.md) · [Processes & system calls (fds, deleted-open files)](../processes-and-resource-management/processes-and-system-calls.md#6-file-descriptors)
 
 ## 1. Overview
 
@@ -142,4 +142,4 @@ rm dirlink (no trailing slash!) · cp follows links, cp -a keeps them
 - [Filesystem hierarchy](../linux-fundamentals/filesystem-hierarchy.md)
 - [Finding files](../files-and-text-processing/finding-files.md)
 - [File permissions](file-permissions.md)
-- systemd unit symlinks (S50), alternatives (S57): planned
+- [systemd services (enable = symlinks)](../boot-systemd-and-kernel/systemd-targets-and-services.md) · [RPM & DNF](../logs-scheduling-and-packages/rpm-and-dnf-package-management.md)

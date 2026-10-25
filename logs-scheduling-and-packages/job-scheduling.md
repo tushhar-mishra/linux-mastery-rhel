@@ -1,7 +1,7 @@
 # Job Scheduling: at, batch, cron, anacron & systemd Timers
 
 > **Sessions:** S54 (systemd timers **supplemented**) · **Objective:** *Schedule tasks using at, cron, and systemd timer units* **[RHCSA Core]**
-> **Related:** [System logging](system-logging.md) · [systemd targets & services](../boot-systemd-and-kernel/systemd-targets-and-services.md) · [Shell variables (cron environment)](../shell-and-command-line/shell-variables-and-environment.md)
+> **Related:** [System logging](system-logging.md) · [systemd targets & services](../boot-systemd-and-kernel/systemd-targets-and-services.md) · [Shell variables (cron environment)](../shell-and-command-line/shell-variables-and-environment.md) · [systemd unit files](../boot-systemd-and-kernel/systemd-unit-files.md) · [Robust scripts](../bash-scripting-and-automation/robust-scripts.md)
 
 ## 1. Overview
 
@@ -228,19 +228,7 @@ OnCalendar=*:0/15  → daemon-reload → enable --now x.timer → list-timers
 | Advantages of systemd timers? | Journal logging, `Persistent=` catch-up, dependencies, resource control, `list-timers` visibility. |
 | What does `*/15` mean? | Every 15 units of that field (e.g., every 15 minutes). |
 
-## 11. Course Corrections
-
-| Course | Correction |
-|---|---|
-| `@weekly` = `0 0 * * mon` | `0 0 * * 0` (Sunday) |
-| `/var/spool/at` "legacy directory" | It's the active at spool on RHEL 10 |
-| `rm -rf /tmp/*` in the at example | Unnecessary and dangerous; removed |
-| Only `.deny` files explained | `.allow` files take precedence |
-| `/etc/crontab` example lines | Need a user field (also in `/etc/cron.d/`) |
-| anacron "runs via systemd timer or cron" | On RHEL: `/etc/cron.hourly/0anacron` |
-| systemd timers not covered | Added (exam objective) |
-
-## 12. Quick Revision
+## 11. Quick Revision
 
 ````bash
 at TIME / at now +5 minutes · atq · at -c N · atrm N · batch · systemctl enable --now atd
@@ -248,3 +236,10 @@ crontab -e|-l|-r|-u U · m h dom mon dow cmd · */N , - · @reboot @daily · \% 
 /etc/crontab & /etc/cron.d/ (user field) · /etc/cron.{allow,deny} · /etc/at.{allow,deny} · /var/log/cron
 /etc/anacrontab · /var/spool/anacron
 timer: OnCalendar= Persistent=true WantedBy=timers.target · daemon-reload · enable --now X.timer · list-timers · systemd-analyze calendar
+````
+
+## 12. Cross-References
+
+- [System logging](system-logging.md)
+- [systemd targets & services](../boot-systemd-and-kernel/systemd-targets-and-services.md)
+- [Shell variables (cron environment)](../shell-and-command-line/shell-variables-and-environment.md)

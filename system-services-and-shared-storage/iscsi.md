@@ -103,19 +103,7 @@ iscsiadm -m node -T IQN -p 192.168.229.132 -o delete   # forget the node record
 | How is access controlled? | ACLs by initiator IQN, optionally CHAP authentication. |
 | Why `_netdev` in fstab? | The network (and iSCSI login) must be up before mounting. |
 
-## 7. Course Corrections
-
-| Course | Correction |
-|---|---|
-| Target: `systemctl enable --now iscsid` | Target side needs `target.service`; iscsid is the initiator daemon |
-| Login `iscsiadm -m node -T IQN 192.168.229.132 -l` | `-p 192.168.229.132` is required |
-| Backstore `/dev/sda`; client `mkfs.ext4 /dev/sda` | `sda` is often the OS disk; use a dedicated device and identify the LUN via `/dev/disk/by-path` |
-| Ports "860 and 3260 TCP/UDP" | 3260/tcp |
-| `ifconfig` | `ip addr` |
-| No fstab / persistence for the client | UUID + `_netdev,nofail`; `iscsi.service` enabled |
-| `losetup` before fileio (multipath lab) | Not needed; fileio uses the file directly |
-
-## 8. Quick Revision
+## 7. Quick Revision
 
 `````
 target: dnf install targetcli ; systemctl enable --now target ; targetcli
@@ -123,3 +111,11 @@ target: dnf install targetcli ; systemctl enable --now target ; targetcli
   firewall iscsi-target (3260/tcp)
 initiator: dnf install iscsi-initiator-utils · /etc/iscsi/initiatorname.iscsi (restart iscsid) ·
   iscsiadm -m discovery -t st -p IP · -m node -T IQN -p IP -l / -u / -o delete · -m session -P 3 · fstab UUID _netdev,nofail
+`````
+
+## 8. Cross-References
+
+- [Multipath](multipath.md)
+- [Disks & partitioning](../storage-and-filesystems/disks-and-partitioning.md)
+- [LVM fundamentals](../storage-and-filesystems/lvm-fundamentals.md)
+- [Mounting & fstab (`_netdev`)](../storage-and-filesystems/mounting-and-fstab.md)

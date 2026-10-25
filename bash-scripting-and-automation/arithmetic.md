@@ -100,18 +100,16 @@ res=$(echo "scale=2; $n1 / $n2" | bc)   # into a variable
 | Can bash handle decimals? | No; use `bc`, `awk` or another language. |
 | Why prefer `$(( ))` over `expr`? | Built-in (faster), no escaping, no surprising exit codes. |
 
-## 8. Course Corrections
-
-| Course | Correction |
-|---|---|
-| "Modulus doesn't work with decimals in bc" | Works with `scale=0` (`22.5 % 8.5` → 5.5); with `bc -l` the result is ~0 |
-| `pi=$(echo "h=10;4*a(1)" \| bc -l)` | `scale=10` was intended; `h=10` just sets an unused variable |
-| ``x=`echo "12+5" \| bc` `` | `x=$(echo "12+5" \| bc)` |
-| `($num2)^($num1)` with decimals | bc `^` needs an integer exponent |
-| Calculator without input validation / divide-by-zero check | Validate input; guard against 0 |
-
-## 9. Quick Revision
+## 8. Quick Revision
 
 ```bash
 $(( a+b )) $(( a/b )) $(( a%b )) $(( a**b )) · ((i++)) ((x+=2)) · let · declare -i · $((16#ff)) · $((10#08))
 expr 5 \* 3 · echo "scale=3; 22.5/8.5" | bc · bc -l: sqrt s c a l e · awk 'BEGIN{print 22.5/8.5}'
+```
+
+## 9. Cross-References
+
+- [Script basics (quoting)](script-basics-and-variables.md)
+- [Conditionals (`(( ))`)](conditionals-and-tests.md)
+- [Loops](loops.md)
+- [awk](../files-and-text-processing/awk.md)

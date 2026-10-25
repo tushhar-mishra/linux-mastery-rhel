@@ -100,16 +100,7 @@ sha256sum /data/cal.txt                       # optional: compare
 | What does `vgsplit` require? | LVs must be entirely on the moving PVs (or entirely not) and inactive. |
 | How do you see which disks an LV uses? | `lvs -a -o +devices` (or `pvs -o +lv_name`, `dmsetup deps`). |
 
-## 9. Course Corrections
-
-| Course | Correction |
-|---|---|
-| `ls -l /dev/ \| grep sd*` | Unquoted `sd*` is expanded by the shell first; use `ls -l /dev/sd*` or `lsblk` |
-| Migration ends at `vgreduce` | Also `pvremove /dev/sda1` to wipe the label |
-| "Create new primary partition" | MBR wording; on GPT just create a partition |
-| `md5sum` validation | Fine for copy checks; `sha256sum` preferred |
-
-## 10. Quick Revision
+## 9. Quick Revision
 
 ```bash
 vgchange -an SRC ; vgmerge DEST SRC ; lvchange -ay DEST/LV
@@ -119,9 +110,9 @@ pvcreate NEW → vgextend VG NEW → pvmove [-n LV] OLD [NEW] → vgreduce VG OL
 pvmove (resume) · pvmove --abort · vgreduce --removemissing
 ```
 
-## 11. Cross-References
+## 10. Cross-References
 
 - [LVM fundamentals](lvm-fundamentals.md)
 - [LVM snapshots & recovery](lvm-snapshots-and-recovery.md)
 - [Mounting & fstab](mounting-and-fstab.md)
-- Thin provisioning, striping, VG export/import (S39–41): planned
+- [Thin provisioning & striping](lvm-thin-provisioning-and-striping.md) · [Moving VGs between systems](lvm-moving-vgs-between-systems.md)

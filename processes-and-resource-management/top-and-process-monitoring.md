@@ -1,7 +1,7 @@
 # top & Process Monitoring
 
 > **Sessions:** S29 (top), S56 (see [system resource monitoring](system-resource-monitoring.md)) · **Objective:** *Identify CPU/memory intensive processes and kill processes* · *Adjust process scheduling* **[RHCSA Core]**
-> **Related:** [Processes & signals](processes-and-signals.md) · [Priority & nice](process-priority-and-nice.md) · [System resource monitoring](system-resource-monitoring.md) · [Filesystem hierarchy (`/proc`)](../linux-fundamentals/filesystem-hierarchy.md)
+> **Related:** [Processes & signals](processes-and-signals.md) · [Priority & nice](process-priority-and-nice.md) · [System resource monitoring](system-resource-monitoring.md) · [Filesystem hierarchy (`/proc`)](../linux-fundamentals/filesystem-hierarchy.md) · [Memory management](memory-management.md) · [Processes & system calls](processes-and-system-calls.md)
 
 ## 1. Overview
 
@@ -20,7 +20,7 @@ MiB Swap:   2048.0 total,   2048.0 free,      0.0 used.   1084.0 avail Mem
 | Line | Meaning |
 |---|---|
 | Uptime / users | Time since boot; logged-in sessions (same as `uptime`, `who`) |
-| **Load average** | 1/5/15-minute exponential averages of processes **running (R) or in uninterruptible sleep (D)** |
+| **Load average** | 1/5/15-minute exponentially damped averages of the number of **tasks (threads)** that are runnable (R) or in uninterruptible sleep (D). A process with 40 threads all in D adds 40 |
 | Tasks | Totals by state (sleeping = S+D; stopped = T; zombie = Z) |
 | %Cpu(s) | See the CPU states table below |
 | Mem / Swap | `free`, `used`, `buff/cache` (reclaimable cache), **`avail Mem`** (what new processes can really use) |
@@ -139,7 +139,7 @@ cat /proc/loadavg /proc/meminfo
 
 | Question | Answer |
 |---|---|
-| What does load average measure on Linux? | Average number of processes runnable or in uninterruptible (D) sleep over 1/5/15 minutes. |
+| What does load average measure on Linux? | Exponentially damped 1/5/15-minute averages of tasks (threads) that are runnable or in uninterruptible (D) sleep. Unlike most UNIXes, Linux includes D, so I/O stalls raise load. For CPU-only pressure use `vmstat` `r` or `/proc/pressure/cpu`. |
 | Is a load of 8 bad? | Depends on CPU count and on whether it's CPU or I/O (`wa`). |
 | VIRT vs RES? | VIRT is reserved address space; RES is physical RAM in use. |
 | Why is "free" memory always low? | The kernel uses spare RAM as cache; `available` is the real headroom. |
@@ -161,4 +161,4 @@ uptime nproc free -h vmstat 1 ps --sort=-%cpu
 - [Priority & nice](process-priority-and-nice.md)
 - [System resource monitoring (vmstat, iostat, mpstat, sar)](system-resource-monitoring.md)
 - [Filesystem hierarchy (`/proc`)](../linux-fundamentals/filesystem-hierarchy.md)
-- tuned profiles (S83): planned
+- [tuned profiles](../containers-and-virtualization/tuned-profiles.md) · [Memory management](memory-management.md) · [Performance & observability tools](../advanced-rhel-and-career-notes/performance-and-observability.md)

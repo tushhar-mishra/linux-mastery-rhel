@@ -1,7 +1,7 @@
 # I/O Redirection & Pipes
 
 > **Sessions:** S16 · **Objective:** *Use input-output redirection (>, >>, |, 2>, etc.)* **[RHCSA Core]**
-> **Related:** [Viewing & creating files (heredoc, tee)](viewing-and-creating-file-contents.md) · [Text filters](text-filters.md) · [Quoting & control operators](../shell-and-command-line/quoting-and-control-operators.md) · [Shell options (noclobber, pipefail)](../shell-and-command-line/command-substitution-and-shell-options.md)
+> **Related:** [Viewing & creating files (heredoc, tee)](viewing-and-creating-file-contents.md) · [Text filters](text-filters.md) · [Quoting & control operators](../shell-and-command-line/quoting-and-control-operators.md) · [Shell options (noclobber, pipefail)](../shell-and-command-line/command-substitution-and-shell-options.md) · [Processes & system calls (fds, dup2)](../processes-and-resource-management/processes-and-system-calls.md#6-file-descriptors) · [grep & regex](grep-and-regular-expressions.md)
 
 ## 1. Overview
 
@@ -161,4 +161,4 @@ set -C / >|   set -o pipefail   sort -o f f   : > log (truncate)   lsof +L1
 - [Text filters & pipelines](text-filters.md)
 - [Finding files (`2>/dev/null`)](finding-files.md)
 - [Shell options (noclobber, pipefail)](../shell-and-command-line/command-substitution-and-shell-options.md)
-- Logs & journal (S55): planned
+- [System logging & journal](../logs-scheduling-and-packages/system-logging.md)

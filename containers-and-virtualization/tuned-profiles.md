@@ -124,18 +124,16 @@ tuned-adm active                     # verify; it persists across reboots
 | Static vs dynamic tuning? | Static applies once; dynamic adjusts with load (off by default). |
 | How do you create a custom profile? | `/etc/tuned/profiles/NAME/tuned.conf` with `include=` + overrides. |
 
-## 9. Course Corrections
-
-| Course | Correction |
-|---|---|
-| Tuned "dynamically adjusts settings" by default | Dynamic tuning is disabled by default |
-| `[vm] swappiness=10` | Use `[sysctl] vm.swappiness=10` |
-| `sudo` for `tuned-adm active/list/recommend` | Not required (needed for changes) |
-| "Fix verify mismatch with `sysctl -w`" | Find what overrides the setting; `sysctl -w` is only temporary |
-| `systemctl restart tuned` to see a new profile | Not required; `tuned-adm list` reads profiles directly |
-
-## 10. Quick Revision
+## 9. Quick Revision
 
 ````bash
 systemctl enable --now tuned · tuned-adm list|active|recommend|profile NAME|auto_profile|profile_info|verify|off
 custom: /etc/tuned/profiles/NAME/tuned.conf → [main] include= · [sysctl] · [cpu] · [vm] · [disk]
+````
+
+## 10. Cross-References
+
+- [Kernel parameters (sysctl)](../boot-systemd-and-kernel/kernel-modules-and-parameters.md)
+- [Swap (swappiness)](../storage-and-filesystems/swap.md)
+- [Resource monitoring](../processes-and-resource-management/system-resource-monitoring.md)
+- [systemd services](../boot-systemd-and-kernel/systemd-targets-and-services.md)

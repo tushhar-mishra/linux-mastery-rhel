@@ -125,21 +125,17 @@ Don't use `grub2-install` on UEFI systems with Secure Boot; it bypasses the sign
 | Why does RHEL keep several kernels? | `installonly` packages: a fallback if a new kernel fails to boot. |
 | Where's the real GRUB config on UEFI? | `/boot/grub2/grub.cfg`; the ESP copy is a stub. |
 
-## 11. Course Corrections
-
-| Course | Correction |
-|---|---|
-| `grub2-mkconfig -o /boot/efi/EFI/redhat/grub.cfg` for UEFI | Use `/boot/grub2/grub.cfg` for both on RHEL 9/10 |
-| `awk -F\' '$1=="menuentry " …' /etc/grub2.cfg` / `grep '^menuentry'` | No menuentry lines with BLS; use `grubby --info=ALL` |
-| `update-grub` | Ubuntu command; RHEL: `grubby` / `grub2-mkconfig` |
-| `GRUB_CMDLINE_LINUX="quiet splash …"` | RHEL default is `rhgb quiet` |
-| `dnf install kernel-5.14.0-162.6.1.el10` | 5.14 is RHEL 9; RHEL 10 kernels are 6.12 |
-| `kernel-abi-whitelists` | Renamed `kernel-abi-stablelists` |
-| `kernel-tools` includes `tuned-adm`, `perf` | Those come from `tuned` and `perf` packages |
-
-## 12. Quick Revision
+## 11. Quick Revision
 
 ```bash
 grubby --default-kernel | --set-default /boot/vmlinuz-V | --info=ALL | --update-kernel=ALL --args="X" | --remove-args="X"
 /etc/default/grub → grub2-mkconfig -o /boot/grub2/grub.cfg [--update-bls-cmdline] · grub2-editenv list
 rpm -q kernel · dnf update kernel · installonly_limit · cat /proc/cmdline · uname -r
+```
+
+## 12. Cross-References
+
+- [Boot process](boot-process.md)
+- [Boot recovery](boot-recovery.md)
+- [Kernel modules & parameters](kernel-modules-and-parameters.md)
+- [Kernel compilation](kernel-compilation.md)

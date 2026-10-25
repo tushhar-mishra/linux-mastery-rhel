@@ -1,7 +1,7 @@
 # VDO on LVM (Deduplication & Compression)
 
 > **Sessions:** S45 · **[Advanced/Optional]** (in older RHCSA versions, not in RHEL 10's objectives)
-> **Related:** [LVM fundamentals](lvm-fundamentals.md) · [LVM thin provisioning](lvm-thin-provisioning-and-striping.md) · [Filesystems & mkfs](filesystems-and-mkfs.md) · Stratis (S46): planned
+> **Related:** [LVM fundamentals](lvm-fundamentals.md) · [LVM thin provisioning](lvm-thin-provisioning-and-striping.md) · [Filesystems & mkfs](filesystems-and-mkfs.md) · [Stratis](stratis.md)
 
 ## 1. Overview
 
@@ -84,17 +84,7 @@ sync ; vdostats --human-readable
 | Biggest operational risk? | Physical pool exhaustion; monitor it like a thin pool. |
 | Where does VDO fit with encryption? | Put encryption above VDO, or deduplication finds nothing to share. |
 
-## 8. Course Corrections
-
-| Course | Correction |
-|---|---|
-| `dnf install lvm2 vdo kmod-kvdo` | `kmod-kvdo` is the RHEL 9 module; RHEL 10 uses in-kernel `dm-vdo` |
-| `lvcreate --type vdo --name lv_vdo --size 10G vg_vdo` | Specify `-V` (virtual size) too; `-L` is the physical pool |
-| `mkfs.xfs /dev/vg_vdo/lv_vdo` | `mkfs.xfs -K` |
-| `echo '…' >> tee -a /etc/fstab` | Writes to a file named `tee`; use `\| tee -a /etc/fstab` or `>> /etc/fstab`, with `UUID=` |
-| `cat /dev/urandom > …` / `cat /dev/zero > …` | Fills the whole volume; use `dd … count=N` |
-
-## 9. Quick Revision
+## 8. Quick Revision
 
 ```bash
 lvcreate --type vdo -n LV -L PHYS -V VIRT VG/POOL | mkfs.xfs -K | fstab UUID
@@ -102,8 +92,8 @@ vdostats --human-readable | lvs -o +vdo_compression,vdo_deduplication,data_perce
 lvchange --compression y|n --deduplication y|n | fstrim | lvextend pool vs virtual
 ```
 
-## 10. Cross-References
+## 9. Cross-References
 
 - [LVM fundamentals](lvm-fundamentals.md) · [LVM thin provisioning](lvm-thin-provisioning-and-striping.md)
 - [Filesystems & mkfs](filesystems-and-mkfs.md)
-- Stratis (S46), LUKS (S47): planned
+- [Stratis](stratis.md) · [LUKS](luks-encryption.md)

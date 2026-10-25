@@ -1,7 +1,7 @@
 # NFS & autofs
 
 > **Sessions:** S97 · **Objectives:** *Mount and unmount network file systems using NFS* · *Configure autofs* **[RHCSA Core]** · NFS server **[Advanced/Optional]**
-> **Related:** [Mounting & fstab](../storage-and-filesystems/mounting-and-fstab.md) · [firewalld](../firewall-and-selinux/firewalld.md) · [SELinux booleans](../firewall-and-selinux/selinux-booleans-ports-troubleshooting.md) · [Local users (home directories)](../users-groups-and-permissions/local-users.md)
+> **Related:** [Mounting & fstab](../storage-and-filesystems/mounting-and-fstab.md) · [firewalld](../firewall-and-selinux/firewalld.md) · [SELinux booleans](../firewall-and-selinux/selinux-booleans-ports-troubleshooting.md) · [Local users (home directories)](../users-groups-and-permissions/local-users.md) · [Central identity (directory users)](../users-groups-and-permissions/central-identity-nss-sssd.md)
 
 ## 1. Overview
 
@@ -17,7 +17,7 @@
 ````bash
 dnf install -y nfs-utils
 mkdir -p /srv/nfs/public /srv/nfs/private
-echo 'NEHRA CLASSES ARE AWESOME' > /srv/nfs/private/nehraclasses_private.txt
+echo 'PRIVATE NFS DATA' > /srv/nfs/private/private.txt
 chmod 755 /srv/nfs/public ; chmod 770 /srv/nfs/private      # set ownership as the share requires
 vi /etc/exports
 ````
@@ -152,23 +152,18 @@ grep -E 'browse_mode|timeout' /etc/autofs.conf   # browse_mode=yes shows keys wi
 | What do `*` and `&` mean in an autofs map? | Wildcard key and substitution of the matched key. |
 | Why autofs instead of fstab? | On-demand mounts, no boot hangs, idle unmount, easy wildcard home directories. |
 
-## 9. Course Corrections
-
-| Course | Correction |
-|---|---|
-| root_squash → `nfsnobody` | `nobody` on RHEL 8+ |
-| `semanage fcontext … public_content_t` for NFS exports | Not needed; NFS exports any label (booleans on by default) |
-| `rpc-bind` + `mountd` always required | Only for NFSv3 / `showmount` |
-| `chmod 777` on exports | Lab only; set ownership/permissions properly |
-| Pre-create `/automount/private` and `/public` | autofs manages subdirectories; don't create them |
-| Map file `/etc/automount.txt` | Works; convention: `/etc/auto.master.d/NAME.autofs` + `/etc/auto.NAME` |
-| `nfs4-acl-tools` required | Optional (NFSv4 ACL tools) |
-| No fstab, direct or wildcard maps | Added (exam relevant) |
-
-## 10. Quick Revision
+## 9. Quick Revision
 
 ````bash
 server: /etc/exports "DIR CLIENT(rw,sync)" · exportfs -arv · systemctl enable --now nfs-server · firewall nfs (+rpc-bind,mountd v3)
 client: mount -t nfs SRV:/EXP MNT · fstab: SRV:/EXP MNT nfs defaults,_netdev 0 0 · showmount -e SRV
 autofs: /etc/auto.master.d/X.autofs "/base /etc/auto.X --timeout=60" · map "key -rw SRV:/path" · "* -rw SRV:/home/&" · "/- /etc/auto.direct"
 systemctl enable --now autofs ; restart after edits · automount -m · cd /base/key
+````
+
+## 10. Cross-References
+
+- [Mounting & fstab](../storage-and-filesystems/mounting-and-fstab.md)
+- [firewalld](../firewall-and-selinux/firewalld.md)
+- [SELinux booleans](../firewall-and-selinux/selinux-booleans-ports-troubleshooting.md)
+- [Local users (home directories)](../users-groups-and-permissions/local-users.md)

@@ -161,20 +161,19 @@ Find the right type: `semanage fcontext -l | grep <standard path>` (e.g., `/var/
 | How do you see only your custom rules? | `semanage fcontext -l -C`. |
 | `default_t` vs `file_t`? | default_t = no matching rule; file_t = no label at all. |
 
-## 13. Course Corrections
-
-| Course | Correction |
-|---|---|
-| `chcon` = "temporary (non-persistent)" | Survives reboot but is undone by `restorecon`/relabel |
-| `ls -lZ /testdir/file.txt` → `user_home_t` | A new top-level `/testdir` is `default_t` (no rule) |
-| tar without `--selinux` → "may revert to default_t" | Files get the default label for their location |
-| `star` for SELinux-aware archives | May not be in RHEL 10 repos; use `tar --selinux --xattrs` |
-| `policycoreutils-python`, `libselinux-python` | `policycoreutils-python-utils`, `python3-libselinux` |
-
-## 14. Quick Revision
+## 13. Quick Revision
 
 ```bash
 ls -Z · ls -dZ · matchpathcon -V PATH · restorecon -Rnv DIR (dry run) · semanage fcontext -l [-C]
 semanage fcontext -a|-m -t TYPE 'DIR(/.*)?' → restorecon -Rv DIR · semanage fcontext -d 'REGEX' · -e (equivalence)
 chcon -t TYPE [-R] (testing; undone by restorecon) · cp = dest default · mv / cp -a = keep source · tar --selinux · rsync -X
 mount -o context="…" · touch /.autorelabel · fixfiles -F onboot
+```
+
+## 14. Cross-References
+
+- [SELinux fundamentals](selinux-fundamentals.md)
+- [Booleans, ports & troubleshooting](selinux-booleans-ports-troubleshooting.md)
+- [Files & directories (cp vs mv)](../shell-and-command-line/files-and-directories.md)
+- [Archiving (tar --selinux)](../files-and-text-processing/archiving-and-compression.md)
+- [Mounting & fstab](../storage-and-filesystems/mounting-and-fstab.md)

@@ -78,18 +78,17 @@ Storage → select the disk with free space → **Create partition** → size, t
 | Does Cockpit keep its own configuration database? | No; it uses system APIs, so changes are the same as CLI changes. |
 | How do you manage several servers securely on RHEL 10? | One host per browser session, or the Cockpit Client; the host switcher is deprecated. |
 
-## 9. Course Corrections
-
-| Course | Correction |
-|---|---|
-| Install + open firewall as required steps | Usually preinstalled; `cockpit` already allowed in the public zone |
-| "Login as root" | root is in `/etc/cockpit/disallowed-users`; use a sudo user |
-| "Add New Host" from the host selector | Deprecated and disabled by default in RHEL 10 |
-| RHEL 8 docs references | RHEL 10 web console documentation applies |
-
-## 10. Quick Revision
+## 9. Quick Revision
 
 `````bash
 systemctl enable --now cockpit.socket · https://HOST:9090 · non-root + Administrative access
 cockpit-machines · cockpit-podman · cockpit-image-builder · /etc/cockpit/{cockpit.conf,ws-certs.d,disallowed-users}
 RHEL 10: host switcher deprecated (AllowMultiHost=yes to re-enable, not recommended)
+`````
+
+## 10. Cross-References
+
+- [Image Builder](image-builder.md)
+- [KVM](kvm-virtualization.md)
+- [Podman](podman-containers.md)
+- [firewalld](../firewall-and-selinux/firewalld.md)

@@ -127,20 +127,17 @@ chronyd -Q 'server 192.168.10.5 iburst'   # one-off query: show offset, don't ch
 | What does `iburst` do? | Sends a quick burst of requests at startup for fast initial sync. |
 | How do you make a host an NTP server? | `allow <network>` in chrony.conf + open the `ntp` firewall service. |
 
-## 9. Course Corrections
-
-| Course | Correction |
-|---|---|
-| `chronyc -a makestep` / `-a burst` | `-a` is obsolete: `chronyc makestep`, `chronyc burst 4/4` |
-| `nc -vzu host 123` as a test | UDP "connectivity" tests aren't reliable; use `chronyc sources` / `chronyd -Q` |
-| "Restart NetworkManager" for chrony issues | Not needed; disrupts networking |
-| `server 0.pool.ntp.org …` for pools | Use `pool` for pool names (RHEL default: `pool 2.rhel.pool.ntp.org iburst`) |
-| No timedatectl | Added (time zone, `set-ntp`, sync status) |
-
-## 10. Quick Revision
+## 9. Quick Revision
 
 `````bash
 /etc/chrony.conf: server HOST iburst | pool NAME iburst | allow NET | local stratum 10
 systemctl enable --now chronyd ; systemctl restart chronyd
 chronyc sources -v (^*) | tracking | clients | makestep | burst 4/4 · chronyd -Q 'server X iburst'
 timedatectl | set-timezone Z | set-ntp true · firewall: ntp (UDP 123)
+`````
+
+## 10. Cross-References
+
+- [firewalld](../firewall-and-selinux/firewalld.md)
+- [systemd services](../boot-systemd-and-kernel/systemd-targets-and-services.md)
+- [System logging (timestamps)](../logs-scheduling-and-packages/system-logging.md)

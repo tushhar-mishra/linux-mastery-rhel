@@ -32,7 +32,7 @@ seinfo -adomain -x | wc -l                     # all domains
 
 ```bash
 dnf install -y httpd ; systemctl enable --now httpd
-echo 'NehraClasses Are Awesome' > /var/www/html/testfile
+echo 'Hello from RHEL' > /var/www/html/testfile
 ls -Z /var/www/html/testfile               # httpd_sys_content_t
 curl -s -o /dev/null -w '%{http_code}\n' http://localhost/testfile   # 200
 
@@ -126,21 +126,19 @@ A confined admin still needs DAC privileges (root via sudo). SELinux roles **lim
 | `user_u` vs `staff_u`? | user_u can't su/sudo; staff_u can sudo (and transition to sysadm_r if configured). |
 | Why doesn't `su -` show the new SELinux user? | `su` keeps the caller's context; mappings apply at real logins. |
 
-## 9. Course Corrections
-
-| Course | Correction |
-|---|---|
-| staff_u + sudo shows `staff_u:staff_r:staff_t` after `sudo -i` | Expected `staff_u:sysadm_r:sysadm_t`; that output means the transition failed |
-| `__default__ → user_u` affects "newly created users" | Affects all users without explicit mappings (existing users at next login) |
-| No warning about admins | Map admins explicitly first; `user_u` can't su/sudo |
-| Table: `root` SELinux user used for the root account | The root login maps to `unconfined_u` by default |
-| `adduser` | Same as `useradd` on RHEL |
-| Relabeling `/usr/sbin/httpd` to `bin_t` | Demo only; restore immediately |
-
-## 10. Quick Revision
+## 9. Quick Revision
 
 ```bash
 ps -eZ | grep DOMAIN · *_exec_t → domain transition · bin_t service → unconfined_service_t
 semanage login -l | semanage user -l | seinfo -u/-r · useradd -Z staff_u U · semanage login -a|-m|-d -s SEUSER U
 semanage login -m -s user_u -r s0 __default__ (map admins first!) · setsebool -P ssh_sysadm_login on
 sudoers: U ALL=(ALL) TYPE=sysadm_t ROLE=sysadm_r ALL · verify with a real login: ssh U@localhost 'id -Z'
+```
+
+## 10. Cross-References
+
+- [SELinux fundamentals](selinux-fundamentals.md)
+- [File contexts](selinux-file-contexts.md)
+- [Booleans, ports & troubleshooting](selinux-booleans-ports-troubleshooting.md)
+- [MLS & MCS](selinux-mls-and-mcs.md)
+- [sudo](../users-groups-and-permissions/sudo-and-privileged-access.md)

@@ -194,4 +194,4 @@ pushd popd dirs -v   cd -
 - [Shell options (`set -f`, `shopt`)](command-substitution-and-shell-options.md)
 - [grep & regular expressions](../files-and-text-processing/grep-and-regular-expressions.md)
 - [Finding files (`find -name`)](../files-and-text-processing/finding-files.md)
-- SELinux `semanage fcontext` regex (S76): planned
+- [SELinux `semanage fcontext` regex](../firewall-and-selinux/selinux-file-contexts.md#3-persistent-labeling-semanage-fcontext--restorecon-rhcsa-core)

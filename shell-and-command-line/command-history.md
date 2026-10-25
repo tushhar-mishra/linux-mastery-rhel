@@ -159,4 +159,4 @@ shopt -s histappend | set +o history | unset HISTFILE
 - [Quoting (`!` expansion)](quoting-and-control-operators.md)
 - [Variables & persistence (`~/.bashrc`)](shell-variables-and-environment.md)
 - [Shell options (`set -o history`, `shopt`)](command-substitution-and-shell-options.md)
-- Logs and auditing (S55): planned
+- [System logging](../logs-scheduling-and-packages/system-logging.md) · [Auditing with auditd](../firewall-and-selinux/auditd.md)

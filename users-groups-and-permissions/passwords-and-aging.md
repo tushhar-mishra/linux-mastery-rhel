@@ -1,7 +1,7 @@
 # Passwords, Aging & Account Locking
 
 > **Sessions:** S22 · **Objective:** *Change passwords and adjust password aging for local user accounts* **[RHCSA Core]**
-> **Related:** [Local users](local-users.md) · [Groups](groups.md) · [SSH (key logins bypass passwords)](../networking-and-ssh/ssh-remote-access.md) · PAM (S93, planned)
+> **Related:** [Local users](local-users.md) · [Groups](groups.md) · [SSH (key logins bypass passwords)](../networking-and-ssh/ssh-remote-access.md) · [PAM & authselect](pam-and-authselect.md)
 
 ## 1. Overview
 
@@ -38,7 +38,7 @@ Convert day numbers: `date -d @$((20202*86400)) +%F` → `2025-04-24`.
 | Value | Meaning |
 |---|---|
 | `$y$…` / `$6$…` / `$5$…` / `$1$…` | yescrypt / SHA-512 / SHA-256 / MD5 (weak) hash |
-| `!!` | **Never set** (state right after `useradd` on RHEL); no password login |
+| `!` (alone) | **Never set**: state right after `useradd` on **RHEL 10** (verified, shadow-utils 4.15); no password login. RHEL 9 and earlier wrote `!!` |
 | `!` + hash | **Locked** (`usermod -L` / `passwd -l`); hash preserved for unlocking |
 | `*` | No valid password possible (typical for system accounts) |
 | *(empty)* | **No password**. Console login may succeed with no password ⚠️ |
@@ -59,10 +59,10 @@ passwd                              # change your own (asks current password; qu
 sudo passwd alice                   # root sets alice's (no old password; quality warnings only)
 echo 'N3w-Secure#Pass' | sudo passwd --stdin alice     # non-interactive (RHEL-specific option)
 echo 'alice:N3w-Secure#Pass' | sudo chpasswd           # non-interactive, several users at once
-sudo passwd -S alice                # status: alice PS 2025-04-24 0 99999 7 -1 (Password set, …)
+sudo passwd -S alice                # status: alice P 2026-10-25 0 99999 7 -1   (RHEL 10, verified)
 ```
 
-- `passwd -S` codes on RHEL: **`PS`** (password set), **`LK`** (locked), **`NP`** (no password).
+- `passwd -S` codes on **RHEL 10** (`passwd` now comes from **shadow-utils**): **`P`** (usable password), **`L`** (locked, *or* never set), **`NP`** (no password). RHEL 9's libuser-based `passwd` printed `PS`/`LK`/`NP`. `--stdin` is still supported on RHEL 10 (verified).
 - Commands with passwords on the command line land in shell history and process lists. Use `--stdin`/`chpasswd` from a file or prompt in production.
 
 ### Password quality (`pam_pwquality`)
@@ -165,7 +165,7 @@ chage -l alice                    # always verify
 |---|---|---|
 | "Your account has expired; please contact your system administrator" | `chage -l u` (Account expires) | `chage -E -1 u` or a new date |
 | "You are required to change your password immediately" | lastchg = 0 or max reached | Expected; or `chage -d $(date +%F) u` |
-| User can't log in, password correct | `passwd -S u` → `LK`; shadow `!` | `usermod -U u` |
+| User can't log in, password correct | `passwd -S u` → `L` (RHEL 9: `LK`); shadow hash starts with `!` | `usermod -U u` |
 | `BAD PASSWORD: …` for a user | pwquality rules | Choose a stronger password; adjust `pwquality.conf` only if policy allows |
 | Locked user still logs in via SSH | Key auth bypasses the password | Expire the account or set `nologin` |
 | `pwck` reports errors after hand edits | Inconsistent files | Fix with `vipw`/`vipw -s`; restore backups |
@@ -176,7 +176,7 @@ chage -l alice                    # always verify
 |---|---|
 | Lock vs expire vs delete password? | Lock prefixes `!` (password unusable, keys still work); expire disables the whole account; deleting the password allows login with **no** password. |
 | What does `chage -d 0` do? | Sets the last change to day 0, forcing a password change at next login. |
-| What does `!!` mean in shadow? | The password has never been set. |
+| What does `!` alone (RHEL 10) or `!!` (RHEL 9) mean in shadow? | The password has never been set. `!` in front of a hash means locked. |
 | What's the salt for? | It makes identical passwords hash differently and defeats precomputed tables; it's stored in the hash string. |
 | Who enforces password complexity on RHEL? | `pam_pwquality` (`/etc/security/pwquality.conf`). |
 | Why `vipw` instead of `vi`? | It locks the files against concurrent edits and edits a copy safely. |
@@ -196,7 +196,7 @@ chage -l alice                    # always verify
 | 9 | Why `vipw` | File locking, safe edit | ✔ |
 | 10 | List shells | `chsh -l` (needs util-linux-user) · `cat /etc/shells` | |
 | 11 | Custom home | `useradd -m -d /custom/home/elena elena` | `-d` alone doesn't create it |
-| 12 | Locked? | `sudo passwd -S oliver` → `LK` | RHEL codes: `LK`/`PS`/`NP` |
+| 12 | Locked? | `sudo passwd -S oliver` → `L` | RHEL 10 codes: `P`/`L`/`NP` (RHEL 9: `PS`/`LK`/`NP`) |
 
 ## 12. Quick Revision
 
@@ -213,4 +213,4 @@ vipw [-s] ; vigr [-s] ; pwck ; grpck ; date -d @$((DAYS*86400))
 - [Groups (gshadow)](groups.md)
 - [SSH key authentication](../networking-and-ssh/ssh-remote-access.md)
 - [Command history (secrets in history)](../shell-and-command-line/command-history.md)
-- PAM (S93), sudo (S27): planned
+- [PAM & authselect](pam-and-authselect.md) · [sudo & privileged access](sudo-and-privileged-access.md)

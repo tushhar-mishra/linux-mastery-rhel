@@ -1,7 +1,7 @@
 # System Resource Monitoring: free, vmstat, iostat, mpstat, sar
 
 > **Sessions:** S56 · Supports *Identify CPU/memory intensive processes* **[RHCSA Core]** · performance analysis **[Production Practice]**
-> **Related:** [top & process monitoring](top-and-process-monitoring.md) · [Processes & signals](processes-and-signals.md) · [Priority & nice](process-priority-and-nice.md) · [Swap](../storage-and-filesystems/swap.md) · [System logging](../logs-scheduling-and-packages/system-logging.md)
+> **Related:** [top & process monitoring](top-and-process-monitoring.md) · [Processes & signals](processes-and-signals.md) · [Priority & nice](process-priority-and-nice.md) · [Swap](../storage-and-filesystems/swap.md) · [System logging](../logs-scheduling-and-packages/system-logging.md) · [Performance & observability](../advanced-rhel-and-career-notes/performance-and-observability.md) · [Memory management](memory-management.md) · [Storage I/O path](../storage-and-filesystems/storage-io-path.md)
 
 ## 1. Overview
 
@@ -158,19 +158,19 @@ top  → P / M → k (kill the hog) → confirm recovery
 | How do you see yesterday's CPU usage? | `sar -u -f /var/log/sa/saDD`. |
 | What's `%steal`? | CPU time the hypervisor gave to other VMs. |
 
-## 14. Course Corrections
-
-| Course | Correction |
-|---|---|
-| vmstat sample read as current (`cs = 3` "suspiciously low") | The first line is a since-boot average; use `vmstat 2 5` |
-| `%steal = 0` → "not a virtualized environment" | It only means no time is being stolen; the sample system was a VM |
-| `sar` shown without setup | Needs `systemctl enable --now sysstat` for history |
-| "Install stress tool" | Use `stress-ng` (check `dnf info stress-ng`) |
-
-## 15. Quick Revision
+## 14. Quick Revision
 
 ````bash
 free -h (available!) · uptime vs nproc · vmstat 2 5 (r b si so wa st; skip line 1)
 iostat -xz 2 (await aqu-sz %util) · mpstat -P ALL 2 · pidstat [-r|-d] 2 · sar -u|-r|-q|-d|-n DEV [-f saDD -s -e]
 watch -n 2 -d CMD · ps --sort=-%cpu · systemd-cgtop · dnf install sysstat ; systemctl enable --now sysstat
 USE: Utilization · Saturation · Errors
+````
+
+## 15. Cross-References
+
+- [top & process monitoring](top-and-process-monitoring.md)
+- [Processes & signals](processes-and-signals.md)
+- [Priority & nice](process-priority-and-nice.md)
+- [Swap](../storage-and-filesystems/swap.md)
+- [System logging](../logs-scheduling-and-packages/system-logging.md)

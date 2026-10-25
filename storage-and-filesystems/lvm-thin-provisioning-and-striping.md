@@ -1,7 +1,7 @@
 # LVM Thin Provisioning & Striping
 
 > **Sessions:** S39–S40 · **[Advanced/Optional]** (not in the RHEL 10 objectives) · common in production and interviews
-> **Related:** [LVM fundamentals](lvm-fundamentals.md) · [LVM snapshots & recovery](lvm-snapshots-and-recovery.md) · [Moving VGs between systems](lvm-moving-vgs-between-systems.md) · RAID (S43), VDO & Stratis (S45–46): planned
+> **Related:** [LVM fundamentals](lvm-fundamentals.md) · [LVM snapshots & recovery](lvm-snapshots-and-recovery.md) · [Moving VGs between systems](lvm-moving-vgs-between-systems.md) · [RAID](raid-mdadm.md) · [VDO](lvm-vdo.md) · [Stratis](stratis.md)
 
 ## 1. Overview
 
@@ -165,17 +165,7 @@ Software RAID with `mdadm` is covered in S43.
 | What does `-i 2 -I 128k` mean? | Stripe across 2 PVs with a 128 KiB stripe size. |
 | Is striping fault tolerant? | No. It's RAID 0; one disk failure loses the LV. |
 
-## 7. Course Corrections
-
-| Course | Correction |
-|---|---|
-| `vgcreate -s 32M … (required for thin pools)` | PE size isn't required for thin pools; the pool has its own chunk size (`-c`) |
-| `lvs -o +seg_monitor` "shows pool usage" | It shows monitoring status; usage is `data_percent`/`metadata_percent` |
-| `dd if=/dev/zero … bs=1M count=1024` as a performance test | Add `oflag=direct` or `conv=fdatasync` |
-| fstab `/dev/vg_striped/lv_striped …` | Prefer `UUID=` |
-| `pvcreate /dev/sda /dev/sdb` | Verify with `lsblk` they aren't the OS disk |
-
-## 8. Quick Revision
+## 7. Quick Revision
 
 ```bash
 lvcreate -L SIZE -T VG/POOL | lvcreate -V VSIZE -T VG/POOL -n LV | lvs -a
@@ -186,9 +176,9 @@ lvcreate --type striped -i N -I 64k -L SIZE -n LV VG | lvs -o +stripes,stripe_si
 striped = RAID0 = no redundancy · LVM RAID: --type raid1 -m 1
 ```
 
-## 9. Cross-References
+## 8. Cross-References
 
 - [LVM fundamentals](lvm-fundamentals.md)
 - [LVM snapshots & recovery](lvm-snapshots-and-recovery.md)
 - [Moving VGs between systems](lvm-moving-vgs-between-systems.md)
-- RAID with mdadm (S43), VDO (S45), Stratis (S46): planned
+- [RAID with mdadm](raid-mdadm.md) · [VDO](lvm-vdo.md) · [Stratis](stratis.md)

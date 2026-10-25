@@ -118,19 +118,17 @@ ssh -M -S ~/.ssh/ctl-%r@%h -fN -L 5555:localhost:80 alice@server3 ; ssh -S ~/.ss
 | What does `-D` create? | A local SOCKS proxy that sends connections out through the SSH server. |
 | How do you stop users from tunneling? | `AllowTcpForwarding no` (and related options) in sshd_config. |
 
-## 10. Course Corrections
-
-| Course | Correction |
-|---|---|
-| "Data transmission is encrypted & 100% secured" (jump-host diagram) | server2 → server3 leg isn't encrypted by SSH |
-| `kill -9 PID` to close | Plain `kill` is enough |
-| "SOCKS5 works with TCP and UDP" | OpenSSH `-D` forwards TCP only |
-| `GatewayPorts yes` in `/etc/ssh/ssh_config` (for `-L`) | Correct for local forwards (client side); for `-R` it's `sshd_config` on the server |
-| root logins in every example | Use regular users (root SSH login is often disabled) |
-
-## 11. Quick Revision
+## 10. Quick Revision
 
 ```bash
 ssh -fN -L [bind:]LPORT:TARGET:TPORT user@server · ssh -fN -R [bind:]RPORT:TARGET:TPORT user@server · ssh -fN -D 8080 user@server
 -g / GatewayPorts (client for -L, sshd for -R) · -J jump · ExitOnForwardFailure · curl --proxy socks5h://localhost:8080 URL
 sshd: AllowTcpForwarding · PermitOpen · PermitListen · close: kill PID / pkill -f / -O exit
+```
+
+## 11. Cross-References
+
+- [SSH remote access](ssh-remote-access.md)
+- [SSH server hardening](ssh-server-hardening.md)
+- [firewalld](../firewall-and-selinux/firewalld.md)
+- [Packet capture](packet-capture.md)

@@ -1,7 +1,7 @@
 # NetworkManager & nmcli: IPv4, IPv6, DNS & Hostname
 
 > **Sessions:** S60 (hostname resolution **supplemented**) · **Objectives:** *Configure IPv4 and IPv6 addresses* · *Configure hostname resolution* · *Configure network services to start automatically at boot* **[RHCSA Core]**
-> **Related:** [IP fundamentals](ip-addressing-fundamentals.md) · [Routing](routing.md) · [Bonding](network-bonding.md) · [SSH](ssh-remote-access.md) · [systemd services](../boot-systemd-and-kernel/systemd-targets-and-services.md)
+> **Related:** [IP fundamentals](ip-addressing-fundamentals.md) · [Routing](routing.md) · [Bonding](network-bonding.md) · [SSH](ssh-remote-access.md) · [systemd services](../boot-systemd-and-kernel/systemd-targets-and-services.md) · [TCP/IP for operators](tcp-ip-for-operators.md)
 
 ## 1. Overview
 
@@ -198,20 +198,7 @@ dig server2.example.com +short ; host www.redhat.com ; nslookup www.redhat.com  
 | How do you test name resolution including `/etc/hosts`? | `getent hosts NAME`. |
 | Why not edit `/etc/resolv.conf` directly? | NetworkManager regenerates it. |
 
-## 15. Course Corrections
-
-| Course | Correction |
-|---|---|
-| `ifup ens256`, `ifconfig`, `cat ifcfg-Myhome1` | Not on RHEL 10: `nmcli con up`, `ip addr`, keyfiles |
-| `dnf install NetworkManager` | Preinstalled and enabled |
-| "gwv4" | `ipv4.gateway` |
-| `connection.permissions vikasnehra` | `user:vikasnehra` |
-| IPv6 needs "static hostname or IPv4 set already" | Not required |
-| `ping -6` required | Optional; `ping` detects IPv6 |
-| `nmcli con down x ; nmcli con up x` | `nmcli con up x` alone re-applies |
-| vnStat for monitoring | EPEL, not RHEL repos |
-
-## 16. Quick Revision
+## 15. Quick Revision
 
 ````bash
 nmcli d s | c s | con show NAME | dev show DEV | -g props · ip -br a · ip r · ip -6 a
@@ -219,3 +206,12 @@ nmcli con mod NAME ipv4.addresses A/P ipv4.gateway G ipv4.dns "D1 D2" ipv4.metho
 nmcli con add type ethernet con-name N ifname D ip4 A/P gw4 G · +/-ipv4.addresses · ipv4.ignore-auto-dns yes
 ipv6.addresses ipv6.gateway ipv6.dns ipv6.method manual|auto|disabled
 nmcli con reload | delete | edit · nmtui · hostnamectl hostname FQDN · /etc/hosts · getent hosts · dig/host (bind-utils)
+````
+
+## 16. Cross-References
+
+- [IP fundamentals](ip-addressing-fundamentals.md)
+- [Routing](routing.md)
+- [Bonding](network-bonding.md)
+- [SSH](ssh-remote-access.md)
+- [systemd services](../boot-systemd-and-kernel/systemd-targets-and-services.md)

@@ -116,16 +116,7 @@ Encrypted pools must be unlocked/started after boot with the key or a Clevis (Ta
 | Special fstab requirement? | `x-systemd.requires=stratisd.service`. |
 | How do you add capacity? | `stratis pool add-data POOL DEV`. |
 
-## 11. Course Corrections
-
-| Course | Correction |
-|---|---|
-| fstab `UUID=… /data xfs defaults 0 0` | Add `x-systemd.requires=stratisd.service` |
-| Restore: `stratis filesystem snapshot my_pool_2 mysnapshot block` | That creates another snapshot named `block`. Mount the snapshot in place of the original (or copy files back) |
-| Delete snapshot: `rm /dev/stratis/my_pool_2/mysnapshot` | Not needed or valid; `umount` then `stratis filesystem destroy` |
-| "Introduced in RHEL 8" feature list | Fine; Stratis isn't part of the RHEL 10 objectives |
-
-## 12. Quick Revision
+## 11. Quick Revision
 
 `````bash
 dnf install stratisd stratis-cli ; systemctl enable --now stratisd ; blkid -p / wipefs -a
@@ -133,3 +124,11 @@ stratis pool create P DEVS | pool list | pool add-data P DEV | blockdev list
 stratis filesystem create P FS | filesystem list | mount /dev/stratis/P/FS MNT
 fstab: UUID=… MNT xfs defaults,x-systemd.requires=stratisd.service 0 0
 snapshot P FS SNAP | filesystem destroy P FS | pool destroy P
+`````
+
+## 12. Cross-References
+
+- [LVM thin provisioning](lvm-thin-provisioning-and-striping.md)
+- [LVM VDO](lvm-vdo.md)
+- [LUKS encryption](luks-encryption.md)
+- [Mounting & fstab](mounting-and-fstab.md)

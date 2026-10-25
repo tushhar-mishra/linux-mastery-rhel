@@ -167,14 +167,7 @@ systemctl list-timers | grep -i updatedb   # automatic refresh timer
 | How do you find SUID files? | `find / -xdev -type f -perm -4000 2>/dev/null`. |
 | Why must `-delete` be last? | find evaluates left to right; an action before the tests applies to everything. |
 
-## 8. Course Corrections
-
-- `-size -500k` effectively means ≤ 499 KiB (rounding up), and `-size 100k` means "rounds up to exactly 100 KiB," not "exactly 100 KB."
-- `-mtime +7` means 8 or more days, not "more than 7."
-- `find … | xargs rm -f` breaks on filenames with spaces; `-exec … {} +` is equally efficient.
-- `find /var/log -name "*.log" -mtime +7 -exec rm …` is risky in production; use logrotate.
-
-## 9. Quick Revision
+## 8. Quick Revision
 
 ```bash
 find / -xdev -type f -name '*.conf' -size +1M -mtime -7 -user u -perm -4000 2>/dev/null
@@ -183,7 +176,7 @@ find / -xdev -type f -name '*.conf' -size +1M -mtime -7 -user u -perm -4000 2>/d
 sudo updatedb; locate -i x; locate -l 5 x    (index: /var/lib/plocate/plocate.db)
 ```
 
-## 10. Cross-References
+## 9. Cross-References
 
 - [Expansion & globbing](../shell-and-command-line/shell-expansion-and-globbing.md)
 - [I/O redirection (`2>/dev/null`)](io-redirection-and-pipes.md)

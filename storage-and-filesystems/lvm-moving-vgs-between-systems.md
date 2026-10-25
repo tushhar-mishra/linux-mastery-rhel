@@ -104,16 +104,7 @@ vgchange -ay my_vg ; mount -o ro /dev/my_vg/my_lv /mnt # mount read-only first a
 | How do you handle two VGs with the same name? | Rename one by UUID with `vgrename`. |
 | How do you recover a PV whose label was wiped? | `pvcreate --uuid … --restorefile …`, then `vgcfgrestore -f …`. |
 
-## 9. Course Corrections
-
-| Course | Correction |
-|---|---|
-| Target: `vgscan` → `vgchange -ay` | On RHEL 9/10, add the disk to the devices file first; then `vgimport` **before** activation (an exported VG can't be activated) |
-| `vgcfgrestore my_vg` then `vgchange -ay` then `vgimport` | Order: `vgimport` → `vgchange -ay`. `vgcfgrestore` is needed only if metadata is damaged, with `-f <backup file>` |
-| "Note the UUID: `blkid /dev/sda`" | For recovery you need the **PV UUID** (`pvs -o +pv_uuid` or the backup file); filesystem UUIDs are different |
-| `pvcreate --uuid … -ff` | Destructive last resort; verify the device first |
-
-## 10. Quick Revision
+## 9. Quick Revision
 
 ```bash
 SOURCE: umount → fstab → vgchange -an VG → vgexport VG → save /etc/lvm/backup/VG → detach
@@ -121,7 +112,7 @@ TARGET: blkid / file -s → lvmdevices --adddev DEV (or vgimportdevices VG) → 
 clash: vgrename <VG-UUID> NEW · clones: vgimportclone · recovery: pvcreate --uuid U --restorefile F DEV ; vgcfgrestore -f F VG
 ```
 
-## 11. Cross-References
+## 10. Cross-References
 
 - [LVM fundamentals](lvm-fundamentals.md)
 - [LVM snapshots & recovery](lvm-snapshots-and-recovery.md)

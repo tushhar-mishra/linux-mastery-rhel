@@ -118,25 +118,19 @@ Recent virt-install **requires** `--osinfo` (or `--osinfo detect=on,require=off`
 | VM has no network | `default` network inactive | `virsh net-start default; virsh net-autostart default` |
 | Cockpit lacks "Virtual machines" | `cockpit-machines` missing | Install it |
 
-## 9. Course Corrections
-
-| Course | Correction |
-|---|---|
-| "Developed by Red Hat" | Developed by Qumranet (acquired by Red Hat 2008) |
-| `systemctl enable --now libvirtd virtqemud` | Use modular daemons; `libvirtd` is deprecated |
-| `egrep -c '(vmx\|svm)'` | `grep -Ec` |
-| `virt-install --ram … --cdrom ubuntu … --disk rhel10-vm…` | `--memory`, add `--osinfo`, consistent names |
-| `--graphics vnc,listen=0.0.0.0` | `listen=127.0.0.1` |
-| Kickstart `ks=http://…` | `inst.ks=` |
-| `virsh undefine --remove-all-storage` | Add `--nvram` for UEFI VMs |
-| Xen table: "AWS → Xen" | AWS Nitro is KVM-based |
-| RHEL 7.3 installer and RHV/VDSM diagram | Outdated; RHV reached end of life |
-| virt-manager as the GUI | Deprecated in RHEL 10; use the web console |
-
-## 10. Quick Revision
+## 9. Quick Revision
 
 ```bash
 grep -Ec '(vmx|svm)' /proc/cpuinfo · dnf install qemu-kvm libvirt virt-install virt-viewer · virt${drv}d sockets · virt-host-validate qemu
 virt-install --name N --memory M --vcpus C --osinfo OS --cdrom ISO|--location ISO --disk … --network network=default
 virsh list --all|start|shutdown|destroy|autostart|dominfo|domifaddr|console|edit|snapshot-*|undefine --nvram --remove-all-storage
 cockpit-machines · default NAT virbr0 192.168.122.0/24 · /var/lib/libvirt/images
+```
+
+## 10. Cross-References
+
+- [Cockpit](cockpit-web-console.md)
+- [Virtualization vs containers](virtualization-vs-containers.md)
+- [Image Builder](image-builder.md)
+- [Lab setup](../linux-fundamentals/virtualization-and-lab-setup.md)
+- [SELinux MCS (sVirt)](../firewall-and-selinux/selinux-mls-and-mcs.md)

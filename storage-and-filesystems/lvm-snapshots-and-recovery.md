@@ -150,4 +150,4 @@ snapshot full → invalid · snapshot ≠ backup · metadata restore ≠ data re
 - [LVM fundamentals](lvm-fundamentals.md)
 - [VG merge/split & disk migration](lvm-vg-merge-split-and-migration.md)
 - [Archiving & compression](../files-and-text-processing/archiving-and-compression.md)
-- Thin provisioning and thin snapshots (S40): planned
+- [Thin provisioning & thin snapshots](lvm-thin-provisioning-and-striping.md)

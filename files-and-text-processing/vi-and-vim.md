@@ -188,4 +188,4 @@ dd yy p P x r cw dw D J . >> | v V Ctrl+v | :%s/a/b/gc | :g/^$/d | :3t7 :3m7
 - [Viewing & creating files](viewing-and-creating-file-contents.md)
 - [grep & regular expressions](grep-and-regular-expressions.md)
 - [Variables (`EDITOR`)](../shell-and-command-line/shell-variables-and-environment.md)
-- sudo/`visudo` (S27), fstab (S33–34), cron (S54): planned
+- [sudo & `visudo`](../users-groups-and-permissions/sudo-and-privileged-access.md) · [fstab](../storage-and-filesystems/mounting-and-fstab.md) · [cron](../logs-scheduling-and-packages/job-scheduling.md)

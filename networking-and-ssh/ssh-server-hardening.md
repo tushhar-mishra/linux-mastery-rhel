@@ -1,7 +1,7 @@
 # SSH Server Configuration & Hardening
 
 > **Sessions:** S65 · supports *Configure key-based authentication for SSH* **[RHCSA Core]** · hardening **[Production Practice]**
-> **Related:** [SSH remote access](ssh-remote-access.md) · [sudo](../users-groups-and-permissions/sudo-and-privileged-access.md) · firewalld & SELinux ports (S69–76, planned)
+> **Related:** [SSH remote access](ssh-remote-access.md) · [sudo](../users-groups-and-permissions/sudo-and-privileged-access.md) · [firewalld](../firewall-and-selinux/firewalld.md) · [SELinux port labels](../firewall-and-selinux/selinux-booleans-ports-troubleshooting.md#3-port-labels-rhcsa-core-supplemented)
 
 ## 1. Overview
 
@@ -145,19 +145,18 @@ DenyGroups interns guests     # members of these groups may not
 | `PermitRootLogin prohibit-password`? | Root may log in with keys only, never with a password. |
 | Why use drop-in files? | Package updates don't overwrite them; settings are easy to audit. Remember the first-match rule. |
 
-## 12. Course Corrections
-
-| Course | Correction |
-|---|---|
-| Edit `PermitRootLogin` in the main `sshd_config` | Drop-ins are read first and win; use `00-local.conf` and verify with `sshd -T` |
-| SELinux label added after editing the port | Add the label (and firewall rule) **before** restarting sshd |
-| Allow/Deny lab results assume earlier directives are gone | Remove previous directives between tests |
-| `restart` after every change | `reload` keeps existing sessions; `restart` is needed for port changes |
-
-## 13. Quick Revision
+## 12. Quick Revision
 
 ```bash
 /etc/ssh/sshd_config.d/00-local.conf (first value wins) · sshd -t · sshd -T | grep KEY · systemctl reload sshd
 PermitRootLogin no|prohibit-password · PasswordAuthentication no (after keys) · Banner FILE · MaxAuthTries 3
 Port 2222 → semanage port -a -t ssh_port_t -p tcp 2222 ; firewall-cmd --permanent --add-port=2222/tcp ; --reload ; restart
 AllowUsers / DenyUsers / AllowGroups / DenyGroups (Deny→Allow users→Deny→Allow groups)
+```
+
+## 13. Cross-References
+
+- [SSH remote access](ssh-remote-access.md)
+- [sudo](../users-groups-and-permissions/sudo-and-privileged-access.md)
+- [firewalld](../firewall-and-selinux/firewalld.md)
+- [SELinux port labels](../firewall-and-selinux/selinux-booleans-ports-troubleshooting.md#3-port-labels-rhcsa-core-supplemented)

@@ -118,18 +118,7 @@ mdadm --zero-superblock /dev/vdb /dev/vdc    # ⚠️ wipe md metadata to reuse 
 | Is RAID a backup? | No. It only protects against disk hardware failure. |
 | How do you replace a failed disk in mdadm? | `--fail`, `--remove`, replace, `--add`, watch `/proc/mdstat`. |
 
-## 11. Course Corrections
-
-| Course | Correction |
-|---|---|
-| RAID 5 parity "1011 − 0101 = 0010" | Parity is XOR: `1011 ⊕ 0101 = 1110` |
-| RAID 6 diagram: same parity on two disks | Two **different** parities (P and Q) |
-| RAID 5 diagram with a dedicated parity disk | Parity is distributed (dedicated = RAID 4); the text pages are correct |
-| Infographic: RAID 0 with parity blocks; "No fault tolerance" under Advantages; RAID 1 "power down for rebuilds"; RAID 5 pros under Disadvantages | RAID 0 has no parity; md rebuilds online; labels reversed |
-| Practical stops after create/fail/add | Add `/etc/mdadm.conf`, fstab by UUID, `mdmonitor`, `--zero-superblock` when reusing |
-| `dnf list install mdadm` | `dnf list --installed mdadm` |
-
-## 12. Quick Revision
+## 11. Quick Revision
 
 ```bash
 mdadm -C /dev/md0 -l {0|1|5|6|10} -n N [-x SPARES] DEVS | cat /proc/mdstat | mdadm -D /dev/md0
@@ -139,8 +128,8 @@ mdadm --grow MD --raid-devices=N | mdadm --stop MD | mdadm --zero-superblock D
 0 none · 1 mirror · 5 XOR parity (1 fail) · 6 P+Q (2 fails) · 10 mirror+stripe · RAID ≠ backup
 ```
 
-## 13. Cross-References
+## 12. Cross-References
 
 - [LVM thin provisioning & striping (LVM RAID)](lvm-thin-provisioning-and-striping.md)
 - [Filesystems & mkfs](filesystems-and-mkfs.md) · [Mounting & fstab](mounting-and-fstab.md)
-- Filesystem repair (S48): planned
+- [Filesystem check & repair](filesystem-check-and-repair.md)

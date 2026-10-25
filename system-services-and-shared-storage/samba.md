@@ -133,19 +133,17 @@ systemctl daemon-reload ; mount -a ; df -hT /mnt/secured
 | How do you share a custom directory with SELinux enforcing? | `semanage fcontext -a -t samba_share_t 'DIR(/.*)?'` + `restorecon -Rv DIR`. |
 | How do you mount a share securely at boot? | fstab with `credentials=` file (mode 600), `_netdev`, SMB3. |
 
-## 7. Course Corrections
-
-| Course | Correction |
-|---|---|
-| `chcon -t samba_share_t …` (server, and troubleshooting fix) | `semanage fcontext` + `restorecon` (persistent) |
-| `dnf install -y samba*` on the client | `cifs-utils` (+ `samba-client`) |
-| `mount … -o username=demo,password=redhat` | Exposes the password; use a credentials file |
-| `chmod -R 0770` for the group share | `2770` (SGID) or `force group` for consistent group ownership |
-| fstab without `nofail` | Add `nofail` for non-critical shares |
-
-## 8. Quick Revision
+## 7. Quick Revision
 
 ````bash
 dnf install samba samba-client cifs-utils · /etc/samba/smb.conf [global]/[share] · testparm · systemctl enable --now smb (nmb)
 smbpasswd -a U · pdbedit -L · firewall samba · semanage fcontext -a -t samba_share_t 'DIR(/.*)?' ; restorecon -Rv
 smbclient -L //SRV -U U · mount -t cifs -o credentials=F //SRV/SHARE MNT · fstab credentials=,_netdev,nofail,vers=3.1.1
+````
+
+## 8. Cross-References
+
+- [Groups (SGID collaboration)](../users-groups-and-permissions/groups.md)
+- [SELinux file contexts](../firewall-and-selinux/selinux-file-contexts.md)
+- [SELinux booleans](../firewall-and-selinux/selinux-booleans-ports-troubleshooting.md)
+- [Mounting & fstab](../storage-and-filesystems/mounting-and-fstab.md)

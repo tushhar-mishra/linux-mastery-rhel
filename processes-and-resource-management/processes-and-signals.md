@@ -1,7 +1,7 @@
 # Processes, Signals & Job Control
 
 > **Sessions:** S29 · **Objective:** *Identify CPU/memory intensive processes and kill processes* **[RHCSA Core]**
-> **Related:** [top & monitoring](top-and-process-monitoring.md) · [Priority & nice](process-priority-and-nice.md) · [Shell basics (fork/exec)](../shell-and-command-line/shell-basics-and-command-syntax.md#23-how-bash-processes-a-command-line-interview-knowledge) · [Control operators (`&`)](../shell-and-command-line/quoting-and-control-operators.md) · systemd services (S50, planned)
+> **Related:** [top & monitoring](top-and-process-monitoring.md) · [Priority & nice](process-priority-and-nice.md) · [Shell basics (fork/exec)](../shell-and-command-line/shell-basics-and-command-syntax.md#23-how-bash-processes-a-command-line-interview-knowledge) · [Control operators (`&`)](../shell-and-command-line/quoting-and-control-operators.md) · [Processes & system calls (internals)](processes-and-system-calls.md) · [systemd services](../boot-systemd-and-kernel/systemd-targets-and-services.md)
 
 ## 1. Overview
 
@@ -36,7 +36,7 @@ exec bash              # replace the current shell WITHOUT forking (same PID); e
 |---|---|---|
 | `R` | Running or runnable (on the run queue) | |
 | `S` | Interruptible sleep (waiting for an event) | Most processes |
-| `D` | **Uninterruptible** sleep (usually I/O) | Can't be killed, even with `-9`, until the I/O returns (hung NFS, failing disk) |
+| `D` | **Uninterruptible** sleep (usually I/O) | Signals aren't acted on until the wait ends, so even `-9` appears to do nothing (hung NFS, failing disk). Exception: **killable** waits (`TASK_KILLABLE`, used by NFS and others) still accept SIGKILL. Inspect with `cat /proc/PID/stack` (root) and `ps -o pid,stat,wchan:32,cmd` |
 | `T` / `t` | Stopped (job control) / stopped by a tracer | |
 | `Z` | Zombie (defunct) | |
 | `I` | Idle kernel thread | |
@@ -162,7 +162,7 @@ pkill -u baduser ; pkill -x stress-ng
 |---|---|
 | What is a zombie and how do you remove it? | An exited process not yet reaped by its parent; make the parent reap it or kill the parent so PID 1 adopts and reaps it. |
 | SIGTERM vs SIGKILL? | TERM can be caught for graceful shutdown; KILL can't be caught and gives no cleanup. |
-| Why can't you kill a `D` state process? | It's blocked in uninterruptible kernel I/O; signals are handled only when it returns. |
+| Why can't you kill a `D` state process? | It's blocked in an uninterruptible kernel wait (usually I/O); pending signals, including SIGKILL, are only acted on when the wait ends. Killable waits (`TASK_KILLABLE`) are the exception. Find where it's stuck with `/proc/PID/stack` or `wchan`; fix the storage/NFS path. |
 | What's fork/exec? | fork duplicates the process; exec replaces the program in that process. |
 | `ps aux` vs `ps -ef`? | BSD vs UNIX syntax; both list all processes with different columns. |
 | How do you keep a job running after logout? | `nohup`, `disown`, `systemd-run`/a service unit, or tmux. |
@@ -196,4 +196,4 @@ kill [-15|-9|-HUP|-STOP|-CONT] PID | pkill -x name | pkill -u user | killall nam
 - [top & process monitoring](top-and-process-monitoring.md)
 - [Priority & nice](process-priority-and-nice.md)
 - [Control operators (`&`, background jobs)](../shell-and-command-line/quoting-and-control-operators.md#43-background-jobs-preview-of-s29)
-- systemd services & `systemctl kill` (S50), resource monitoring (S56): planned
+- [systemd services](../boot-systemd-and-kernel/systemd-targets-and-services.md) · [systemd unit files](../boot-systemd-and-kernel/systemd-unit-files.md) · [Resource monitoring](system-resource-monitoring.md) · [Processes & system calls](processes-and-system-calls.md)

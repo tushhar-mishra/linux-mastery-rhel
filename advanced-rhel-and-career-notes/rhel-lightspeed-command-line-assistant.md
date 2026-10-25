@@ -43,10 +43,3 @@ Interactive multi-step sessions and history viewing (`c history …`) are availa
 | Authentication/registration errors | System not registered | `subscription-manager register`; check status |
 | Connection errors | No internet / proxy not configured | Configure proxy settings for the assistant |
 | `c: command not found` | Package missing / older RHEL | Install `command-line-assistant` (RHEL 9.6+ / 10) |
-
-## 6. Course Corrections
-
-| Course | Correction |
-|---|---|
-| Presented as a general troubleshooting tool | Not available in the exam environment; verify outputs; don't send sensitive data |
-| Exact subcommands (`chat --interactive`, `-a a,b`, `history --filter`) | Syntax varies by version; check `c --help` |

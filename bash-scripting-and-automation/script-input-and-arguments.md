@@ -131,19 +131,17 @@ done
 | What does `shift` do? | Drops `$1` and moves the remaining arguments down. |
 | How do you read a password without echoing it? | `read -rsp "Password: " pw`. |
 
-## 6. Course Corrections
-
-| Course | Correction |
-|---|---|
-| `read name` everywhere | `read -r` (and `IFS= read -r` for full lines) |
-| `$@` "as a list" vs `$*` "as a single string" | Only true when quoted |
-| `echo "Password: $password"` in examples | Never print secrets (demo only) |
-| backup.sh copies without checking the destination | Check `[ -d "$dest" ]`; errors to stderr; non-zero exit |
-| Hard-coded `admin`/`1234` in login.sh | Demo only; never store credentials in scripts |
-
-## 7. Quick Revision
+## 6. Quick Revision
 
 ````bash
 read -rp "Prompt: " v · read -rsp "Pass: " p ; echo · read -ra arr · $REPLY · -t N · -n N
 $0 $1..$9 ${10} $# "$@" "$*" shift · [ "$#" -ne N ] && { echo "Usage: $0 …" >&2; exit 1; }
 for a in "$@" · while [ "$#" -gt 0 ]; do …; shift; done · getopts
+````
+
+## 7. Cross-References
+
+- [Script basics](script-basics-and-variables.md)
+- [Conditionals & tests](conditionals-and-tests.md)
+- [Loops](loops.md)
+- [Positional parameters (shell note)](../shell-and-command-line/shell-variables-and-environment.md#6-positional-parameters-rhcsa-core)

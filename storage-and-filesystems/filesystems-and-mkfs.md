@@ -1,7 +1,7 @@
 # Filesystems: Types, Creation & Tuning (XFS, ext4, VFAT)
 
 > **Sessions:** S31–S34 · **Objective:** *Create, mount, unmount, and use VFAT, ext4, and XFS file systems* **[RHCSA Core]**
-> **Related:** [Disks & partitioning](disks-and-partitioning.md) · [Mounting & fstab](mounting-and-fstab.md) · [Links & inodes](../users-groups-and-permissions/links.md) · filesystem repair (S48, planned)
+> **Related:** [Disks & partitioning](disks-and-partitioning.md) · [Mounting & fstab](mounting-and-fstab.md) · [Links & inodes](../users-groups-and-permissions/links.md) · [Filesystem check & repair](filesystem-check-and-repair.md) · [Storage I/O path](storage-io-path.md)
 
 ## 1. Overview
 
@@ -158,4 +158,4 @@ labels ≤12 XFS ≤16 ext ≤11 VFAT · XFS default on RHEL 10
 - [Disks & partitioning](disks-and-partitioning.md)
 - [Mounting & fstab](mounting-and-fstab.md)
 - [Links & inodes (`df -i`)](../users-groups-and-permissions/links.md)
-- LVM & resizing (S35–36), swap (S42), filesystem repair (S48): planned
+- [LVM & resizing](lvm-fundamentals.md) · [Swap](swap.md) · [Filesystem check & repair](filesystem-check-and-repair.md) · [Storage I/O path](storage-io-path.md)

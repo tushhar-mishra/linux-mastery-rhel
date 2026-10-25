@@ -1,7 +1,7 @@
 # RHCSA 10 Sample Exam: Corrected Solutions & Verification
 
 > **Sessions:** S104 · practice exam covering many **[RHCSA Core]** objectives
-> **Related:** [Objectives map](exam-objectives-map.md) · [Practice lab setup](practice-lab-setup.md) · [Exam strategy](../linux-fundamentals/rhcsa-exam-and-certification.md)
+> **Related:** [Objectives map](exam-objectives-map.md) · [Practice lab setup](practice-lab-setup.md) · [Exam strategy](../linux-fundamentals/rhcsa-exam-and-certification.md) · [Mock exam 2](mock-exam-2.md) · [Mock exam 3 (break-fix)](mock-exam-3.md) · [Coverage](../COVERAGE.md)
 
 ## 0. Ground Rules (as in the real exam)
 
@@ -184,21 +184,27 @@ Same as Node 1 with `file:///mnt/BaseOSRepo` and `file:///mnt/AppRepo`.
 ### 3. 800 MiB swap on /dev/sdb (non-destructive)
 
 ```bash
-lsblk /dev/sdb ; parted /dev/sdb print free        # existing partitions? free space?
-parted -s /dev/sdb mklabel gpt                       # ONLY if the disk is empty/unlabeled
-parted -s /dev/sdb mkpart swap1 linux-swap 1MiB 801MiB
-udevadm settle
-mkswap /dev/sdb1
-echo "UUID=$(blkid -s UUID -o value /dev/sdb1) none swap defaults 0 0" >> /etc/fstab
-swapon -a ; swapon --show
+lsblk /dev/sdb ; parted /dev/sdb unit MiB print free   # existing partitions? where is the free space?
+# Empty, unlabeled disk only:   parted -s /dev/sdb mklabel gpt
+# Create the partition IN THE FREE SPACE shown above (START = end of the last partition, or 1MiB on an empty disk):
+parted -s /dev/sdb mkpart swap1 linux-swap STARTMiB $((START+800))MiB
+udevadm settle ; lsblk /dev/sdb                      # note the NEW partition's name (sdb1 only if the disk was empty)
+NEW=/dev/sdbN                                        # ← the partition you just created, never an existing one
+mkswap "$NEW"
+echo "UUID=$(blkid -s UUID -o value "$NEW") none swap defaults 0 0" >> /etc/fstab
+swapon -a ; swapon --show                            # new area listed, existing swap still listed
 ```
 
 ### 4. Resize LV to 300 MiB
 
 ```bash
-lvs vgdata ; df -hT | grep lvstore           # current size and filesystem
-lvextend -r -L 300M /dev/vgdata/lvstore      # grows LV + filesystem (XFS can't shrink)
-df -hT | grep lvstore
+lvs vgdata ; df -hT | grep lvstore           # current size, free extents, and filesystem type
+# Smaller than 300 MiB (any FS):  grow LV + filesystem in one step
+lvextend -r -L 300M /dev/vgdata/lvstore
+# Larger than 300 MiB and ext4:   shrink filesystem first, then LV (-r does both, in the right order)
+#   umount /mnt/lvstore ; lvreduce -r -L 300M /dev/vgdata/lvstore ; mount -a
+# Larger than 300 MiB and XFS:    impossible in place (XFS never shrinks): back up, recreate, restore
+df -hT | grep lvstore ; lvs vgdata           # verify; extent rounding may give e.g. 304 MiB — fine if the task gives a range
 ```
 
 ### 5. Flatpak remote and app for student
@@ -239,21 +245,3 @@ ip -br a ; hostname ; dnf repolist ; curl http://localhost:8082 ; id adam linda 
 crontab -l -u adam ; chronyc sources ; systemctl list-timers event_logger.timer
 swapon --show ; findmnt /mnt/testqa ; lvs ; tuned-adm active ; getenforce ; firewall-cmd --list-all
 ```
-
-## Course Corrections
-
-| Task | Course solution | Correction |
-|---|---|---|
-| N1-1 | No domain search, no autoconnect | `ipv4.dns-search training.lab`, `connection.autoconnect yes` |
-| N1-3 | No firewall step | `--add-port=8082/tcp` + reload |
-| N1-5 | `yum`; edit `/etc/auto.master` | `dnf`; `/etc/auto.master.d/*.autofs`; wildcard map |
-| N1-7 | `sed 's/^server .*/…/'`; `enable --now` only | Default config uses `pool`; restart chronyd |
-| N1-8 | `find … -exec cp -p` | Add `-type f`; `cp -a` |
-| N1-9 | `grep -ni` | Exactly what's asked (`grep Listen`) |
-| N1-12 | "777 − 277 = 500" | umask is AND NOT (same result here) |
-| N1-13 | Script without shebang; no daemon-reload; `WantedBy=multi-user.target` | Add `#!/bin/bash`; `daemon-reload`; `timers.target` |
-| N2-1 | "Boot into rescue → mount → passwd" | Full `rd.break` procedure + `/.autorelabel` |
-| N2-3 | `mklabel gpt` unconditionally; fstab `/dev/sdb1` | Check the disk first; fstab by UUID |
-| N2-4 | `lvresize` + `xfs_growfs` | `lvextend -r` (XFS can't shrink) |
-| N2-6 | fstab by device path | `UUID=` |
-| N2-7 | No service enable | `systemctl enable --now tuned` |

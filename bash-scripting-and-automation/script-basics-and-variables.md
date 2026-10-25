@@ -1,7 +1,7 @@
 # Bash Scripting Basics: Scripts, Shebang, Output & Variables
 
 > **Sessions:** S85–S86 · supports all *Create simple shell scripts* objectives **[RHCSA Core]**
-> **Related:** [Script input & arguments](script-input-and-arguments.md) · [Conditionals & tests](conditionals-and-tests.md) · [Loops](loops.md) · [Arithmetic](arithmetic.md) · [Variables & environment](../shell-and-command-line/shell-variables-and-environment.md) · [Quoting](../shell-and-command-line/quoting-and-control-operators.md) · [Command substitution & `set -x`](../shell-and-command-line/command-substitution-and-shell-options.md)
+> **Related:** [Script input & arguments](script-input-and-arguments.md) · [Conditionals & tests](conditionals-and-tests.md) · [Loops](loops.md) · [Arithmetic](arithmetic.md) · [Variables & environment](../shell-and-command-line/shell-variables-and-environment.md) · [Quoting](../shell-and-command-line/quoting-and-control-operators.md) · [Command substitution & `set -x`](../shell-and-command-line/command-substitution-and-shell-options.md) · [Robust scripts](robust-scripts.md)
 
 ## 1. Overview
 
@@ -129,19 +129,20 @@ Bash reads a whole compound command (if/loop/function) before running it, so a s
 | Single vs double quotes? | Single: literal. Double: variables/command substitution expand, no word splitting. |
 | How do you debug a script? | `bash -n` (syntax), `bash -x` (trace), `set -x` sections. |
 
-## 10. Course Corrections
-
-| Course | Correction |
-|---|---|
-| `echo $SHELL` = "shell you are currently using" | Login shell; use `ps -p $$ -o comm=` |
-| `#!/bin/sh` = "Bourne shell" | On RHEL it's bash in POSIX mode |
-| "System vs user-defined variables" | The real distinction is shell (local) vs exported (environment) |
-| "Errors in one line don't prevent others" | Syntax errors abort the whole block; use `bash -n`, `set -e` |
-| ``x=`cmd` `` | Prefer `x=$(cmd)` |
-
-## 11. Quick Revision
+## 10. Quick Revision
 
 `````bash
 #!/bin/bash · chmod +x · ./s.sh | bash s.sh | source s.sh · echo -e / printf
 var=value "$var" "${var}" $(cmd) export readonly unset · 'literal' "expand"
 bash -n · bash -x · set -euo pipefail · sed -i 's/\r$//'
+`````
+
+## 11. Cross-References
+
+- [Script input & arguments](script-input-and-arguments.md)
+- [Conditionals & tests](conditionals-and-tests.md)
+- [Loops](loops.md)
+- [Arithmetic](arithmetic.md)
+- [Variables & environment](../shell-and-command-line/shell-variables-and-environment.md)
+- [Quoting](../shell-and-command-line/quoting-and-control-operators.md)
+- [Command substitution & `set -x`](../shell-and-command-line/command-substitution-and-shell-options.md)

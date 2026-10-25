@@ -207,4 +207,4 @@ shopt -s/-u/-q  dotglob nullglob nocaseglob globstar extglob histappend
 - [Quoting & control operators](quoting-and-control-operators.md)
 - [Expansion & globbing (dotglob, nullglob)](shell-expansion-and-globbing.md)
 - [I/O redirection (noclobber, pipefail)](../files-and-text-processing/io-redirection-and-pipes.md)
-- Scripting (S85–92): planned
+- [Scripting](../bash-scripting-and-automation/script-basics-and-variables.md) · [Robust scripts](../bash-scripting-and-automation/robust-scripts.md)

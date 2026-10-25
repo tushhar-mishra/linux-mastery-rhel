@@ -189,20 +189,7 @@ GRUB repair from rescue: `dnf reinstall grub2-efi-x64 shim-x64` (UEFI) or `grub2
 | GRUB password unknown and root password lost? | Boot installation media → Rescue → chroot → passwd → autorelabel. |
 | How do you recover from a missing initramfs? | Boot another kernel or rescue media, then `dracut -f --kver <ver>`. |
 
-## 10. Course Corrections
-
-| Course | Correction |
-|---|---|
-| `rd.break` "get a root shell… reset the password" | Must `mount -o remount,rw /sysroot`, `chroot /sysroot` and `touch /.autorelabel` |
-| `init=/bin/bash` then `exec /sbin/shutdown -r now` | systemd isn't running; `exec /sbin/init` or `reboot -f` |
-| `init=/bin/bash` only "for RHEL 6" | Still works as an alternative on RHEL 10 |
-| Rescue ISO "press 3 (Continue)" | 3 = Skip to shell; 1 = Continue (auto-mount at `/mnt/sysroot`) |
-| `chroot /mnt/sysimage` | RHEL 8+ rescue mounts at `/mnt/sysroot` |
-| GRUB password: `grub2-mkconfig` "for BIOS systems" | Not needed after `grub2-setpassword`; `/boot/grub2/grub.cfg` is used on BIOS and UEFI |
-| `dracut -f /boot/initramfs-$(uname -r).img $(uname -r)` from rescue | Use the explicit installed version (`--kver`) |
-| Boot-loop fix via rescue/emergency targets | Needs root's password; use `systemd.unit=multi-user.target` or `rd.break` |
-
-## 11. Quick Revision
+## 10. Quick Revision
 
 ````
 PASSWORD: e → linux … rd.break → Ctrl+X → mount -o remount,rw /sysroot → chroot /sysroot → passwd root → touch /.autorelabel → exit → exit
@@ -211,3 +198,13 @@ GRUB PW: grub2-setpassword → /boot/grub2/user.cfg · remove: rm user.cfg
 LOOP: e → systemd.unit=multi-user.target → systemctl set-default multi-user.target
 FSTAB: emergency (root pw) or rd.break → fix → daemon-reload → mount -a
 PANIC: older/rescue kernel → dracut -f --kver V | media: Troubleshooting → Rescue → 1) Continue → chroot /mnt/sysroot
+````
+
+## 11. Cross-References
+
+- [Boot process](boot-process.md)
+- [systemd targets & services](systemd-targets-and-services.md)
+- [GRUB2 & kernel management](grub2-and-kernel-management.md)
+- [Mounting & fstab](../storage-and-filesystems/mounting-and-fstab.md)
+- [Filesystem check & repair](../storage-and-filesystems/filesystem-check-and-repair.md)
+- [LVM fundamentals](../storage-and-filesystems/lvm-fundamentals.md)

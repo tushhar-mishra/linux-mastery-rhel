@@ -29,6 +29,7 @@ RHEL 10 (codename **Coughlan**) became generally available on **20 May 2025**. T
 | Application Streams | Modularity (`dnf module`) | No modularity; traditional RPMs | `dnf module` workflows irrelevant |
 | cgroups | v2 default; v1 possible | **v1 removed** | Old agents and container tools |
 | Installer root account | Root password set by default | **Root disabled by default**; admin user (wheel); password SSH root login disabled | Lab and `su` behavior |
+| `passwd` command | `passwd` package (libuser); `passwd -S` codes `PS`/`LK`/`NP`; new accounts `!!` in shadow | Provided by **shadow-utils** (verified 4.15 on 10.2); `passwd -S` codes `P`/`L`/`NP`; new accounts `!` in shadow; `--stdin` still works | Scripts parsing `passwd -S` output |
 | Default filesystem | XFS | XFS | No change |
 | `/usr/sbin` | Separate | **Still separate** (Fedora merged it into `/usr/bin`; RHEL 10 did not) | FHS accuracy |
 | New features | — | Lightspeed command-line assistant, image mode (bootc), post-quantum cryptography | S103 |

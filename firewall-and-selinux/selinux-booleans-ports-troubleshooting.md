@@ -1,7 +1,7 @@
 # SELinux Booleans, Port Labels & Troubleshooting
 
 > **Sessions:** S76–S77 (port labels and the full troubleshooting workflow **supplemented**) · **Objectives:** *Use Boolean settings to modify system SELinux settings* · *Manage SELinux port labels* **[RHCSA Core]**
-> **Related:** [SELinux fundamentals](selinux-fundamentals.md) · [File contexts](selinux-file-contexts.md) · [firewalld](firewalld.md) · [SSH hardening (port change)](../networking-and-ssh/ssh-server-hardening.md)
+> **Related:** [SELinux fundamentals](selinux-fundamentals.md) · [File contexts](selinux-file-contexts.md) · [firewalld](firewalld.md) · [SSH hardening (port change)](../networking-and-ssh/ssh-server-hardening.md) · [auditd](auditd.md)
 
 ## 1. Overview
 
@@ -173,19 +173,18 @@ Some denials are suppressed by `dontaudit` rules. `semodule -DB` disables them t
 | When is `audit2allow` appropriate? | Rarely: for custom applications after labels/booleans/ports are ruled out, and only after reviewing the generated rules. |
 | `setsebool` vs `setsebool -P`? | Runtime vs persistent. |
 
-## 10. Course Corrections
-
-| Course | Correction |
-|---|---|
-| Port labels not covered | Added (§3), an exam objective |
-| `dnf install setroubleshoot` for sealert | The tool is in `setroubleshoot-server` |
-| `policycoreutils-python` | `policycoreutils-python-utils` |
-| `policycoreutils-gui` / `system-config-selinux` | May not be available on RHEL 10; use CLI tools |
-
-## 11. Quick Revision
+## 10. Quick Revision
 
 ```bash
 getsebool -a | grep X · semanage boolean -l [-C] · setsebool -P NAME on|off
 semanage port -l | grep TYPE · semanage port -a|-m|-d -t TYPE -p tcp PORT · semanage port -l -C
 ausearch -m AVC -ts recent [-c CMD] · sealert -a /var/log/audit/audit.log · audit2why · audit2allow -M MOD ; semodule -i MOD.pp (last resort)
 fix order: label → boolean → port → module · stay enforcing
+```
+
+## 11. Cross-References
+
+- [SELinux fundamentals](selinux-fundamentals.md)
+- [File contexts](selinux-file-contexts.md)
+- [firewalld](firewalld.md)
+- [SSH hardening (port change)](../networking-and-ssh/ssh-server-hardening.md)

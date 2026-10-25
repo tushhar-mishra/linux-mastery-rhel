@@ -95,20 +95,14 @@ ip -4 -o addr show scope global | awk '{print $2, $4}'        # interface + addr
 | How do you pass a shell variable into awk? | `awk -v name="$var" '…'`. |
 | Print the 2nd column of lines containing "error"? | `awk '/error/ {print $2}' file`. |
 
-## 7. Course Corrections
-
-- `awk '$2 > 25' data.txt` also prints the **header** (string comparison). Use `NR>1 && $2 > 25`.
-- `awk '$9 == 404 …' access.log` assumes the Apache/Nginx combined log format.
-- `dmesg` may require root, depending on `kernel.dmesg_restrict`.
-
-## 8. Quick Revision
+## 7. Quick Revision
 
 ```bash
 awk -F: -v x=1 'BEGIN{OFS=","} NR>1 && $3>=1000 {print $1,$NF; n++} END{print n}' /etc/passwd
 $0 $1 $NF NF NR FNR FS OFS   ~ !~ /re/   printf "%-10s %5d\n"   arrays: c[$1]++
 ```
 
-## 9. Cross-References
+## 8. Cross-References
 
 - [Text filters & pipelines](text-filters.md)
 - [grep & regular expressions](grep-and-regular-expressions.md)

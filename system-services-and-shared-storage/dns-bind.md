@@ -42,7 +42,7 @@ DNS uses **UDP 53** and **TCP 53** (zone transfers, large responses, DNSSEC).
 ## 2. Install BIND
 
 ```bash
-hostnamectl hostname dns-primary.nehraclasses.lan
+hostnamectl hostname dns-primary.example.lan
 dnf install -y bind bind-utils
 cp -a /etc/named.conf /etc/named.conf.bak
 ```
@@ -61,15 +61,15 @@ options {
     dnssec-validation yes;
 };
 
-zone "nehraclasses.lan" IN {
+zone "example.lan" IN {
     type primary;                    // "master" is the older keyword (still accepted)
-    file "nehraclasses.lan.db";
+    file "example.lan.db";
     allow-update { none; };
 };
 
 zone "229.168.192.in-addr.arpa" IN {
     type primary;
-    file "nehraclasses.lan.rev";
+    file "example.lan.rev";
     allow-update { none; };
 };
 ```
@@ -77,58 +77,58 @@ zone "229.168.192.in-addr.arpa" IN {
 ## 4. Zone Files
 
 ```dns
-; /var/named/nehraclasses.lan.db
+; /var/named/example.lan.db
 $TTL 86400
-@   IN SOA dns-primary.nehraclasses.lan. admin.nehraclasses.lan. (
+@   IN SOA dns-primary.example.lan. admin.example.lan. (
         2026102501 ; Serial
         3600       ; Refresh
         1800       ; Retry
         604800     ; Expire
         86400 )    ; Minimum (negative TTL)
-@            IN NS    dns-primary.nehraclasses.lan.
-@            IN MX 10 mail.nehraclasses.lan.
+@            IN NS    dns-primary.example.lan.
+@            IN MX 10 mail.example.lan.
 dns-primary  IN A     192.168.229.137
 www          IN A     192.168.229.50
 mail         IN A     192.168.229.60
-ftp          IN CNAME www.nehraclasses.lan.
+ftp          IN CNAME www.example.lan.
 ```
 
 ```dns
-; /var/named/nehraclasses.lan.rev
+; /var/named/example.lan.rev
 $TTL 86400
-@   IN SOA dns-primary.nehraclasses.lan. admin.nehraclasses.lan. (
+@   IN SOA dns-primary.example.lan. admin.example.lan. (
         2026102501 3600 1800 604800 86400 )
-@    IN NS  dns-primary.nehraclasses.lan.
-137  IN PTR dns-primary.nehraclasses.lan.
-50   IN PTR www.nehraclasses.lan.
-60   IN PTR mail.nehraclasses.lan.
+@    IN NS  dns-primary.example.lan.
+137  IN PTR dns-primary.example.lan.
+50   IN PTR www.example.lan.
+60   IN PTR mail.example.lan.
 ```
 
-- `@` = the zone name. Names **without** a trailing dot get the zone appended (`www` → `www.nehraclasses.lan.`). **Forgetting the dot** on a full name produces `mail.nehraclasses.lan.nehraclasses.lan.`.
-- The admin mailbox `admin.nehraclasses.lan.` means `admin@nehraclasses.lan`.
+- `@` = the zone name. Names **without** a trailing dot get the zone appended (`www` → `www.example.lan.`). **Forgetting the dot** on a full name produces `mail.example.lan.example.lan.`.
+- The admin mailbox `admin.example.lan.` means `admin@example.lan`.
 
 ```bash
-chown root:named /var/named/nehraclasses.lan.{db,rev} ; chmod 640 /var/named/nehraclasses.lan.{db,rev}
+chown root:named /var/named/example.lan.{db,rev} ; chmod 640 /var/named/example.lan.{db,rev}
 restorecon -v /var/named/*         # named_zone_t
 named-checkconf
-named-checkzone nehraclasses.lan /var/named/nehraclasses.lan.db
-named-checkzone 229.168.192.in-addr.arpa /var/named/nehraclasses.lan.rev
+named-checkzone example.lan /var/named/example.lan.db
+named-checkzone 229.168.192.in-addr.arpa /var/named/example.lan.rev
 systemctl enable --now named
 firewall-cmd --permanent --add-service=dns ; firewall-cmd --reload
 # after later edits: increase the serial, then
-rndc reload                        # (or rndc reload nehraclasses.lan)
+rndc reload                        # (or rndc reload example.lan)
 ```
 
 ## 5. Client Configuration & Testing
 
 ```bash
-nmcli con mod ens160 ipv4.dns 192.168.229.137 ipv4.dns-search nehraclasses.lan ipv4.ignore-auto-dns yes
+nmcli con mod ens160 ipv4.dns 192.168.229.137 ipv4.dns-search example.lan ipv4.ignore-auto-dns yes
 nmcli con up ens160 ; cat /etc/resolv.conf
-dig @192.168.229.137 www.nehraclasses.lan          # query a specific server
-dig www.nehraclasses.lan +short
+dig @192.168.229.137 www.example.lan          # query a specific server
+dig www.example.lan +short
 dig -x 192.168.229.137 +short                       # reverse lookup
-dig nehraclasses.lan MX ; dig nehraclasses.lan SOA
-host ftp.nehraclasses.lan ; nslookup mail.nehraclasses.lan
+dig example.lan MX ; dig example.lan SOA
+host ftp.example.lan ; nslookup mail.example.lan
 getent hosts www                                    # through nsswitch (files, then dns) + search domain
 ```
 
@@ -136,12 +136,12 @@ getent hosts www                                    # through nsswitch (files, t
 
 ```c
 // primary: allow transfers to the secondary
-zone "nehraclasses.lan" IN { type primary; file "nehraclasses.lan.db";
+zone "example.lan" IN { type primary; file "example.lan.db";
     allow-transfer { 192.168.229.138; }; also-notify { 192.168.229.138; }; };
 
 // secondary
-zone "nehraclasses.lan" IN { type secondary; primaries { 192.168.229.137; };
-    file "slaves/nehraclasses.lan.db"; };
+zone "example.lan" IN { type secondary; primaries { 192.168.229.137; };
+    file "slaves/example.lan.db"; };
 ```
 
 **Caching-only resolver:** default `named.conf` with `recursion yes`, `allow-recursion` and `listen-on` set, and no zones of your own (optionally `forwarders`).
@@ -174,22 +174,17 @@ zone "nehraclasses.lan" IN { type secondary; primaries { 192.168.229.137; };
 | What's a PTR record? | Reverse mapping IP → name in `in-addr.arpa`. |
 | Why does DNS use TCP? | Zone transfers and responses too large for UDP (e.g., DNSSEC). |
 
-## 10. Course Corrections
-
-| Course | Correction |
-|---|---|
-| Client: `DNS=192.168.229.137` + restart NetworkManager + edit `/etc/resolv.conf` | RHEL 10: `nmcli con mod … ipv4.dns …` (resolv.conf is generated) |
-| SOA "TTL: minimum TTL for records" | Negative-caching TTL |
-| "TCP 53 for zone transfers" only | Also large responses/DNSSEC |
-| `systemctl restart named` after zone edits | Increase the serial; `rndc reload` |
-| `type master` | `type primary` (old keyword still accepted) |
-| `.local` domain | Reserved for mDNS; use a real subdomain or `.internal` |
-| `chown named:named` zone files | `root:named` 640 is the RHEL convention (named only needs read for primary zones) |
-
-## 11. Quick Revision
+## 10. Quick Revision
 
 ````
 records: SOA NS A AAAA PTR CNAME MX TXT SRV · SOA: serial refresh retry expire minimum(negative TTL)
 dnf install bind bind-utils · /etc/named.conf (options, zone type primary file) · /var/named/*.db *.rev (root:named 640)
 named-checkconf · named-checkzone ZONE FILE · systemctl enable --now named · rndc reload · firewall dns
 client: nmcli … ipv4.dns IP ipv4.dns-search DOMAIN · dig [@srv] NAME [+short] · dig -x IP · host · nslookup · getent hosts
+````
+
+## 11. Cross-References
+
+- [NetworkManager (client DNS)](../networking-and-ssh/networkmanager-nmcli.md)
+- [firewalld](../firewall-and-selinux/firewalld.md)
+- [IP fundamentals](../networking-and-ssh/ip-addressing-fundamentals.md)

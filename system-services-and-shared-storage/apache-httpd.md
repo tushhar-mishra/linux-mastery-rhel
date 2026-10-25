@@ -23,7 +23,7 @@ curl http://localhost/
 ## 2. A Basic Site
 
 ```bash
-echo '<h1>NehraClasses Are Awesome.</h1>' > /var/www/html/index.html
+echo '<h1>Hello from RHEL.</h1>' > /var/www/html/index.html
 ls -lZ /var/www/html/index.html      # root:root 644, httpd_sys_content_t
 ```
 
@@ -145,22 +145,18 @@ TLS versions and ciphers follow RHEL's **system-wide crypto policy** (TLS 1.2+ b
 | How does name-based hosting work? | The `Host` header selects the vhost with a matching ServerName/ServerAlias. |
 | Port 8081 for Apache? | `Listen 8081`, SELinux `http_port_t`, firewall rule, restart. |
 
-## 10. Course Corrections
-
-| Course | Correction |
-|---|---|
-| `chown -R apache:apache /var/www/html` | Don't give Apache write access to content |
-| `dnf install mod_deflate` | Part of the `httpd` package |
-| `SSLProtocol all -SSLv2 -SSLv3 -TLSv1 -TLSv1.1` | Crypto policy already enforces TLS 1.2+; if pinning: `-all +TLSv1.2 +TLSv1.3` |
-| Cert/key in `/etc/httpd/ssl/` | Prefer `/etc/pki/tls/{certs,private}` (correct labels; key mode 600) |
-| Single vhost replaces the default site silently | Define a default vhost first |
-| `certbot` from RHEL repos | EPEL |
-| "Enable event MPM" | Already the default |
-
-## 11. Quick Revision
+## 10. Quick Revision
 
 ```bash
 dnf install httpd ; systemctl enable --now httpd ; firewall http/https · apachectl configtest ; systemctl reload httpd
 <VirtualHost *:80> ServerName DocumentRoot </VirtualHost> · <Directory /srv/web> Require all granted
 semanage fcontext -a -t httpd_sys_content_t '/srv/web(/.*)?' ; restorecon -Rv · semanage port -a -t http_port_t -p tcp PORT
 mod_ssl · /etc/pki/tls/{certs,private} · Redirect permanent / https://… · logs /var/log/httpd/
+```
+
+## 11. Cross-References
+
+- [firewalld](../firewall-and-selinux/firewalld.md)
+- [SELinux file contexts](../firewall-and-selinux/selinux-file-contexts.md)
+- [SELinux ports & booleans](../firewall-and-selinux/selinux-booleans-ports-troubleshooting.md)
+- [systemd services](../boot-systemd-and-kernel/systemd-targets-and-services.md)

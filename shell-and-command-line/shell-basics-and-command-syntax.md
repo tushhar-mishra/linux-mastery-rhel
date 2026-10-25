@@ -114,7 +114,7 @@ long command \                      # backslash continues a line
   --option value
 ```
 
-> ⚠️ **Course corrections:** In the `cp file1.txt file2.txt /tmp` example the notes name a different destination (`/home/vikasnehra/backup/`); the destination is `/tmp`. Also, `ls -l | grep ".txt"` matches names like `atxt` too, because `.` in a regex means "any character." Use `ls *.txt`, or `grep '\.txt$'` when filtering text.
+> ⚠️ **Course corrections:** In the `cp file1.txt file2.txt /tmp` example the notes name a different destination (`/home/alice/backup/`); the destination is `/tmp`. Also, `ls -l | grep ".txt"` matches names like `atxt` too, because `.` in a regex means "any character." Use `ls *.txt`, or `grep '\.txt$'` when filtering text.
 
 ### 2.6 Time-saving keys **[RHCSA Core]**
 
@@ -209,4 +209,4 @@ PS1='[\u@\h \W]\$ '    # RHEL default prompt  hostnamectl set-hostname NAME   # 
 - [Files & directories](files-and-directories.md)
 - [Login & switching users](../networking-and-ssh/ssh-remote-access.md#4-logging-in-and-switching-users-rhcsa-core)
 - [Quoting & control operators](quoting-and-control-operators.md) · [Variables](shell-variables-and-environment.md) · [Substitution & options](command-substitution-and-shell-options.md) · [History](command-history.md) · [Expansion & globbing](shell-expansion-and-globbing.md)
-- Profile files (`~/.bashrc`, `/etc/profile`): S23 (`users-groups-and-permissions/`, planned)
+- [Profile files (`~/.bashrc`, `/etc/profile`)](../users-groups-and-permissions/shell-startup-files.md) · [Processes & system calls (fork/exec in depth)](../processes-and-resource-management/processes-and-system-calls.md)

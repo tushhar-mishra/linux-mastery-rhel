@@ -111,22 +111,18 @@ systemctl halt              # stop the OS without powering off
 | Where are GRUB menu entries on RHEL? | BLS files in `/boot/loader/entries/`; `grub.cfg` loads them via `blscfg`. |
 | How do you find what slowed the boot? | `systemd-analyze blame` and `critical-chain`. |
 
-## 9. Course Corrections
-
-| Course | Correction |
-|---|---|
-| "UEFI verifies GRUB" | Firmware verifies **shim**, which verifies GRUB/kernel |
-| Kernel examples `5.14.0-362.el10` | RHEL 9 kernel; RHEL 10 is 6.12 (`6.12.0-55.9.1.el10_0` as in the slides) |
-| "initramfs drivers for all hardware" | Only what's needed to mount root; the rest load later via udev |
-| "Switch from initramfs root (/sysroot) to /" | Real root is mounted at `/sysroot` and becomes `/` |
-| "7 targets" | 7 runlevel compatibility links; systemd has many targets |
-| "Secure Boot enabled by default", "systemd-boot" in RHEL 10 | Secure Boot is a firmware setting; GRUB2 is RHEL's standard bootloader |
-| Wayland/GDM `WaylandEnable=false` | Xorg server is removed in RHEL 10; no Xorg session to fall back to |
-
-## 10. Quick Revision
+## 9. Quick Revision
 
 ````
 UEFI → shim → GRUB2 (BLS /boot/loader/entries) → vmlinuz + initramfs (dracut) → initrd.target → /sysroot → switch-root → systemd → default.target
 cat /proc/cmdline · uname -r · efibootmgr -v · grubby --info=DEFAULT · mokutil --sb-state
 systemd-analyze [blame|critical-chain] · journalctl -b [-1] · journalctl -k
 systemctl reboot|poweroff|halt · shutdown -r +5 / -c
+````
+
+## 10. Cross-References
+
+- [systemd targets & services](systemd-targets-and-services.md)
+- [GRUB2 & kernel management](grub2-and-kernel-management.md)
+- [Boot recovery](boot-recovery.md)
+- [Disks & partitioning (GPT, ESP)](../storage-and-filesystems/disks-and-partitioning.md)

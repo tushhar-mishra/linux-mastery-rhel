@@ -220,4 +220,4 @@ type -a cmd | type -P cmd | command -v cmd | which cmd | whereis cmd | sudo mand
 - [Shell basics](shell-basics-and-command-syntax.md)
 - [Exam strategy: docs during the exam](../linux-fundamentals/rhcsa-exam-and-certification.md#4-exam-strategy-rhcsa-core)
 - [Finding files (find, locate, rpm -qf)](../files-and-text-processing/finding-files.md)
-- Package queries (`rpm -q*`, `dnf provides`): S57 (planned)
+- [Package queries (`rpm -q*`, `dnf provides`)](../logs-scheduling-and-packages/rpm-and-dnf-package-management.md)

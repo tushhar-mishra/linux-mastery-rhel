@@ -1,7 +1,7 @@
 # Hardware Virtualization vs Containers (OS Virtualization)
 
 > **Sessions:** S81 · **[Interview Knowledge]**
-> **Related:** [KVM](kvm-virtualization.md) · [Podman](podman-containers.md) · [SELinux MCS (sVirt/container isolation)](../firewall-and-selinux/selinux-mls-and-mcs.md)
+> **Related:** [KVM](kvm-virtualization.md) · [Podman](podman-containers.md) · [SELinux MCS (sVirt/container isolation)](../firewall-and-selinux/selinux-mls-and-mcs.md) · [Namespaces & cgroups (how containers are built)](namespaces-and-cgroups.md)
 
 ## 1. Why Virtualize?
 
@@ -57,16 +57,15 @@ Containers are isolated **processes** sharing the **host kernel**. Isolation com
 | Is Kubernetes a container engine? | No; it orchestrates containers run by an engine/runtime (CRI-O, containerd). |
 | Type 1 vs Type 2 hypervisor? | Type 1 runs on hardware (ESXi, Hyper-V, Xen, KVM); Type 2 runs as an app on a host OS (VirtualBox). |
 
-## 7. Course Corrections
-
-| Course | Correction |
-|---|---|
-| "Kubernetes" listed among container engines | It's an orchestrator |
-| Type 1 diagram with a host OS beneath the hypervisor | That layout describes Type 2 (or KVM, where Linux *is* the hypervisor) |
-| Containers "medium isolation" without explanation | Shared kernel is the key limitation; SELinux/seccomp/user namespaces mitigate it |
-
-## 8. Quick Revision
+## 7. Quick Revision
 
 ````
 VM = hypervisor + guest kernel (strong isolation, heavier) · container = process + namespaces/cgroups/SELinux (light, shared kernel)
 Type 1: ESXi Hyper-V Xen KVM · Type 2: VirtualBox Workstation · engines: Podman Docker CRI-O · orchestrators: Kubernetes OpenShift
+````
+
+## 8. Cross-References
+
+- [KVM](kvm-virtualization.md)
+- [Podman](podman-containers.md)
+- [SELinux MCS (sVirt/container isolation)](../firewall-and-selinux/selinux-mls-and-mcs.md)
