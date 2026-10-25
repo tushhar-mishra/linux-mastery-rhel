@@ -4,6 +4,7 @@ Topic-organized notes for **RHCSA (EX200, RHEL 10)**, Linux administration inter
 
 - **Baseline:** RHEL 10.x · EX200 objectives as published by Red Hat (verified Oct 2026)
 - **Source course:** 104-session RHCSA course (RHEL 10), consolidated, corrected and supplemented
+- **Start here:** [EX200 objectives map](rhcsa-exam-labs/exam-objectives-map.md) → [practice lab](rhcsa-exam-labs/practice-lab-setup.md) → [sample exam](rhcsa-exam-labs/sample-exam-with-solutions.md)
 
 ## Label Legend
 
@@ -16,8 +17,10 @@ Topic-organized notes for **RHCSA (EX200, RHEL 10)**, Linux administration inter
 
 ## Topic Index
 
-### Exam
+### Exam & labs
 - [EX200 objectives map (RHEL 10)](rhcsa-exam-labs/exam-objectives-map.md)
+- [Practice lab setup (Vagrant/VirtualBox/KVM)](rhcsa-exam-labs/practice-lab-setup.md)
+- [Sample exam with corrected solutions](rhcsa-exam-labs/sample-exam-with-solutions.md)
 
 ### Linux fundamentals
 - [RHCSA exam & Red Hat certification path](linux-fundamentals/rhcsa-exam-and-certification.md)
@@ -25,9 +28,6 @@ Topic-organized notes for **RHCSA (EX200, RHEL 10)**, Linux administration inter
 - [UNIX/Linux history & architecture](linux-fundamentals/unix-linux-history-and-architecture.md)
 - [Virtualization & RHEL 10 lab setup](linux-fundamentals/virtualization-and-lab-setup.md)
 - [Filesystem hierarchy (RHEL 10)](linux-fundamentals/filesystem-hierarchy.md)
-
-### Networking & SSH
-- [SSH remote access, login & switching users](networking-and-ssh/ssh-remote-access.md) *(basics; extended in S64–68)*
 
 ### Shell & command line
 - [Shell basics & command syntax](shell-and-command-line/shell-basics-and-command-syntax.md)
@@ -58,10 +58,12 @@ Topic-organized notes for **RHCSA (EX200, RHEL 10)**, Linux administration inter
 - [Special permissions (SUID, SGID, sticky) & ACLs](users-groups-and-permissions/special-permissions-and-acls.md)
 - [sudo & privileged access](users-groups-and-permissions/sudo-and-privileged-access.md)
 - [Inodes, hard links & symbolic links](users-groups-and-permissions/links.md)
+- [PAM & authselect](users-groups-and-permissions/pam-and-authselect.md)
 
 ### Processes & resource management
 - [Processes, signals & job control](processes-and-resource-management/processes-and-signals.md)
-- [top & process monitoring](processes-and-resource-management/top-and-process-monitoring.md) *(extended in S56)*
+- [top & process monitoring](processes-and-resource-management/top-and-process-monitoring.md)
+- [System resource monitoring (free, vmstat, iostat, mpstat, sar)](processes-and-resource-management/system-resource-monitoring.md)
 - [Process priority & nice/renice](processes-and-resource-management/process-priority-and-nice.md)
 
 ### Storage & filesystems
@@ -71,52 +73,66 @@ Topic-organized notes for **RHCSA (EX200, RHEL 10)**, Linux administration inter
 - [LVM fundamentals: PVs, VGs, LVs & resizing](storage-and-filesystems/lvm-fundamentals.md)
 - [LVM snapshots & metadata recovery](storage-and-filesystems/lvm-snapshots-and-recovery.md)
 - [VG merge/split & online disk migration (pvmove)](storage-and-filesystems/lvm-vg-merge-split-and-migration.md)
+- [LVM thin provisioning & striping](storage-and-filesystems/lvm-thin-provisioning-and-striping.md)
+- [Moving LVM VGs between systems](storage-and-filesystems/lvm-moving-vgs-between-systems.md)
+- [Swap: partitions, LVs, swap files & swappiness](storage-and-filesystems/swap.md)
+- [Software RAID with mdadm](storage-and-filesystems/raid-mdadm.md)
+- [XFS disk quotas](storage-and-filesystems/xfs-quotas.md)
+- [VDO on LVM](storage-and-filesystems/lvm-vdo.md)
+- [Stratis](storage-and-filesystems/stratis.md)
+- [LUKS disk encryption](storage-and-filesystems/luks-encryption.md)
+- [Filesystem check & repair](storage-and-filesystems/filesystem-check-and-repair.md)
 
-## Repository Layout
+### Boot, systemd & kernel
+- [The RHEL 10 boot process](boot-systemd-and-kernel/boot-process.md)
+- [systemd targets & service management](boot-systemd-and-kernel/systemd-targets-and-services.md)
+- [GRUB2, kernel arguments & kernel packages](boot-systemd-and-kernel/grub2-and-kernel-management.md)
+- [Boot recovery: root password, GRUB password, boot loops, kernel panic](boot-systemd-and-kernel/boot-recovery.md)
+- [Kernel modules & kernel parameters (sysctl)](boot-systemd-and-kernel/kernel-modules-and-parameters.md)
+- [Compiling a custom kernel](boot-systemd-and-kernel/kernel-compilation.md)
 
-```
-linux-rhcsa-notes/
-├── README.md
-├── linux-fundamentals/
-├── shell-and-command-line/
-├── files-and-text-processing/
-├── users-groups-and-permissions/
-├── processes-and-resource-management/
-├── storage-and-filesystems/
-├── boot-systemd-and-kernel/
-├── logs-scheduling-and-packages/
-├── networking-and-ssh/
-├── firewall-and-selinux/
-├── bash-scripting-and-automation/
-├── containers-and-virtualization/
-├── system-services-and-shared-storage/
-├── rhcsa-exam-labs/
-└── advanced-rhel-and-career-notes/
-```
+### Logs, scheduling & packages
+- [Job scheduling: at, cron, anacron & systemd timers](logs-scheduling-and-packages/job-scheduling.md)
+- [System logging: journald, rsyslog & logrotate](logs-scheduling-and-packages/system-logging.md)
+- [RPM & DNF package management](logs-scheduling-and-packages/rpm-and-dnf-package-management.md)
+- [Flatpak](logs-scheduling-and-packages/flatpak.md)
+- [Building RPM packages](logs-scheduling-and-packages/rpm-package-building.md)
 
-## Session → Topic Map
+### Networking & SSH
+- [IP addressing fundamentals (IPv4 & IPv6)](networking-and-ssh/ip-addressing-fundamentals.md)
+- [NetworkManager & nmcli: IPv4, IPv6, DNS & hostname](networking-and-ssh/networkmanager-nmcli.md)
+- [Network bonding](networking-and-ssh/network-bonding.md)
+- [Routing](networking-and-ssh/routing.md)
+- [Packet capture: tcpdump, tshark, Wireshark](networking-and-ssh/packet-capture.md)
+- [SSH: remote access, keys, file transfer & switching users](networking-and-ssh/ssh-remote-access.md)
+- [SSH server configuration & hardening](networking-and-ssh/ssh-server-hardening.md)
+- [SSH port forwarding (tunneling)](networking-and-ssh/ssh-port-forwarding.md)
+- [Cryptography basics](networking-and-ssh/cryptography-basics.md)
+- [rsync & automated remote backups](networking-and-ssh/rsync-and-remote-backups.md)
 
-| Sessions | Topic | Notes | Status |
-|---|---|---|---|
-| 1 | Exam objectives, careers, RHEL 9 vs 10 | `linux-fundamentals/rhcsa-exam-and-certification.md`, `rhel-9-vs-rhel-10.md` | Done |
-| 2 | UNIX/Linux history, virtualization, installation | `unix-linux-history-and-architecture.md`, `virtualization-and-lab-setup.md` | Done (installation supplemented) |
-| 3 | Remote access, filesystem hierarchy | `networking-and-ssh/ssh-remote-access.md`, `linux-fundamentals/filesystem-hierarchy.md` | Done |
-| 4–6 | Shells, man pages, directories, files | `shell-and-command-line/shell-basics-and-command-syntax.md`, `getting-help-and-documentation.md`, `files-and-directories.md` | Done (S6 theory supplemented) |
-| 7–8 | File contents, compression, archives | `files-and-text-processing/viewing-and-creating-file-contents.md`, `archiving-and-compression.md` | Done (S7 theory supplemented) |
-| 9–15 | Expansion, control operators, variables, positional parameters, substitution/options, history, globbing | `shell-and-command-line/` (5 files) | Done (S13 & expansion order supplemented) |
-| 16–20 | Redirection, filters, find/locate, awk, regex, vi | `files-and-text-processing/` (6 files) | Done (S17 theory supplemented) |
-| 21–24 | Local users, passwords & aging, profile files, groups | `users-groups-and-permissions/local-users.md`, `passwords-and-aging.md`, `shell-startup-files.md`, `groups.md` | Done |
-| 25–28 | Permissions & umask, special permissions & ACLs, sudo, links | `users-groups-and-permissions/file-permissions.md`, `special-permissions-and-acls.md`, `sudo-and-privileged-access.md`, `links.md` | Done |
-| 29–30 | Processes, signals, top, priorities & nice | `processes-and-resource-management/processes-and-signals.md`, `top-and-process-monitoring.md`, `process-priority-and-nice.md` | Done |
-| 31–34 | Storage devices, partitioning, filesystems, mounting, XFS | `storage-and-filesystems/disks-and-partitioning.md`, `filesystems-and-mkfs.md`, `mounting-and-fstab.md` | Done (GPT focus; swap basics previewed) |
-| 35–38 | LVM fundamentals & resizing, snapshots & recovery, VG merge/split, disk migration | `storage-and-filesystems/lvm-fundamentals.md`, `lvm-snapshots-and-recovery.md`, `lvm-vg-merge-split-and-migration.md` | Done |
-| 39–41 | Thin provisioning, striping, LVM migration between machines | `storage-and-filesystems/` | Pending |
-| 42–48 | Swap, RAID, quotas, VDO, Stratis, LUKS, filesystem repair | `storage-and-filesystems/` | Pending |
-| 49–53 | Boot, systemd, kernel, modules | `boot-systemd-and-kernel/` | Pending |
-| 54–59 | Scheduling, logs, monitoring, packages | `logs-scheduling-and-packages/` | Pending |
-| 60–68 | Networking, SSH, recovery, backups | `networking-and-ssh/` | Pending |
-| 69–77 | firewalld, SELinux | `firewall-and-selinux/` | Pending |
-| 78–84 | Cockpit, Image Builder, KVM, Podman, tuned | `containers-and-virtualization/` | Pending |
-| 85–93 | Bash scripting, PAM | `bash-scripting-and-automation/` | Pending |
-| 94–101 | NTP, Apache, FTP, NFS, Samba, iSCSI, DNS | `system-services-and-shared-storage/` | Pending |
-| 102–104 | Exam lab, Lightspeed, exam practice | `rhcsa-exam-labs/` | Pending |
+### Firewall & SELinux
+- [firewalld: zones, services, ports, NAT & rich rules](firewall-and-selinux/firewalld.md)
+- [SELinux fundamentals: modes, contexts & domain transitions](firewall-and-selinux/selinux-fundamentals.md)
+- [SELinux file contexts: chcon, semanage fcontext & restorecon](firewall-and-selinux/selinux-file-contexts.md)
+- [SELinux booleans, port labels & troubleshooting](firewall-and-selinux/selinux-booleans-ports-troubleshooting.md)
+- [SELinux confined domains & confined users](firewall-and-selinux/selinux-confined-users-and-domains.md)
+- [SELinux MLS & MCS](firewall-and-selinux/selinux-mls-and-mcs.md)
+
+### Containers, virtualization & tuning
+- [Cockpit web console](containers-and-virtualization/cockpit-web-console.md)
+- [RHEL Image Builder](containers-and-virtualization/image-builder.md)
+- [KVM virtualization](containers-and-virtualization/kvm-virtualization.md)
+- [Hardware virtualization vs containers](containers-and-virtualization/virtualization-vs-containers.md)
+- [Podman containers](containers-and-virtualization/podman-containers.md)
+- [Tuning profiles with tuned](containers-and-virtualization/tuned-profiles.md)
+
+### Bash scripting & automation
+- [Script basics: shebang, output & variables](bash-scripting-and-automation/script-basics-and-variables.md)
+- [Script input: read & positional parameters](bash-scripting-and-automation/script-input-and-arguments.md)
+- [Conditionals: if, test, [[ ]], file tests & case](bash-scripting-and-automation/conditionals-and-tests.md)
+- [Loops: for, while, until & processing input](bash-scripting-and-automation/loops.md)
+- [Arithmetic: $(( )), let, expr & bc](bash-scripting-and-automation/arithmetic.md)
+
+### System services & shared storage
+- [Time synchronization with chrony](system-services-and-shared-storage/chrony-time-sync.md)
+- [Apache HTTP Server
