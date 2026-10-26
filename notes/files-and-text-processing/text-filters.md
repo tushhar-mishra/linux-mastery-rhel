@@ -117,11 +117,11 @@ ps -eo user= | sort | uniq -c | sort -rn             # processes per user
 
 | # | Task | Better command | Note |
 |---|---|---|---|
-| 1 | Users with `/bin/sh`, sorted | `awk -F: '$7=="/bin/sh"{print $1}' /etc/passwd \| sort > shusers.txt` | Course's unanchored `grep '/bin/sh'` can match other fields; `grep ':/bin/sh$'` also works |
+| 1 | Users with `/bin/sh`, sorted | `awk -F: '$7=="/bin/sh"{print $1}' /etc/passwd \| sort > shusers.txt` | An unanchored `grep '/bin/sh'` can match other fields; `grep ':/bin/sh$'` also works |
 | 2 | Logged-in terminals | `who \| awk '{print $2}' \| sort -u > onlineterminals.txt` | ✔ |
 | 3 | Names in `/var/log` containing "log" | `ls /var/log \| grep log > logfile_names.txt` | ✔ (interactive use; `find /var/log -maxdepth 1 -name '*log*'` in scripts) |
 | 4 | Files in `/usr/bin` matching "python" (any case) | `ls /usr/bin \| grep -i python \| sort > pythonfiles.txt` | ✔ |
-| 5 | IP/prefix of non-loopback interfaces | `ip -4 -o addr show scope global \| awk '{print $4}'` | ⚠️ Course's `grep -v 'lo'` also removes lines with "g**lo**bal", which hides real addresses. Output is CIDR (`/24`), not a dotted mask |
+| 5 | IP/prefix of non-loopback interfaces | `ip -4 -o addr show scope global \| awk '{print $4}'` | ⚠️ `grep -v 'lo'` would also remove lines with "g**lo**bal", which hides real addresses. Output is CIDR (`/24`), not a dotted mask |
 | 6 | Remove digits | `tr -d '0-9'` | ✔ |
 
 ## 9. Quick Revision

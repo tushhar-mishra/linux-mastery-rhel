@@ -19,7 +19,7 @@
 | Scoring | Total score reported; 300 max and 210 to pass are widely reported but not on the public page | Unofficial |
 | Delivery | Test center or remote exam | Official |
 | Validity | 3 years | Official |
-| Cost | Varies by region and taxes; check the Red Hat store (course figure: INR 20,000 + GST, may be outdated) | Volatile |
+| Cost | Varies by region and taxes; check the Red Hat store | Volatile |
 
 **Official training paths:** RH124 (System Administration I) + RH134 (System Administration II), or RH199 (RHCSA Rapid Track). None is mandatory.
 

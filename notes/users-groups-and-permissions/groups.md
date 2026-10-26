@@ -127,7 +127,7 @@ groupadd -g 4000 project ; getent group project   # specific GID
 | 1 | Create groups | `groupadd music; groupadd photography; groupadd media` | |
 | 2 | oliver into music + media | `usermod -aG music,media oliver` | ✔ |
 | 3 | Rename photography | `groupmod -n photos photography` | ✔ |
-| 4 | Add luna to music "with vi" | `vigr` (edit `/etc/group`), then `vigr -s` (edit `/etc/gshadow`), then `grpck -r` | Course uses plain `vi` on one file only. Normally: `usermod -aG music luna` |
+| 4 | Add luna to music "with vi" | `vigr` (edit `/etc/group`), then `vigr -s` (edit `/etc/gshadow`), then `grpck -r` | Plain `vi` on `/etc/group` alone leaves gshadow inconsistent. Normally: `usermod -aG music luna` |
 | 5 | Verify | `id luna` | Running sessions need re-login |
 | 6 | Delegate admin to nina | `gpasswd -A nina photos; gpasswd -A nina media` then `su - nina; gpasswd -a oliver photos` | ✔ |
 

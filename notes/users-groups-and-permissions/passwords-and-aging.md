@@ -44,7 +44,7 @@ Convert day numbers: `date -d @$((20202*86400)) +%F` → `2025-04-24`.
 
 ### 2.2 Hash algorithm
 
-Which algorithm `passwd` uses is set in the PAM stack (authselect), while `ENCRYPT_METHOD` in `/etc/login.defs` affects shadow-utils tools such as `chpasswd`, `useradd -p` workflows and `newusers`. The course's RHEL 10 lab shows yescrypt (`$y$`). Check your own system:
+Which algorithm `passwd` uses is set in the PAM stack (authselect), while `ENCRYPT_METHOD` in `/etc/login.defs` affects shadow-utils tools such as `chpasswd`, `useradd -p` workflows and `newusers`. RHEL 10 uses yescrypt (`$y$`) by default (`ENCRYPT_METHOD YESCRYPT`, verified on 10.2). Check your own system:
 
 ```bash
 sudo awk -F: '$2 ~ /^\$/ {print $1, substr($2,1,3)}' /etc/shadow   # algorithm per user
@@ -137,7 +137,7 @@ sudo useradd -p "$(openssl passwd -6 'Secret')" tarun   # works, but the passwor
 
 - The salt is stored between the second and third `$`, so identical passwords produce different hashes.
 - Copying a hash from one user to another gives them the same password (the salt travels with it).
-- The course's C program using `crypt()` with a 2-character DES salt is legacy. DES is crackable in minutes and may not be supported by RHEL's libxcrypt; use it only to understand hash formats.
+- Old examples that call `crypt()` with a 2-character DES salt are legacy. DES is crackable in minutes and may not be supported by RHEL's libxcrypt; use it only to understand hash formats.
 
 ## 7. RHCSA Exam Focus **[RHCSA Core]**
 
@@ -187,7 +187,7 @@ chage -l alice                    # always verify
 | 1 | Password for oliver | `sudo passwd oliver` | |
 | 2 | Lock amelia; verify | `sudo usermod -L amelia; sudo grep '^amelia:' /etc/shadow` | Look for `!` before the hash |
 | 3 | `passwd -d oliver` | `sudo passwd -d oliver` | ⚠️ Empty password: login may need no password. Not a safe "disable" |
-| 4 | Lock vs disable | See §5 | Course answer ("SSH key only") is wrong |
+| 4 | Lock vs disable | See §5 | `passwd -d` is not "SSH key only": it allows login with no password |
 | 5 | oliver sets "oliver" | `su - oliver; passwd` | Rejected by pwquality (based on username) |
 | 6 | Change every 10 days | `sudo chage -M 10 oliver; sudo chage -l oliver` | |
 | 7 | Same for new users | `PASS_MAX_DAYS 10` in `/etc/login.defs` | New accounts only |

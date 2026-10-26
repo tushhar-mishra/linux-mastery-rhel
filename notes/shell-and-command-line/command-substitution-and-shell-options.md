@@ -5,7 +5,7 @@
 
 ## 1. Overview
 
-**Command substitution**, which the course calls "shell embedding," runs a command in a **subshell** and replaces `$(…)` with its output. It's how scripts capture command output into variables and arguments. **Shell options** (`set`, `shopt`) change how bash behaves: error handling, globbing, tracing, history.
+**Command substitution** (sometimes called "shell embedding") runs a command in a **subshell** and replaces `$(…)` with its output. It's how scripts capture command output into variables and arguments. **Shell options** (`set`, `shopt`) change how bash behaves: error handling, globbing, tracing, history.
 
 ## 2. Subshells **[Interview Knowledge]**
 
@@ -189,7 +189,7 @@ Persist chosen options in `~/.bashrc`.
 | 4 | Run `cd /etc; ls` in an embedded shell | `echo $(cd /etc; ls)`, or `(cd /etc; ls)`. Wrapping `bash -c` in `( )` is redundant |
 | 5 | Variable in an embedded shell | `echo $(tempvar=hi; echo $tempvar); echo "[$tempvar]"` → `hi` then `[]` |
 | 6 | What `set -v` does | Prints input lines as read (unexpanded); useful alongside `-x` |
-| 7 | Output `AlphaBetaGamma` | `echo -n Alpha; echo -n Beta; echo Gamma` (the course's `{ …; }` answer prints `Alpha⏎BetaGamma`) |
+| 7 | Output `AlphaBetaGamma` | `echo -n Alpha; echo -n Beta; echo Gamma` (a `{ …; }` group would print `Alpha⏎BetaGamma`) |
 | 8 | `ls -l` of `grep` via substitution | `ls -l "$(type -P grep)"`. Interactive `which` on RHEL can print alias text too |
 
 ## 10. Quick Revision

@@ -169,7 +169,7 @@ Setup: `touch test1 test10 test11 test2 Test2 Test3 test99 testXY testa Testa Te
 | 9 | Letter … digit | `ls [a-zA-Z]*[0-9]` | test1 test10 test11 test2 test99 Test2 Test3 **"test 2"** |
 | 10 | Exactly five characters | `ls ?????` | test1 test2 Test2 Test3 **testa Testa test(** |
 | 11 | Start `t`/`T`, end `3`/`a` | `ls [tT]*[3a]` | Test3 testa Testa ✔ |
-| 12 | `t`, then `e` or `R`, … digit | `ls t[eR]*[0-9]` (course used `[eiR]`) | test1 test10 test11 test2 test99 **"test 2"** |
+| 12 | `t`, then `e` or `R`, … digit | `ls t[eR]*[0-9]` | test1 test10 test11 test2 test99 **"test 2"** |
 | 13 | Not starting with `T` | `ls [!T]*` (or `[^T]*`) | all lowercase `test…` names ✔ |
 | 14 | Copy `LANG` | `MyLANG=$LANG` (export only if children need it) | |
 | 15 | `LANG` influence | `ls` vs `LC_ALL=C ls` | Different **sort order** (see §6) |

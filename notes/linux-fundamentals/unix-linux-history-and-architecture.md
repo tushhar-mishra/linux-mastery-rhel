@@ -115,7 +115,7 @@ strace -c ls             # [Advanced] count system calls made by ls
 
 ## 7. Linux Features (accurate version)
 
-| Course claim | Accurate statement |
+| Common claim | Accurate statement |
 |---|---|
 | "High security (virus free)" | Strong security model (permissions, SELinux, fast patching), but malware for Linux exists |
 | "Supports all file systems" | Supports many (XFS, ext4, Btrfs, VFAT, NFS…). Support varies by distribution; RHEL ships a curated set |

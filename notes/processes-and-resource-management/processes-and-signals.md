@@ -172,7 +172,7 @@ pkill -u baduser ; pkill -x stress-ng
 | # | Task | Command | Note |
 |---|---|---|---|
 | 1 | Find systemd by name | `ps -C systemd` | ✔ |
-| 2 | PID of systemd | `ps -p 1 -o pid,comm` | Course's `pidof init` may print nothing (the process is named `systemd`) |
+| 2 | PID of systemd | `ps -p 1 -o pid,comm` | `pidof init` may print nothing (the process is named `systemd`) |
 | 3 | Your terminal | `who am i` or `tty` | ✔ |
 | 4 | Processes on your terminal | `ps -t pts/0` | `ps fax \| grep pts/0` also matches the grep |
 | 5–6 | Shell PID / parent | `echo $$` · `echo $PPID` | ✔ |

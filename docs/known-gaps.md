@@ -15,9 +15,9 @@
 **Limits of that lab, and what they mean for you:**
 
 - **Kernel:** containers share Docker Desktop's kernel (`6.12.x-linuxkit`), not RHEL's build. Kernel *mechanisms* (cgroups, namespaces, page cache, TCP) behave the same, but **sysctl defaults printed in a container are the host VM's** (e.g., `vm.overcommit_memory=1`, `vm.dirty_writeback_centisecs=1500` there). The notes state upstream/RHEL defaults separately; confirm with `sysctl` on your RHEL host.
-- **Not executable in containers:** SELinux enforcement and labels, GRUB/boot/`rd.break`, NetworkManager/`nmcli`, real disks/udev, firewalld runtime filtering, auditd, kdump, `perf`/eBPF tools, PCP, NFS/autofs between hosts, SSSD/IdM. Notes covering these follow Red Hat documentation and the original course labs; practise them on VMs.
+- **Not executable in containers:** SELinux enforcement and labels, GRUB/boot/`rd.break`, NetworkManager/`nmcli`, real disks/udev, firewalld runtime filtering, auditd, kdump, `perf`/eBPF tools, PCP, NFS/autofs between hosts, SSSD/IdM. Notes covering these follow Red Hat documentation; practise them on VMs.
 - **UBI vs a full install:** UBI images use the same RHEL 10.2 packages (shadow-utils, pam, authselect, setup), so defaults like `passwd -S` codes and umask `0022` should match a minimal install, but a security profile, tuned profile or local policy can change them.
-- **Original course-derived notes** (about 90 files): reviewed line by line in the audit; specific claims were re-tested and corrected (see `git log`). Their full command sequences were **not** all re-executed in this pass.
+- **Original notes** (about 90 files, consolidated from RHCSA course material): reviewed line by line in the audit; specific claims were re-tested and corrected (see `git log`). Their full command sequences were **not** all re-executed in this pass.
 
 ## 2. Details to Confirm on a Real RHEL 10 Host
 
@@ -34,7 +34,7 @@
 | Default umask in **graphical** sessions | [File permissions §3.3](../notes/users-groups-and-permissions/file-permissions.md#33-umask-default-permissions-rhcsa-core) | `umask` in a GNOME terminal |
 | SELinux denial when systemd executes files labeled `user_home_t` (stated as "typically") | [systemd unit files](../notes/boot-systemd-and-kernel/systemd-unit-files.md#13-rhcsa--production-patterns) | Reproduce scenario 12 and `ausearch -m avc` |
 | Certification-track names after the May 2026 restructure (e.g., EX342 naming) | [Exam note §5](../notes/linux-fundamentals/rhcsa-exam-and-certification.md#5-red-hat-certification-framework-2026-interview-knowledge) | Red Hat certification pages |
-| RHEL 10 deprecations quoted from the course (virt-manager, Cockpit host switcher, i440fx) | KVM, Cockpit notes | RHEL 10 release notes |
+| RHEL 10 deprecations stated in the notes (virt-manager, Cockpit host switcher, i440fx) | KVM, Cockpit notes | RHEL 10 release notes |
 
 ## 3. Topics Requiring Separate Study
 

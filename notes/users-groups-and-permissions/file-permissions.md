@@ -197,7 +197,7 @@ su - natasha -c 'umask; touch t; ls -l t'      # verify
 | 14 | SGID on `~/projects` | `chmod g+s ~/projects` | Affects **new** files only |
 | 15 | Default perms of a new file | Depends on umask | RHEL 10 default umask `0022` → `rw-r--r--` (or `rw-rw----` if `umask 007` from task 10 is still active in that shell) |
 | 16 | 750 | `chmod 750 devfile.txt` | ✔ |
-| 17 | Can users delete others' files? | Yes, with `w`+`x` on the directory | ✘ Course says no; only the sticky bit restricts it |
+| 17 | Can users delete others' files? | Yes, with `w`+`x` on the directory | Only the sticky bit restricts it |
 
 ## 10. Quick Revision
 
