@@ -131,6 +131,7 @@ enp0s8           UP             fe80::a00:27ff:fe9e:4410/64
 ```
 
 ```bash
+sudo dnf install -y ipcalc        # not in a minimal install; Ubuntu's ipcalc is a different program with other options
 ipcalc 192.168.10.70/26
 ```
 ```
@@ -147,7 +148,7 @@ Hosts/Net:	62
 - `ipcalc` (`dnf install ipcalc`; Ubuntu has `ipcalc` with slightly different output) does the subnet maths for you. Check your mental arithmetic with it.
 
 ```bash
-ipcalc --split 4 10.0.0.0/24      # split a /24 into 4 equal subnets (RHEL's ipcalc)
+ipcalc -S 26 10.0.0.0/24          # split a /24 into /26 subnets (RHEL's ipcalc)
 ```
 ```
 [Split networks]
@@ -155,6 +156,9 @@ Network:	10.0.0.0/26
 Network:	10.0.0.64/26
 Network:	10.0.0.128/26
 Network:	10.0.0.192/26
+
+Total:  	4
+Hosts/Net:	62
 ```
 
 ```bash

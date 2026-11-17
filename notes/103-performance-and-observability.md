@@ -77,6 +77,12 @@ procs -----------memory---------- ---swap-- -----io---- -system-- -------cpu----
 
 ### PSI
 
+On RHEL, PSI is compiled in but **off by default**. Turn it on once per machine:
+```bash
+ls /proc/pressure 2>/dev/null || echo "PSI is off"
+sudo grubby --update-kernel=ALL --args=psi=1 ; sudo reboot
+```
+
 ```bash
 cat /proc/pressure/cpu
 cat /sys/fs/cgroup/system.slice/httpd.service/cpu.pressure
@@ -97,9 +103,9 @@ sudo perf stat -p PID -- sleep 10               # cycles, instructions, IPC, con
 ```
 ```
 Samples: 12K of event 'cpu-clock:ppp', Event count (approx.): 3012000000
-Overhead  Command  Shared Object       Symbol
-  38.21%  python3  libpython3.12.so    [.] _PyEval_EvalFrameDefault
-  11.04%  python3  libpython3.12.so    [.] long_mul
+Overhead  Command  Shared Object         Symbol
+  38.21%  python3  libpython3.12.so.1.0  [.] _PyEval_EvalFrameDefault
+  11.04%  python3  libpython3.12.so.1.0  [.] long_mul
    6.80%  swapper  [kernel.kallsyms]   [k] native_safe_halt
 ```
 - `[.]` = user-space function, `[k]` = kernel function. High `%sys` in `vmstat` → look for `[k]` hot spots (locks, page faults, network stack).
@@ -109,8 +115,8 @@ Overhead  Command  Shared Object       Symbol
 
 ```bash
 sudo dnf install -y bcc-tools bpftrace       # Ubuntu: bpfcc-tools (tools named *-bpfcc) and bpftrace
-export PATH=$PATH:/usr/share/bcc/tools
-sudo execsnoop
+# the tools live in /usr/share/bcc/tools; sudo resets PATH (secure_path), so use the full path
+sudo /usr/share/bcc/tools/execsnoop          # takes 10–20 s to compile and attach before it prints
 ```
 ```
 PCOMM            PID     PPID    RET ARGS
@@ -159,7 +165,9 @@ TIME                           PID  UID  GID SIG     COREFILE EXE        SIZE
 Tue 2026-11-17 14:20:11 UTC   9123 1000 1000 SIGSEGV present  /usr/bin/sleep 18.4K
 ```
 ```bash
+sudo dnf install -y kdump-utils                 # RHEL 10: kdumpctl moved here from kexec-tools
 sudo kdumpctl status ; grep -o 'crashkernel=[^ ]*' /proc/cmdline
+sudo kdumpctl get-default-crashkernel          # e.g. 2G-64G:256M,64G-:512M → nothing reserved below 2 GiB RAM
 # ONLY on a lab VM — crashes the kernel immediately:  echo c | sudo tee /proc/sysrq-trigger
 ```
 After a panic, the vmcore lands in `/var/crash/`. Analysing it with the `crash` tool needs `kernel-debuginfo`. Most admins collect it plus a `sos report` and open a support case.
@@ -198,10 +206,12 @@ After a panic, the vmcore lands in `/var/crash/`. Analysing it with the `crash` 
 
 | Symptom | Cause | Fix |
 |---|---|---|
+| `cat: /proc/pressure/memory: No such file or directory` (and no `*.pressure` files in cgroups) | RHEL kernels ship with PSI disabled (`CONFIG_PSI_DEFAULT_DISABLED=y`) | Add the kernel argument `psi=1` (`grubby --update-kernel=ALL --args=psi=1`) and reboot |
 | `perf` shows hex addresses instead of names | Missing debug symbols, or no frame pointers | `dnf debuginfo-install PKG`; `--call-graph dwarf` |
 | BCC tools fail to compile or attach | Kernel headers missing, or lockdown/Secure Boot restrictions | Install `kernel-devel` for the running kernel; check `dmesg` for lockdown messages |
 | `sar` says "No such file" | sysstat collection not enabled | `systemctl enable --now sysstat` |
-| No core dumps | `LimitCORE=0`/`ulimit -c 0`, or storage limits | `coredumpctl`, `/etc/systemd/coredump.conf` |
+| `sudo: kdumpctl: command not found` | On RHEL 10 `kdumpctl` is in the **kdump-utils** package | `dnf install kdump-utils` |
+| No core dumps | `LimitCORE=0`/`ulimit -c 0`, or storage limits | `coredumpctl`; limits in `/usr/lib/systemd/coredump.conf` (override with a drop-in in `/etc/systemd/coredump.conf.d/`) |
 | No vmcore after a panic | kdump not running, or no `crashkernel=` reservation | `kdumpctl status`; add `crashkernel=` (topic 054); test on a lab VM |
 | "Everything looks fine" but users see latency | Looking at averages, or the wrong layer | Look at percentiles (p99), PSI, cgroup throttling, the network path |
 

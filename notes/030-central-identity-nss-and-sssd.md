@@ -84,11 +84,11 @@ grep -vE '^#|^$' /etc/nsswitch.conf | head -4
 ```
 ```
 passwd:     files systemd
+shadow:     files systemd
 group:      files [SUCCESS=merge] systemd
-netgroup:   files
-automount:  files
+hosts:      files  dns myhostname
 ```
-- A machine with local accounts only.
+- A machine with local accounts only. `files` = the local files (`/etc/passwd` and friends); `systemd` = users that systemd creates on the fly (for example `DynamicUser=` services, topic 098). On an SSSD client the `passwd:` line becomes `files sss systemd`. The `hosts:` line is used for name lookups (topic 063).
 
 ```bash
 getent passwd alice

@@ -144,7 +144,7 @@ Protect yourself in interactive shells with `set -o noclobber`: then `>` refuses
 ls -l /etc | tee listing.txt | wc -l
 ```
 ```
-211
+176
 ```
 - `tee` wrote the listing to `listing.txt` **and** passed it on to `wc -l`.
 
@@ -167,8 +167,8 @@ rm: cannot remove 'ghost.txt': No such file or directory
 wc -l /etc/passwd ; wc -l < /etc/passwd
 ```
 ```
-42 /etc/passwd
-42
+27 /etc/passwd
+27
 ```
 - With `<`, **the shell** opens the file and `wc` only sees a stream, so it can't print a name. Handy in scripts when you want just the number.
 

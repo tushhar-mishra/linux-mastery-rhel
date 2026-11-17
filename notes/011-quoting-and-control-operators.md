@@ -142,11 +142,15 @@ alias
 ```
 ```
 alias egrep='grep -E --color=auto'
+alias fgrep='grep -F --color=auto'
 alias grep='grep --color=auto'
 alias l.='ls -d .* --color=auto'
 alias ll='ls -l --color=auto'
 alias ls='ls --color=auto'
 alias which='(alias; declare -f) | /usr/bin/which --tty-only --read-alias --read-functions --show-tilde --show-dot'
+alias xzegrep='xzegrep --color=auto'
+...
+alias zgrep='zgrep --color=auto'
 ```
 - The aliases RHEL sets up. As root you'd also see `rm='rm -i'`, `cp='cp -i'`, `mv='mv -i'`.
 

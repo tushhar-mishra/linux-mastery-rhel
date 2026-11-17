@@ -430,11 +430,12 @@ reboot
 ```text
 GRUB → e → append rd.break → Ctrl+X
 ```
+- The menu is hidden by default on RHEL 10: press **Esc** once as the GRUB screen would appear (too early lands in the UEFI firmware menu: choose Continue; too many presses give a `grub>` prompt: type `normal`). On the `linux …` line press End, add ` rd.break`, boot with Ctrl+X, then press Enter at "Press Enter for maintenance".
 ```bash
 mount -o remount,rw /sysroot ; chroot /sysroot
-passwd root                                   # Root@2026
+passwd root                                   # Root@2026 (a "BAD PASSWORD: … contains the user name" warning is fine: root may override it)
 vi /etc/fstab                                 # delete the /archive line
-systemctl set-default multi-user.target       # works in the chroot (it only relinks default.target)
+systemctl set-default multi-user.target       # warns "/proc/ is not mounted … Proceeding anyway", but works: it only relinks default.target
 touch /.autorelabel ; exit ; exit
 ```
 
@@ -487,6 +488,10 @@ su - ana -c 'cat /srv/reports/q3.txt' ; su - opsuser -c 'cat /srv/reports/q3.txt
 4. A locked password vs a `nologin` shell: which one stops SSH key logins?
 5. Why does `/srv/reports` need `x` for the group when the task only says "read"?
 </details>
+
+### Try it
+1. Snapshot a lab VM, then reproduce any five of scenarios 1–24: break it, take notes from the symptom only, fix it, and write a three-line postmortem (cause, fix, prevention).
+2. Do scenario 25 under a 60-minute timer, then revert the snapshot and do it again faster.
 
 ## Where you'll use it
 

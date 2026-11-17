@@ -128,6 +128,8 @@ Sector size (logical/physical): 512 bytes / 512 bytes
 
 ```
 $ sudo fdisk /dev/vdb
+Device does not contain a recognized partition table.
+Created a new DOS (MBR) disklabel with disk identifier 0x062d10f7.   ← only in memory; g replaces it
 Command (m for help): g          ← create a new EMPTY GPT table (only on an unused disk!)
 Created a new GPT disklabel (GUID: 6C1A…).
 Command (m for help): n          ← new partition
@@ -141,6 +143,7 @@ Last sector ...: +512M
 Command (m for help): t          ← change the type of a partition
 Partition number (1,2, default 2): 2
 Partition type or alias (type L to list all): swap
+Changed type of partition 'Linux filesystem' to 'Linux swap'.
 Command (m for help): p          ← print to check
 Command (m for help): w          ← write and exit   (q = quit WITHOUT saving)
 ```
@@ -159,7 +162,9 @@ sudo parted /dev/vdc print
 ```
 Model: Virtio Block Device (virtblk)
 Disk /dev/vdc: 5369MB
+Sector size (logical/physical): 512B/512B
 Partition Table: gpt
+Disk Flags:
 
 Number  Start   End     Size    File system  Name   Flags
  1      1049kB  1075MB  1074MB               data

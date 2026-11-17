@@ -97,8 +97,10 @@ smbclient -L //localhost -U demo
 	---------       ----      -------
 	team            Disk
 	public          Disk
-	IPC$            IPC       IPC Service (Samba 4.21.3)
+	IPC$            IPC       IPC Service (Samba 4.24.5)
+SMB1 disabled -- no workgroup available
 ```
+- The last line is harmless: listing workgroups needs the old SMB1 protocol, which is disabled for security.
 
 | SELinux boolean | Allows |
 |---|---|

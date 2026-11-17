@@ -39,13 +39,13 @@ logrotate.timer ─► logrotate ─► rotates/compresses the text files
 ```
 
 - **journald** stores each entry with **metadata fields**: `_SYSTEMD_UNIT` (which service), `_PID`, `_UID`, `PRIORITY`, `_BOOT_ID` (which boot), the hostname, and more. That's why `journalctl` can filter so precisely. Files are indexed and checksummed.
-- **Where the journal lives** (setting `Storage=` in `/etc/systemd/journald.conf`):
+- **Where the journal lives** (setting `Storage=`; the defaults are in `/usr/lib/systemd/journald.conf`, and you override them with a drop-in in `/etc/systemd/journald.conf.d/`. RHEL 10 no longer ships `/etc/systemd/journald.conf` at all):
   - `auto` (RHEL default): **persistent only if `/var/log/journal/` exists**; otherwise it's kept in RAM in `/run/log/journal/` and **lost at reboot**.
   - `persistent`: always on disk. **Ubuntu** keeps the journal persistent by default.
   - `volatile`: RAM only.
 - The journal limits its own size (by default about 10% of the filesystem, capped at 4 GiB). Set `SystemMaxUse=` for an explicit limit.
 - **Kernel messages** go to an in-memory **ring buffer** (read it with `dmesg`), and journald also stores them (`journalctl -k`).
-- **logrotate** runs daily from `logrotate.timer` (a systemd timer, topic 039). For each log it renames `messages` → `messages-20261116`, creates a fresh empty file, compresses older ones and deletes the oldest. A program that keeps the old file open must be told to reopen it (with a signal or reload in `postrotate`); this is the same inode story as topic 008.
+- **logrotate** runs daily from `logrotate.timer` (a systemd timer, topic 039). For each log it renames `messages` → `messages-20261116`, creates a fresh empty file, and deletes the oldest (RHEL keeps 4 weeks). Compression is **off** by default on RHEL (`#compress` in `/etc/logrotate.conf`); a file in `/etc/logrotate.d/` can turn it on with `compress`, as the example below does. A program that keeps the old file open must be told to reopen it (with a signal or reload in `postrotate`); this is the same inode story as topic 008.
 
 ### Priorities (severity)
 
@@ -129,14 +129,17 @@ journalctl -u nginx -o verbose -n 1
 ```
     PRIORITY=6
     _UID=0
-    _PID=1210
-    _COMM=nginx
-    _SYSTEMD_UNIT=nginx.service
     _BOOT_ID=9f8e7d6c5b4a39281706f5e4d3c2b1a0
+    _PID=1
+    _COMM=systemd
+    _SYSTEMD_UNIT=init.scope
+    UNIT=nginx.service
     MESSAGE=Started nginx.service - The nginx HTTP and reverse proxy server.
 ...
 ```
-- The structured fields behind each line. Any field can be a filter: `journalctl _SYSTEMD_UNIT=nginx.service PRIORITY=3`.
+- The structured fields behind each line. Fields starting with `_` are filled in by journald itself (trusted); the others come from the sender.
+- Note who wrote this line: "Started nginx.service" comes from **systemd** (`_PID=1`, `_COMM=systemd`, `_SYSTEMD_UNIT=init.scope`). The service it is *about* is in `UNIT=`. `journalctl -u nginx` shows both nginx's own output and systemd's messages about it.
+- Any field can be a filter: `journalctl _SYSTEMD_UNIT=nginx.service PRIORITY=3` (only lines nginx itself logged at "err").
 
 Normal users only see their own entries unless they're in `wheel`, `adm` or `systemd-journal`.
 
@@ -146,6 +149,7 @@ Normal users only see their own entries unless they're in `wheel`, `adm` or `sys
 sudo mkdir -p /var/log/journal
 sudo systemd-tmpfiles --create --prefix /var/log/journal    # correct owner, permissions, SELinux label
 sudo systemctl restart systemd-journald
+sudo journalctl --flush                                      # move what's in RAM to disk now
 ```
 or, explicitly:
 ```bash
@@ -259,7 +263,7 @@ sudo lastb -n 5  # failed logins
 - journald collects everything with metadata. `journalctl -u SVC`, `-b`, `-b -1`, `-p err`, `--since`, `-f`, `-k`, `-g`.
 - RHEL's journal is persistent only if `/var/log/journal` exists (or `Storage=persistent`). Cap it with `SystemMaxUse`.
 - rsyslog writes text files (`/var/log/messages`, `secure`; Ubuntu `syslog`, `auth.log`) and forwards logs. Rules are `facility.priority action`; test with `logger`.
-- logrotate (daily timer) rotates, compresses and deletes; `postrotate` makes apps reopen their files.
+- logrotate (daily timer) rotates and deletes old logs (compression only if you enable `compress`; off by default on RHEL); `postrotate` makes apps reopen their files.
 
 **Interview questions**
 

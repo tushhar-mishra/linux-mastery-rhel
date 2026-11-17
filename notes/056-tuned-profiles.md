@@ -152,6 +152,7 @@ Reference: `man tuned.conf`, `man tuned-profiles`.
 
 | Symptom | Cause | Fix |
 |---|---|---|
+| `verify` fails on a VM with something like `device cpu0: 'boost' = 'None', expected '1'` (see `/var/log/tuned/tuned.log`) | The profile sets a CPU feature the virtual CPU doesn't have | Harmless; only the listed setting is missing. Read the log line before assuming a real drift |
 | "No current active profile" | `tuned-adm off`, or the service is stopped | `systemctl enable --now tuned`; `tuned-adm profile X` |
 | A custom profile isn't listed | Wrong directory or file name (must be `tuned.conf`) | Check the path; `tuned-adm list` |
 | `verify` reports `expected 10, got 30` | Something else overrides it (a `/etc/sysctl.d/` file, a script) | Keep each setting in one place; read `tuned.log` |

@@ -160,7 +160,7 @@ sudo rndc reload example.lan
 ```
 zone reload queued
 ```
-- `rndc` (Remote Name Daemon Control) controls the running named: `reload`, `flush` (clear the cache), `status`.
+- If you forgot to increase the serial, you get `zone reload up-to-date` instead, and named keeps serving the old records (and secondaries would never fetch the change).- `rndc` (Remote Name Daemon Control) controls the running named: `reload`, `flush` (clear the cache), `status`.
 
 ### Test it
 

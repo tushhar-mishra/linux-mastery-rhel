@@ -157,6 +157,7 @@ system_u:system_r:svirt_t:s0:c12,c540  7812 ?   00:01:22 qemu-kvm
 | Symptom | Cause | Fix |
 |---|---|---|
 | `virt-host-validate`: hardware virtualisation FAIL | VT-x/AMD-V disabled, or nested virtualisation off | Enable it in firmware / on the outer hypervisor |
+| `virt-install`: `ERROR    Host does not support any virtualization options` | No `/dev/kvm` (no VT-x/AMD-V, or a VM without nested virtualisation). RHEL's `qemu-kvm` has **no software emulation (TCG)**, so even `--virt-type qemu` fails | Run on bare metal or enable nested virtualisation on the outer hypervisor |
 | `--osinfo OS name is required` | Newer virt-install | Add `--osinfo NAME` (or `--osinfo detect=on,require=off`) |
 | `virsh console` shows nothing | The guest has no serial console | Add `console=ttyS0` to the guest kernel command line (topic 054) |
 | Permission denied on a disk image | SELinux label or location | Use `/var/lib/libvirt/images`, or `restorecon`/proper fcontext |

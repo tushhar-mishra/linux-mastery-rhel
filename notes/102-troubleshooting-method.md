@@ -60,7 +60,7 @@ Test from the bottom up (or inside out); each check takes seconds:
 | Layer | Fast test | Topics |
 |---|---|---|
 | Hardware / virtual hardware | `dmesg -T \| tail`, `journalctl -k -p err` | 038, 094 |
-| Kernel resources | `vmstat 1`, `cat /proc/pressure/*`, `free -h`, `df -h`, `df -i` | 034, 036, 093 |
+| Kernel resources | `vmstat 1`, `cat /proc/pressure/*` (RHEL: boot with `psi=1` first), `free -h`, `df -h`, `df -i` | 034, 036, 093 |
 | Storage | `lsblk`, `findmnt`, `iostat -xz 1` | 046–052, 094 |
 | Network | `ip -br a`, `ip route get X`, `ping`, `ss -tlnp` | 058–063, 095 |
 | Security | `firewall-cmd --list-all`, `ausearch -m avc -ts recent`, `ls -lZ`, `namei -l PATH` | 026–027, 071–074 |
@@ -118,19 +118,22 @@ works now → enabled? (is-enabled) still works after a reboot?
 ### Collect evidence before changing anything
 
 ```bash
-D=/root/incident-$(date +%F_%H%M) ; sudo mkdir -p $D
-sudo journalctl -b --since "-1h" > $D/journal.txt
+sudo -i                                    # a root shell: redirections below write as root
+D=/root/incident-$(date +%F_%H%M) ; mkdir -p $D
+journalctl -b --since "-1h" > $D/journal.txt
 top -b -n 1 > $D/top.txt
 ps -eo pid,ppid,user,stat,%cpu,%mem,wchan:20,cmd > $D/ps.txt
-sudo ss -tanp > $D/ss.txt ; df -h > $D/df.txt ; df -i >> $D/df.txt
-sudo dmesg -T > $D/dmesg.txt
+ss -tanp > $D/ss.txt ; df -h > $D/df.txt ; df -i >> $D/df.txt
+dmesg -T > $D/dmesg.txt
+exit
 ```
+- Run it as root. With `sudo CMD > /root/...`, the **redirection is done by your own shell**, not by sudo, so it fails with `Permission denied` (topic 028).
 
 ### What changed?
 
 ```bash
 sudo dnf history | head -5
-sudo rpm -Va 2>/dev/null | grep -v '^.......T' | head
+sudo rpm -Va 2>/dev/null | grep -v '^.......T' | head      # checks every file: takes minutes
 last -x | head ; journalctl --list-boots | tail -3
 find /etc -newermt '-2 hours' -type f 2>/dev/null
 ```

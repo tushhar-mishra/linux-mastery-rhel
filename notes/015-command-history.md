@@ -42,7 +42,7 @@ What follows from this:
 | `HISTCONTROL` | `ignoredups` (skip repeats), `ignorespace` (skip commands starting with a space), `ignoreboth` (both), `erasedups` | `ignoredups` |
 | `HISTIGNORE` | Patterns never saved, e.g. `ls:ll:history*` | unset |
 | `HISTTIMEFORMAT` | Show a timestamp per entry, e.g. `'%F %T '` | unset |
-| `shopt histappend` | Append instead of overwrite | Usually on |
+| `shopt histappend` | Append instead of overwrite | On (set in `/etc/bashrc`) |
 
 **Trap:** many guides say "start a command with a space to hide it from history". That only works if `HISTCONTROL` contains `ignorespace` or `ignoreboth`. RHEL's default is `ignoredups`, so **spaced commands are saved**. Ubuntu's default `~/.bashrc` uses `ignoreboth`.
 

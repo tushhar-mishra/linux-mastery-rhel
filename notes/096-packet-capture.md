@@ -86,10 +86,10 @@ sudo tcpdump -i any -nn -c 6 port 8080
 ```
 10:41:02.112233 enp0s8 In  IP 192.168.56.10.51234 > 192.168.56.11.8080: Flags [S], seq 1000, win 64240, options [mss 1460,...], length 0
 10:41:02.112301 enp0s8 Out IP 192.168.56.11.8080 > 192.168.56.10.51234: Flags [S.], seq 5000, ack 1001, win 65160, ..., length 0
-10:41:02.112540 enp0s8 In  IP 192.168.56.10.51234 > 192.168.56.11.8080: Flags [.], ack 5001, win 502, length 0
-10:41:02.112811 enp0s8 In  IP 192.168.56.10.51234 > 192.168.56.11.8080: Flags [P.], seq 1001:1079, ack 5001, length 78: HTTP: GET /health HTTP/1.1
-10:41:02.113402 enp0s8 Out IP 192.168.56.11.8080 > 192.168.56.10.51234: Flags [P.], seq 5001:5150, ack 1079, length 149: HTTP: HTTP/1.1 200 OK
-10:41:02.113650 enp0s8 In  IP 192.168.56.10.51234 > 192.168.56.11.8080: Flags [F.], seq 1079, ack 5150, length 0
+10:41:02.112540 enp0s8 In  IP 192.168.56.10.51234 > 192.168.56.11.8080: Flags [.], ack 1, win 502, length 0
+10:41:02.112811 enp0s8 In  IP 192.168.56.10.51234 > 192.168.56.11.8080: Flags [P.], seq 1:79, ack 1, length 78: HTTP: GET /health HTTP/1.1
+10:41:02.113402 enp0s8 Out IP 192.168.56.11.8080 > 192.168.56.10.51234: Flags [P.], seq 1:150, ack 79, length 149: HTTP: HTTP/1.1 200 OK
+10:41:02.113650 enp0s8 In  IP 192.168.56.10.51234 > 192.168.56.11.8080: Flags [F.], seq 79, ack 150, length 0
 ```
 
 | Flag | Meaning |
@@ -101,7 +101,7 @@ sudo tcpdump -i any -nn -c 6 port 8080
 | `[F.]` | FIN (close) |
 | `[R]` / `[R.]` | **RST**: refused or aborted |
 
-- `In`/`Out` shows direction on `-i any`. Here: a full handshake, a GET, a 200 OK, then the client closes.
+- `In`/`Out` shows direction on `-i any`. Here: a full handshake, a GET, a 200 OK, then the client closes. After the handshake, tcpdump prints **relative** sequence numbers (`seq 1:79`, `ack 1`) so they're easy to follow; add `-S` to see the real 32-bit numbers.
 
 **What failures look like:**
 - **Refused:** `[S]` in, `[R.]` out immediately. Nothing is listening, or there's a reject rule.

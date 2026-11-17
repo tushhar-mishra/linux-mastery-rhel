@@ -103,10 +103,11 @@ getent ahosts www.redhat.com | head -2
 ```
 ```
 192.168.56.11   server2.example.com server2
-2600:1408:ec00:385::d44 STREAM www.redhat.com
-23.45.92.181    STREAM www.redhat.com
+23.38.58.41     STREAM e3396.dscx.akamaiedge.net
+23.38.58.41     DGRAM
 ```
 - `getent` follows nsswitch exactly like applications do (files, then DNS).
+- `ahosts` shows what a program would get from `getaddrinfo()`: one line per address and socket type (`STREAM` for TCP, `DGRAM` for UDP). The name on the first line is the **canonical** name, reached after following CNAME aliases (here `www.redhat.com` is an alias that ends at a CDN host). Use `getent hosts NAME` for a simple "IP name" answer.
 
 ### dig: ask DNS directly
 
@@ -118,26 +119,30 @@ dig www.example.com
 ; <<>> DiG 9.18.33 <<>> www.example.com
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 41712
-;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 41721
+;; flags: qr rd ra ad; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1280
 ;; QUESTION SECTION:
 ;www.example.com.		IN	A
 
 ;; ANSWER SECTION:
-www.example.com.	3002	IN	A	93.184.215.14
+www.example.com.	1	IN	A	104.20.23.154
+www.example.com.	1	IN	A	172.66.147.243
 
-;; Query time: 12 msec
+;; Query time: 51 msec
 ;; SERVER: 10.0.2.3#53(10.0.2.3) (UDP)
-;; WHEN: Mon Nov 16 17:10:22 UTC 2026
-;; MSG SIZE  rcvd: 60
+;; WHEN: Tue Nov 17 00:31:33 UTC 2026
+;; MSG SIZE  rcvd: 76
 ```
 
 | Part | Meaning |
 |---|---|
 | `status: NOERROR` | Success. **`NXDOMAIN`** = the name doesn't exist. **`SERVFAIL`** = the resolver couldn't get an answer (broken upstream or DNSSEC). `REFUSED` = the server won't answer you |
-| `flags: qr rd ra` | `rd` = you asked for recursion, `ra` = the server offers it. `aa` would mean an authoritative answer |
-| `ANSWER SECTION` | Name, **TTL in seconds** (3002 left in the cache), class `IN`, type `A`, the value |
+| `flags: qr rd ra ad` | `rd` = you asked for recursion, `ra` = the server offers it, `ad` = the resolver validated the answer with DNSSEC. `aa` would mean an authoritative answer |
+| `OPT PSEUDOSECTION` | EDNS: an extension that lets DNS messages be larger than 512 bytes (`udp: 1280` = the size offered). It is the "1" in `ADDITIONAL: 1` |
+| `ANSWER SECTION` | Name, **TTL in seconds** (here only 1 s left in the cache), class `IN`, type `A`, the value. Two lines = two addresses; clients may use either |
 | `Query time` | How long the lookup took. A slow resolver shows up here |
 | `SERVER:` | Which DNS server answered |
 

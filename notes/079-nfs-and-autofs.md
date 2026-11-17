@@ -105,9 +105,10 @@ Export list for 192.168.56.11:
 /srv/nfs/public  192.168.56.0/24
 /srv/nfs/private 192.168.56.10
 TARGET      SOURCE                         FSTYPE OPTIONS
-/mnt/public 192.168.56.11:/srv/nfs/public  nfs4   ro,relatime,vers=4.2,rsize=262144,wsize=262144,hard,proto=tcp,timeo=600,retrans=2,sec=sys,...
+/mnt/public 192.168.56.11:/srv/nfs/public  nfs4   rw,relatime,vers=4.2,rsize=262144,wsize=262144,namlen=255,hard,fatal_neterrors=none,proto=tcp,timeo=600,retrans=2,sec=sys,...
 ```
 - `vers=4.2` was negotiated. `hard` = retry forever if the server disappears. `rsize/wsize` = the transfer block size. `sec=sys` = UID-based trust.
+- The mount says `rw` although the export is `ro`: these are the **client's** mount options. The server still enforces its export, so a write fails with `Read-only file system`. Mount with `-o ro` if you want the client side to say so too.
 
 ```
 # /etc/fstab

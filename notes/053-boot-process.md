@@ -108,12 +108,16 @@ BOOT_IMAGE=(hd0,gpt2)/vmlinuz-6.12.0-55.el10.x86_64 root=/dev/mapper/rhel-root r
 sudo efibootmgr -v
 ```
 ```
-BootCurrent: 0001
-BootOrder: 0001,0000
-Boot0000* UiApp	FvVol(...)
-Boot0001* Red Hat Enterprise Linux	HD(1,GPT,…)/File(\EFI\redhat\shimx64.efi)
+BootCurrent: 0002
+Timeout: 0 seconds
+BootOrder: 0002,0000,0001,0003,0004
+Boot0000* UiApp	FvVol(7cb8bdc9-…)/FvFile(462caa21-…)
+      dp: 04 07 14 00 …
+Boot0002* AlmaLinux	HD(2,GPT,fca4cfde-…,0x1000,0x64000)/\EFI\almalinux\shimx64.efi
+      dp: 04 01 2a 00 …
 ```
-- The firmware's boot entries and their order. The RHEL entry points at shim on the ESP.
+- The firmware's boot entries and their order. The OS entry points at shim on the ESP (on RHEL: `\EFI\redhat\shimx64.efi`, labelled "Red Hat Enterprise Linux").
+- The `dp:` lines are the same device path as raw bytes; newer `efibootmgr` prints them with `-v`. Plain `efibootmgr` (no `-v`) gives a shorter listing.
 
 ```bash
 ls /boot ; ls /boot/loader/entries/
@@ -127,10 +131,10 @@ lsinitrd /boot/initramfs-$(uname -r).img | grep -E 'lvm|xfs' | head
 systemd-analyze
 ```
 ```
-Startup finished in 2.104s (firmware) + 1.512s (loader) + 1.201s (kernel) + 2.874s (initrd) + 9.640s (userspace) = 17.333s
-multi-user.target reached after 9.601s in userspace.
+Startup finished in 1.831s (kernel) + 8.047s (initrd) + 17.868s (userspace) = 27.747s
+multi-user.target reached after 14.805s in userspace.
 ```
-- The time spent in each stage.
+- The time spent in each stage. Some systems also show `(firmware)` and `(loader)` times in front, but only when the boot loader reports them to Linux; with RHEL's GRUB you normally see just kernel, initrd and userspace.
 
 ```bash
 systemd-analyze blame | head -3

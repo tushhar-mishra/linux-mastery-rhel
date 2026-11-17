@@ -68,22 +68,24 @@ When you add `-z`, tar starts `gzip` and **pipes** (topic 016) its output throug
 | Test | `gzip -t f.gz` | `bzip2 -t` | `xz -t` |
 
 ```bash
-cp /var/log/messages /tmp/m ; ls -lh /tmp/m ; gzip -k -9 /tmp/m ; gzip -l /tmp/m.gz
+sudo cp /var/log/messages /tmp/m ; sudo chown $USER: /tmp/m     # the log is readable only by root
+ls -lh /tmp/m ; gzip -k -9 /tmp/m ; gzip -l /tmp/m.gz
 ```
 ```
--rw-------. 1 alice alice 612K Nov 16 12:00 /tmp/m
+-rw-------. 1 alice alice 527K Nov 16 23:11 /tmp/m
          compressed        uncompressed  ratio uncompressed_name
-              58312              627145  90.7% /tmp/m
+              84929              538856  84.2% /tmp/m
 ```
-- A text log shrank by about 91%.
+- A text log shrank by about 84%. Logs compress very well because they repeat the same words.
 
 ```bash
-zgrep -c sshd /var/log/messages-20261110.gz
+sudo zgrep -c sshd /var/log/messages-20261110
 ```
 ```
 37
 ```
-- Search a rotated, compressed log without unpacking it.
+- `zgrep` searches compressed **and** plain files, so the same command works however a log was rotated.
+- On RHEL, rotated logs are **not compressed** by default (`#compress` is commented out in `/etc/logrotate.conf`), so you see `messages-20261110` rather than `.gz`. Many sites turn `compress` on; Ubuntu compresses by default (`syslog.2.gz`).
 
 ### tar
 
@@ -117,21 +119,22 @@ sudo tar -czvf /root/etc-backup.tar.gz -C / etc
 ```
 ```
 etc/
-etc/hostname
-etc/passwd
+etc/fstab
+etc/crypttab
 ...
 ```
 - `-C / etc` = "go to `/`, then archive `etc`". It stores paths as `etc/...` with no warning.
 
 ```bash
-tar -tvf /root/etc-backup.tar.gz | head -3
+sudo tar -tvf /root/etc-backup.tar.gz | head -3
 ```
 ```
-drwxr-xr-x root/root         0 2026-11-16 09:00 etc/
--rw-r--r-- root/root        20 2026-10-03 12:00 etc/hostname
--rw-r--r-- root/root      2311 2026-11-15 18:20 etc/passwd
+drwxr-xr-x root/root         0 2026-11-16 23:11 etc/
+-rw-r--r-- root/root       732 2026-11-16 20:21 etc/fstab
+-rw------- root/root         0 2026-09-14 12:44 etc/crypttab
 ```
 - **Always list before extracting an archive you didn't make.** The columns are permissions, owner/group, size, date and stored path.
+- `sudo` is needed only because the archive sits in `/root`, which normal users can't enter. The order is the order tar met the files on disk, not alphabetical.
 
 ```bash
 mkdir -p /tmp/restore
@@ -147,10 +150,10 @@ tar -xzf app.tar.gz --wildcards '*.conf'
 - Extract one member, using the **exact stored path** shown by `tar -t`. Or extract by pattern.
 
 ```bash
-file /root/etc-backup.tar.gz
+sudo file /root/etc-backup.tar.gz
 ```
 ```
-/root/etc-backup.tar.gz: gzip compressed data, from Unix, original size modulo 2^32 4126720
+/root/etc-backup.tar.gz: gzip compressed data, from Unix, original size modulo 2^32 22200320
 ```
 - Confirms the real compression type, whatever the file name says.
 
@@ -202,6 +205,7 @@ unzip -n site.zip                   # never overwrite
 ### zstd
 
 ```bash
+sudo dnf install -y zstd                # not part of a minimal install
 tar --zstd -cf logs.tar.zst /var/log/app
 zstd -19 -T0 big.dump               # max compression, all cores
 ```

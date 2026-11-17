@@ -63,7 +63,7 @@ sudo systemctl enable --now osbuild-composer.socket
 sudo usermod -aG weldr alice          # optional: allow a non-root user to use composer-cli (re-login)
 composer-cli status show
 ```
-Requirements: a registered RHEL host (or local repo mirrors), about 4 GiB RAM and 20+ GiB free in `/var`.
+Requirements: a registered RHEL host (or local repo mirrors), about 4 GiB RAM and 20+ GiB free in `/var`. The **first** request after the service starts is slow: osbuild-composer preloads the definition of every distribution release it supports (minutes on a small VM), so a `depsolve` can look hung. Watch `journalctl -u osbuild-composer -f` for the `Finished preload` lines.
 
 ### A blueprint
 
@@ -115,8 +115,8 @@ composer-cli blueprints list
 ```
 ```
 blueprint: golden v0.0.1
-    acl-2.3.2-1.el10.x86_64
-    alternatives-1.30-1.el10.x86_64
+    almalinux-gpg-keys-10.2-22.el10.x86_64      (on RHEL: redhat-release and friends)
+    almalinux-release-10.2-22.el10.x86_64
 ...
 golden
 ```
@@ -130,7 +130,7 @@ composer-cli compose start golden qcow2
 composer-cli compose status
 ```
 ```
-ami edge-installer gce image-installer minimal-raw oci qcow2 vhd vmdk wsl ...
+ami azure container container-minimal ec2 gce image-installer network-installer oci ova pxe-tar-xz qcow2 tar vagrant-libvirt vagrant-virtualbox vhd vmdk wsl
 Compose 5f1c2b3a-8d9e-4f10-a2b3-c4d5e6f7a8b9 added to the queue
 5f1c2b3a-8d9e-4f10-a2b3-c4d5e6f7a8b9 RUNNING  Tue Nov 17 15:02:11 2026 golden 0.0.1 qcow2
 ```
@@ -163,6 +163,7 @@ Open `https://HOST:9090` → **Image Builder** → create a blueprint (packages,
 
 | Symptom | Cause | Fix |
 |---|---|---|
+| `composer-cli` hangs for minutes right after install or restart | osbuild-composer is preloading its distribution definitions | Wait; follow `journalctl -u osbuild-composer -f`. Give the host more CPU/RAM |
 | `composer-cli: … connection refused` | The socket isn't started | `systemctl enable --now osbuild-composer.socket` |
 | `permission denied` on the API socket | Not root and not in `weldr` | `usermod -aG weldr USER`; re-login |
 | Depsolve errors | A package name or version isn't in the repos | `dnf info PKG`; fix the blueprint |

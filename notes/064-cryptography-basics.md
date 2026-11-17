@@ -102,7 +102,7 @@ echo -n "hello" | sha256sum ; echo -n "hellp" | sha256sum
 ```
 ```
 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824  -
-51d82f5f16e4b77d2d7ae9b5a3ab5a2f8e7b4c3f1c2c4b0d7a6a3b1b2b9b8c7d  -
+fdd7585e08c4e2afd71dcabdb4636c89d557a3f42db9e2040c8bbd1708aa4ce7  -
 ```
 - One letter changed → a completely different hash.
 
@@ -133,14 +133,15 @@ openssl s_client -connect www.redhat.com:443 -servername www.redhat.com </dev/nu
   | openssl x509 -noout -subject -issuer -dates -ext subjectAltName
 ```
 ```
-subject=CN=www.redhat.com
-issuer=C=US, O=DigiCert Inc, CN=DigiCert Global G2 TLS RSA SHA256 2020 CA1
-notBefore=Feb 10 00:00:00 2026 GMT
-notAfter=Feb 11 23:59:59 2027 GMT
+subject=jurisdictionC=US, jurisdictionST=Delaware, businessCategory=Private Organization, serialNumber=2945436, C=US, ST=North Carolina, L=Raleigh, O=Red Hat, LLC, CN=www.redhat.com
+issuer=C=US, O=DigiCert Inc, CN=DigiCert EV RSA CA G2
+notBefore=Aug 24 00:00:00 2026 GMT
+notAfter=Mar 10 23:59:59 2027 GMT
 X509v3 Subject Alternative Name:
-    DNS:www.redhat.com, DNS:redhat.com
+    DNS:www.redhat.com
 ```
 - **Subject/SAN** = which names it's valid for. **Issuer** = the CA that signed it. **notBefore/notAfter** = the validity window. Expired certificates are one of the most common production outages.
+- This is an **EV** (Extended Validation) certificate, so its subject also lists the company's legal details. Browsers and clients only check the names in the SAN; the `CN` is legacy.
 
 ### Make a self-signed certificate (labs)
 

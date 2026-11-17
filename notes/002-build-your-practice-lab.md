@@ -123,6 +123,7 @@ end
 
 - `private_network` creates the Host-only network. `192.168.56.10` is server1's address on it (IP addresses are explained in topic 059).
 - `vb.memory` is RAM in MB. `vb.cpus` is the number of virtual CPUs.
+- The two VMs together need 6 GB of RAM. On an 8 GB laptop, use `2048` and `1024` instead, or start only server1 (`vagrant up server1`).
 
 ```bash
 cd linux-lab
@@ -133,9 +134,14 @@ Bringing machine 'server1' up with 'virtualbox' provider...
 Bringing machine 'server2' up with 'virtualbox' provider...
 ==> server1: Importing base box 'almalinux/10'...
 ...
-==> server2: Machine booted and ready!
+==> server1: Machine booted and ready!
+==> server1: Checking for guest additions in VM...
+==> server1: Setting hostname...
+==> server1: Configuring and enabling network interfaces...
+...
 ```
-- `vagrant up` downloads the box the first time, then creates and boots both VMs.
+- `vagrant up` downloads the box the first time (about 625 MB), then creates and boots both VMs.
+- **The last two lines matter.** Vagrant sets the hostname and the private-network address only *after* the VM has booted. If `vagrant up` stops with "Timed out while waiting for the machine to boot", those steps never ran, and the VM is left with hostname `localhost` and no `192.168.56.x` address. Once it boots, run `vagrant reload` to finish the setup.
 
 ```bash
 vagrant status
@@ -214,6 +220,16 @@ sdb      8:16   0    5G  0 disk
 sdc      8:32   0    5G  0 disk
 ```
 - `sda` is the system disk. `sdb` and `sdc` are your empty practice disks (on KVM they're called `vda`, `vdb`, `vdc`).
+- A **Vagrant box** looks different from a manual install. The `almalinux/10` box has a plain XFS root partition (no LVM, no swap), and its network cards are called `eth0`/`eth1` instead of names like `enp0s3`:
+```
+NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+sda      8:0    0 19.5G  0 disk
+├─sda1   8:1    0    1M  0 part
+├─sda2   8:2    0  200M  0 part /boot/efi
+├─sda3   8:3    0    1G  0 part /boot
+└─sda4   8:4    0 18.3G  0 part /
+```
+  Both are fine for learning; the storage topics use the extra disks either way.
 
 ### Add extra disks for storage practice
 
@@ -230,6 +246,9 @@ grep -Ec '(vmx|svm)' /proc/cpuinfo
 8
 ```
 - This counts the CPU lines that have the virtualization flag. Any number above 0 means VT-x/AMD-V is available. `0` means it's off in the firmware or unsupported.
+- Inside a VirtualBox guest this prints `0`: VirtualBox doesn't pass the flag through by default, so you can't run VMs inside the VM (topic 100 needs nested virtualization).
+
+On a Windows host, open Task Manager → Performance → CPU and look for **Virtualization: Enabled**. If Windows' own hypervisor is active (Hyper-V, WSL2, or "Memory integrity" under Core isolation), VirtualBox can't use VT-x directly. It falls back to running on top of Windows' hypervisor, which is slower; see "When it breaks".
 
 Inside a guest:
 
@@ -269,6 +288,8 @@ oracle
 | No network after a manual install | The network card was left OFF in the installer | `nmcli device status`, then `nmcli connection up <name>` (topic 060) |
 | Can't log in as root | Root is disabled by default on RHEL 10 | Log in as your admin user and run `sudo -i` |
 | VM very slow | Too little RAM, or hardware virtualization unavailable | Give it more RAM; check the `vmx`/`svm` flags |
+| Windows host: `vagrant up` times out; the VM console froze after about 3 seconds of kernel messages; the VirtualBox log (`VBoxManage showvminfo NAME --log 0`) says "VT-x is not available … fall back to NEM" | Windows' hypervisor (Memory integrity/VBS, Hyper-V or WSL2) owns VT-x, so VirtualBox runs on top of it, and recent kernels can hang there | Quickest: 1 vCPU and no paravirtualization: add `vb.cpus = 1` and `vb.customize ["modifyvm", :id, "--paravirt-provider", "none"]`, then `vagrant reload`. Faster VMs: turn off Memory integrity (Windows Security → Device security → Core isolation) and reboot Windows, which lowers Windows' protection, so decide deliberately |
+| VM is up but hostname is `localhost` and there's no `192.168.56.x` address | `vagrant up` timed out before its setup steps | `vagrant reload` |
 
 ## Quick recap
 

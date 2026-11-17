@@ -155,10 +155,10 @@ You can't run these until you have a lab (next topic). Read them now and come ba
 uname -r
 ```
 ```
-6.12.0-55.el10.x86_64
+6.12.0-211.53.1.el10_2.x86_64
 ```
 - `uname` prints system information. `-r` asks for the kernel **release**.
-- `6.12.0` is the kernel version. `55` is Red Hat's build number. `el10` means "Enterprise Linux 10". `x86_64` is the CPU architecture (64-bit Intel/AMD).
+- `6.12.0` is the upstream kernel version. `211.53.1` is the distribution's build number. `el10_2` means "Enterprise Linux 10, update 2". `x86_64` is the CPU architecture (64-bit Intel/AMD).
 
 ```bash
 uname -m
@@ -172,49 +172,61 @@ x86_64
 cat /etc/os-release
 ```
 ```
-NAME="Red Hat Enterprise Linux"
-VERSION="10.1 (Coughlan)"
-ID="rhel"
-ID_LIKE="centos fedora"
-VERSION_ID="10.1"
+NAME="AlmaLinux"
+VERSION="10.2 (Lavender Lion)"
+RELEASE_TYPE=stable
+ID="almalinux"
+ID_LIKE="rhel centos fedora"
+VERSION_ID="10.2"
 PLATFORM_ID="platform:el10"
-PRETTY_NAME="Red Hat Enterprise Linux 10.1 (Coughlan)"
+PRETTY_NAME="AlmaLinux 10.2 (Lavender Lion)"
+...
 ```
 - `cat` prints a file. `/etc/os-release` exists on **every** modern distro (Ubuntu too). Scripts read it to know where they are running.
-- `ID` is the short name (`rhel`, `ubuntu`, `debian`).
-- `ID_LIKE` lists the families it is compatible with.
-- `VERSION_ID` is the version number. `Coughlan` is the RHEL 10 codename.
+- `ID` is the short name (`rhel`, `almalinux`, `ubuntu`, `debian`).
+- `ID_LIKE` lists the families it is compatible with: AlmaLinux says it behaves like `rhel`.
+- `VERSION_ID` is the version number. `PLATFORM_ID="platform:el10"` is the same on RHEL 10 and every rebuild of it. On real RHEL you'd see `NAME="Red Hat Enterprise Linux"` and `ID="rhel"`.
 
 ```bash
 cat /etc/redhat-release        # RHEL family only
 ```
 ```
-Red Hat Enterprise Linux release 10.1 (Coughlan)
+AlmaLinux release 10.2 (Lavender Lion)
 ```
+- RHEL-family systems keep this one-line file for older scripts. RHEL itself prints `Red Hat Enterprise Linux release 10.x (…)`.
 
 ```bash
 hostnamectl
 ```
 ```
- Static hostname: server1.example.com
-       Icon name: computer-vm
-         Chassis: vm
-  Virtualization: kvm
-Operating System: Red Hat Enterprise Linux 10.1 (Coughlan)
-          Kernel: Linux 6.12.0-55.el10.x86_64
-    Architecture: x86-64
+     Static hostname: localhost
+           Icon name: computer-vm
+             Chassis: vm 🖴
+          Machine ID: 70f12486803644139ed48fe11bab52f7
+             Boot ID: d67267e2d11d43d2b3345e154bd3356c
+      Virtualization: oracle
+    Operating System: AlmaLinux 10.2 (Lavender Lion)
+         CPE OS Name: cpe:/o:almalinux:almalinux:10.2
+      OS Support End: Fri 2035-06-01
+              Kernel: Linux 6.12.0-211.53.1.el10_2.x86_64
+        Architecture: x86-64
+     Hardware Vendor: innotek GmbH
+      Hardware Model: VirtualBox
+...
 ```
-- A one-screen summary. `Virtualization: kvm` tells you this is a virtual machine running on the KVM hypervisor (you'll learn these words in topic 002). On real hardware this line is missing.
+- A one-screen summary. `Virtualization: oracle` means this is a virtual machine running in VirtualBox (Oracle's hypervisor; you'll learn these words in topic 002). On KVM it says `kvm`; on real hardware the line is missing.
+- `Static hostname: localhost` means nobody has set a hostname yet (topic 060 shows how).
 
 ```bash
 ldd /usr/bin/ls
 ```
 ```
-	linux-vdso.so.1 (0x00007ffd6b9e5000)
-	libselinux.so.1 => /lib64/libselinux.so.1 (0x00007f2b1c5a0000)
-	libcap.so.2 => /lib64/libcap.so.2 (0x00007f2b1c596000)
-	libc.so.6 => /lib64/libc.so.6 (0x00007f2b1c3a4000)
-	/lib64/ld-linux-x86-64.so.2 (0x00007f2b1c5f9000)
+	linux-vdso.so.1 (0x00007f62283b8000)
+	libselinux.so.1 => /lib64/libselinux.so.1 (0x00007f6228355000)
+	libcap.so.2 => /lib64/libcap.so.2 (0x00007f6228348000)
+	libc.so.6 => /lib64/libc.so.6 (0x00007f622816e000)
+	libpcre2-8.so.0 => /lib64/libpcre2-8.so.0 (0x00007f62280ce000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007f62283ba000)
 ```
 - `ldd` lists the **shared libraries** a program needs. A shared library is code that many programs load instead of each carrying its own copy.
 - `libc.so.6` is glibc, the wrapper around system calls.

@@ -73,8 +73,12 @@ total size is 2.10G  speedup is 11.65
 rsync -avhn --delete /srv/data/ backup01:/backups/data/
 ```
 ```
+sending incremental file list
 deleting old/report-2024.csv
 reports/2026-12.csv
+
+sent 151 bytes  received 38 bytes  378.00 bytes/sec
+total size is 2.10G  speedup is 110,960.44 (DRY RUN)
 ```
 - **Always dry-run `--delete` first.** `deleting …` lines show what would be removed.
 

@@ -148,7 +148,7 @@ Also: PID 1 of a namespace ignores signals it has no handler for, when they're s
 <details><summary>Model answer</summary>
 
 It depends. Linux load counts threads that are runnable **or** in D state, averaged over 1/5/15 minutes.
-- **CPU problem:** `vmstat` `r` > 16, high us/sy, `mpstat`, PSI cpu.
+- **CPU problem:** `vmstat` `r` > 16, high us/sy, `mpstat`, PSI cpu (RHEL: boot with `psi=1` first).
 - **I/O problem:** `b`, `wa`, D-state processes, `iostat` await, PSI io.
 
 The trend matters (1-minute vs 15-minute). A load of 40 with idle CPUs and D-state tasks means a storage or NFS problem, not a CPU one. → Topics 034, 103.

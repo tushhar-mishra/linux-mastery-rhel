@@ -112,15 +112,14 @@ root     tty2         2026-11-16 08:55
 w
 ```
 ```
- 09:45:02 up 2 days,  3:01,  3 users,  load average: 0.08, 0.03, 0.01
-USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU  WHAT
-vagrant  pts/0    192.168.56.1     09:12    0.00s  0.05s  0.00s w
-alice    pts/1    10.0.0.25        09:40    4:30   0.02s  0.02s vim app.conf
-root     tty2     -                08:55    50:10  0.01s  0.01s -bash
+ 20:21:42 up 1 min,  1 user,  load average: 0.93, 0.41, 0.15
+USER     TTY        LOGIN@   IDLE   JCPU   PCPU WHAT
+vagrant            20:21   54.00s  0.00s  0.02s sshd-session: vagrant [priv]
 ```
 - Like `who`, but it also shows **what each person is doing**.
 - First line: current time, **uptime** (how long since the last boot), number of users, and **load average** (how busy the system is, topic 034).
-- `IDLE`: time since they last pressed a key. `WHAT`: the command they are running now. `-bash` with a dash means a login shell sitting at its prompt.
+- `IDLE`: time since they last pressed a key. `WHAT`: the command they are running now. On a local console you'd see `-bash` (the dash means a login shell sitting at its prompt).
+- On RHEL 10, `w` gets its session list from systemd's login manager. Two surprises: the `FROM` column is hidden unless you add `-f` (`w -f`), and for SSH logins `TTY` may be blank while `WHAT` shows `sshd-session: USER [priv]`, the helper process OpenSSH 9.9 runs for each login. `who` still shows the terminal and the source address. Older systems and Ubuntu print a `FROM` column by default.
 
 ```bash
 echo $0

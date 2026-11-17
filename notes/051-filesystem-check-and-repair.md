@@ -62,25 +62,39 @@ EXT4-fs (vdb2): Remounting filesystem read-only
 
 ```bash
 findmnt /dev/vdb2 && sudo umount /logs          # must be unmounted
-sudo e2fsck -n /dev/vdb2                         # read-only check: report only, answers "no"
+sudo e2fsck -fn /dev/vdb2                        # read-only check: force a real check, answer "no" to every fix
 sudo e2fsck -f -y /dev/vdb2                      # force a full check, fix everything (yes to all)
 ```
 ```
 e2fsck 1.47.1 (20-May-2024)
 Pass 1: Checking inodes, blocks, and sizes
 Pass 2: Checking directory structure
-Entry 'report.txt' in /data (131073) has deleted/unused inode 131090.  Clear? yes
+Entry 'report.txt' in /data (129025) has deleted/unused inode 129026.  Clear? yes
+
 Pass 3: Checking directory connectivity
 Pass 4: Checking reference counts
 Pass 5: Checking group summary information
+Block bitmap differences:  -573440
+Fix? yes
+
+Free blocks count wrong for group #17 (16383, counted=16384).
+Fix? yes
+...
+Inode bitmap differences:  -129026
+Fix? yes
+...
+
 LOGS: ***** FILE SYSTEM WAS MODIFIED *****
-LOGS: 14/131072 files (0.0% non-contiguous), 26941/524288 blocks
+LOGS: 12/282240 files (0.0% non-contiguous), 38517/1127424 blocks
 ```
 - The five passes: inodes → directory structure → whether every directory is connected to the tree → link counts → free-space summaries. "WAS MODIFIED" = fixes were made.
+- Here a directory entry pointed at an inode that had been wiped. Pass 2 removed the entry, and Pass 5 then corrected the free-block and free-inode counts that no longer matched.
+- **Always add `-f` to a check-only run.** Plain `e2fsck -n` trusts the "clean" flag in the superblock and skips the check: on this damaged filesystem it printed `LOGS: clean, 13/282240 files` and exited 0.
+- Exit code: `0` = no errors, `1` = errors were fixed, `4` = errors left uncorrected (e.g. with `-n`), `8` = operational error. Scripts and boot checks rely on it.
 
 | `e2fsck` option | Meaning |
 |---|---|
-| `-n` | Read-only; answer "no" to everything |
+| `-n` | Read-only; answer "no" to everything (combine with `-f`, or a "clean" filesystem isn't checked at all) |
 | `-y` | Answer "yes" to everything |
 | `-p` | "Preen": automatically fix only safe problems (used at boot) |
 | `-f` | Force a check even if the filesystem looks clean |
@@ -127,10 +141,12 @@ sudo xfs_repair /dev/vdc1
 ```
 ERROR: The filesystem has valuable metadata changes in a log which needs to
 be replayed.  Mount the filesystem to replay the log, and unmount it before
-re-running xfs_repair.  If you are unable to mount the filesystem, then use
-the -L option to destroy the log and attempt a repair.
+re-running xfs_repair.  If the filesystem is a snapshot of a mounted
+filesystem, you may need to give mount the nouuid option. If you are unable
+to mount the filesystem, then use the -L option to destroy the log and
+attempt a repair.
 ```
-- Do exactly what it says. Use `-L` **only** if the mount fails.
+- Do exactly what it says. Use `-L` **only** if the mount fails. A successful mount replays the log; the kernel log then shows `XFS (dm-0): Starting recovery (logdev: internal)` and `Ending recovery`. This situation is easy to reproduce in a lab: `sudo xfs_io -x -c shutdown /web` stops a busy XFS filesystem without flushing its log, just like a crash.
 
 ### The root filesystem
 

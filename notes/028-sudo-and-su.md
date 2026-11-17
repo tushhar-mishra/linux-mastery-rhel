@@ -166,6 +166,7 @@ sudo chmod 0440 /etc/sudoers.d/sysadmin ; sudo visudo -c
 
 # harry may only create users and set passwords
 echo 'harry ALL=(root) /usr/sbin/useradd, /usr/bin/passwd' | sudo tee /etc/sudoers.d/harry
+sudo chmod 0440 /etc/sudoers.d/harry ; sudo visudo -c   # tee creates files 0644; visudo -c would warn "bad permissions"
 ```
 - Find full paths with `command -v useradd`. sudoers needs absolute paths.
 
@@ -173,6 +174,9 @@ echo 'harry ALL=(root) /usr/sbin/useradd, /usr/bin/passwd' | sudo tee /etc/sudoe
 sudo -l -U harry
 ```
 ```
+Matching Defaults entries for harry on server1:
+    ...
+
 User harry may run the following commands on server1:
     (root) /usr/sbin/useradd, /usr/bin/passwd
 ```
@@ -183,6 +187,7 @@ User harry may run the following commands on server1:
 ```bash
 sudo install -m 0755 -o root -g root restart-web.sh /usr/local/sbin/restart-web.sh
 echo '%webteam ALL=(root) NOPASSWD: /usr/local/sbin/restart-web.sh' | sudo tee /etc/sudoers.d/webteam
+sudo chmod 0440 /etc/sudoers.d/webteam ; sudo visudo -c
 ```
 - The script and **every directory above it** must be writable only by root. Otherwise the user can replace the script and become root.
 

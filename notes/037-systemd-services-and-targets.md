@@ -90,6 +90,7 @@ systemctl status sshd
 ● sshd.service - OpenSSH server daemon
      Loaded: loaded (/usr/lib/systemd/system/sshd.service; enabled; preset: enabled)
      Active: active (running) since Mon 2026-11-16 08:51:02 UTC; 6h ago
+ Invocation: 4baf8712d9c2437798e2cdf0c7df5c91
        Docs: man:sshd(8)
              man:sshd_config(5)
    Main PID: 1050 (sshd)
@@ -106,6 +107,7 @@ Nov 16 13:02:11 server1 sshd-session[4120]: Accepted publickey for alice from 19
 |---|---|
 | `Loaded:` | Which file defines it; **enabled** = starts at boot; `preset` = the distro's default |
 | `Active:` | `active (running)`, `inactive (dead)`, `failed`, `activating`… and since when |
+| `Invocation:` | A unique ID for this run of the service (new in systemd 257). Filter the journal for exactly one run with `journalctl _SYSTEMD_INVOCATION_ID=…` |
 | `Main PID` | The main process |
 | `Tasks` / `Memory` / `CPU` | Resource use, measured through the cgroup |
 | `CGroup:` | Every process belonging to the service |
@@ -214,7 +216,7 @@ Nov 16 15:10:01 server1 systemd[1]: Started heartbeat.service - Heartbeat demo s
 Nov 16 15:10:01 server1 heartbeat.sh[5120]: heartbeat from server1.example.com at 15:10:01
 Nov 16 15:10:11 server1 heartbeat.sh[5120]: heartbeat from server1.example.com at 15:10:11
 ```
-
+- If you see `No journal files were opened due to insufficient permissions`, your user isn't in `wheel`, `adm` or `systemd-journal`: use `sudo journalctl …` (topic 038).
 | Line | Meaning |
 |---|---|
 | `[Unit] Description=` | Human-readable name |

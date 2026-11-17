@@ -96,11 +96,11 @@ echo $GREETING             # hello   (parent unchanged)
 env | sort | head -5
 ```
 ```
+DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+DEBUGINFOD_IMA_CERT_PATH=/etc/keys/ima:
+GPG_TTY=/dev/pts/0
 HISTCONTROL=ignoredups
 HISTSIZE=1000
-HOME=/home/alice
-HOSTNAME=server1.example.com
-LANG=en_US.UTF-8
 ```
 - `env` prints the **environment** (exported variables only). `set` prints everything, including local variables and shell functions.
 
@@ -117,17 +117,17 @@ declare -x PATH="/home/alice/.local/bin:/home/alice/bin:/usr/local/bin:/usr/bin:
 LANG=C date
 ```
 ```
-Mon Nov 16 10:45:02 UTC 2026
+Mon Nov 16 20:28:19 UTC 2026
 ```
-- `NAME=value command` sets a variable **for that one command only**. Here it forces English/plain output. This is very handy for scripts that parse output.
+- `NAME=value command` sets a variable **for that one command only**. Here it forces English/plain output. (Compare plain `date`, which on RHEL prints `08:28:19 PM` because of `en_US.UTF-8`, topic 004.) This is very handy for scripts that parse output.
 
 ```bash
 env -i bash -c 'echo "[$HOME] [$PATH]"'
 ```
 ```
-[] [/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:.]
+[] [/usr/local/bin:/usr/bin]
 ```
-- `env -i` starts a program with an **empty** environment. Bash then fills in a fallback PATH (note the `.` at the end of that fallback, one more reason not to rely on it). Useful to test how a program behaves under cron or systemd, which give a minimal environment.
+- `env -i` starts a program with an **empty** environment. Bash then fills in a short built-in fallback PATH (on RHEL 10 just `/usr/local/bin:/usr/bin`; other builds differ, so never rely on it). Useful to test how a program behaves under cron or systemd, which give a minimal environment.
 
 ```bash
 readonly PI=3.14 ; PI=3

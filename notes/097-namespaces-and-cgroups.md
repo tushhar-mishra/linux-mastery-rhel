@@ -144,21 +144,21 @@ hostname
 inside: inside-ns
 my PID: 1
 UID          PID    PPID  C STIME TTY          TIME CMD
-root           1       0  0 12:03 pts/0    00:00:00 bash -c hostname inside-ns; ...
-root           3       1  0 12:03 pts/0    00:00:00 ps -ef
-server1
+root           1       0  0 01:31 ?        00:00:00 ps -ef
+server1.example.com
 ```
-- Inside: its own hostname, the shell is **PID 1**, and `ps` sees only two processes (`--mount-proc` mounted a fresh `/proc`). Outside, the hostname is unchanged.
+- Inside: its own hostname, the first process is **PID 1**, and `ps` sees only itself (`--mount-proc` mounted a fresh `/proc`). Outside, the hostname is unchanged.
+- Why is `ps` PID 1 and not bash? Bash `exec`s the **last** command of a `-c` string instead of forking it, so `ps` replaced the shell. Add `; true` at the end and you'll see bash as PID 1 and `ps` as a child.
 
 ```bash
 unshare --user --map-root-user bash -c 'id; cat /proc/self/uid_map; touch /etc/x'     # as a NORMAL user
 ```
 ```
-uid=0(root) gid=0(root) groups=0(root)
+uid=0(root) gid=0(root) groups=0(root),65534(nobody) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
          0       1000          1
 touch: cannot touch '/etc/x': Permission denied
 ```
-- "root" inside maps to UID 1000 outside, so the host's real permissions still apply. This is the basis of **rootless containers**.
+- "root" inside maps to UID 1000 outside, so the host's real permissions still apply. This is the basis of **rootless containers**. Your other groups can't be mapped without help, so they show up as `65534(nobody)`.
 
 ### Network namespaces, veth and NAT: container networking by hand
 
@@ -300,6 +300,7 @@ Inside: the hostname is `myctr`, `/proc` shows only your processes, `/proc/self/
 
 | Symptom | Mechanism | Check |
 |---|---|---|
+| No `cpu.pressure`/`memory.pressure` files in a cgroup | PSI is disabled by default on RHEL kernels | Boot with `psi=1` (topic 103) |
 | Killed with exit 137 while the host has free RAM | cgroup `memory.max` | `memory.events` (`oom_kill`), `memory.current`, `memory.stat`; kernel log |
 | High latency, CPU looks idle | `cpu.max` throttling | `cpu.stat` `nr_throttled`, `throttled_usec`; `cpu.pressure` |
 | `fork: Resource temporarily unavailable` | `pids.max` (or `ulimit -u`) | `pids.events`; `TasksMax=` |

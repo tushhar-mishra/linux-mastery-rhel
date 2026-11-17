@@ -93,10 +93,13 @@ root                 unconfined_u         s0-s0:c0.c1023       *
                 Labeling   MLS/       MLS/
 SELinux User    Prefix     MCS Level  MCS Range                      SELinux Roles
 guest_u         user       s0         s0                             guest_r
-staff_u         staff      s0         s0-s0:c0.c1023                 staff_r sysadm_r system_r unconfined_r
-sysadm_u        sysadm     s0         s0-s0:c0.c1023                 sysadm_r
-unconfined_u    unconfined s0         s0-s0:c0.c1023                 system_r unconfined_r
+root            user       s0         s0-s0:c0.c1023                 system_r staff_r sysadm_r unconfined_r
+staff_u         user       s0         s0-s0:c0.c1023                 system_r staff_r sysadm_r unconfined_r
+sysadm_u        user       s0         s0-s0:c0.c1023                 sysadm_r
+system_u        user       s0         s0-s0:c0.c1023                 system_r unconfined_r
+unconfined_u    user       s0         s0-s0:c0.c1023                 system_r unconfined_r
 user_u          user       s0         s0                             user_r
+xguest_u        user       s0         s0                             xguest_r
 ```
 
 ```bash
@@ -113,7 +116,8 @@ staff_u:staff_r:staff_t:s0-s0:c0.c1023
 ssh bob@localhost 'sudo -l'
 ```
 ```
-sudo: PERM_SUDOERS: setresuid(-1, 1, -1): Operation not permitted
+sudo: setresuid() [0, 0, 0] -> [2008, -1, -1]: Operation not permitted
+sudo: error initializing audit plugin sudoers_audit
 ```
 - `user_u` can't escalate, even if sudoers would allow it.
 
@@ -123,6 +127,7 @@ sudo: PERM_SUDOERS: setresuid(-1, 1, -1): Operation not permitted
 # staff_u + sudo, switching role to sysadm_r for admin work
 sudo useradd -G wheel -Z staff_u admin3
 echo 'admin3 ALL=(ALL) TYPE=sysadm_t ROLE=sysadm_r ALL' | sudo tee /etc/sudoers.d/admin3
+sudo chmod 0440 /etc/sudoers.d/admin3                  # tee creates it 0644; visudo -c then warns "bad permissions"
 sudo visudo -c
 ssh admin3@localhost
 sudo -i ; id -Z

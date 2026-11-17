@@ -112,7 +112,9 @@ Sort entries alphabetically if none of -cftuvSUX nor --sort is specified.
   -S                         sort by file size, largest first
       --sort=WORD            sort by WORD instead of name: none (-U), size (-S),
   -t                         sort by time, newest first; see --time
+...
 ```
+- (The real output has a few more lines; only the most useful ones are shown.)
 - The `|` symbol (a **pipe**, topic 016) sends `ls --help`'s output into `grep`. `grep` keeps only the lines containing a word (topic 017). `-i` ignores upper/lower case. This is the fastest way to find one option.
 
 ```bash
@@ -125,9 +127,11 @@ man -f passwd
 ```
 ```
 passwd (1)           - change user password
-passwd (5)           - the password file
+passwd (1ossl)       - OpenSSL application commands
+passwd (5)           - password file
 ```
 - `-f` (same as `whatis`) lists every section that has a page with this exact name. Then you pick: `man 5 passwd`.
+- `passwd (5)` (the file format) comes from the `man-pages` package. Minimal installs and cloud images often lack it, and then only `passwd (1)` appears: `sudo dnf install man-pages`, then `sudo mandb`. `1ossl` is OpenSSL's own `passwd` command.
 
 ```bash
 man -k partition
@@ -135,10 +139,14 @@ man -k partition
 ```
 addpart (8)          - tell the kernel about the existence of a partition
 cfdisk (8)           - display or manipulate a disk partition table
+delpart (8)          - tell the kernel to forget about a partition
 fdisk (8)            - manipulate disk partition table
+growpart (1)         - extend a partition in a partition table to fill availa...
+...
 parted (8)           - a partition manipulation program
 partprobe (8)        - inform the OS of partition table changes
 sfdisk (8)           - display or manipulate a disk partition table
+...
 ```
 - `-k` (same as `apropos`) searches the NAME line of **all** pages for a word. Use it when you don't know the command's name.
 - Each line shows the name, the section number in brackets, and a one-line description.
@@ -147,6 +155,7 @@ sfdisk (8)           - display or manipulate a disk partition table
 apropos -s 8 user
 ```
 ```
+...
 useradd (8)          - create a new user or update default new user information
 userdel (8)          - delete a user account and related files
 usermod (8)          - modify a user account
@@ -158,10 +167,12 @@ usermod (8)          - modify a user account
 sudo mandb
 ```
 ```
+Purging old database entries in /usr/share/man...
 Processing manual pages under /usr/share/man...
-Updating index cache for path `/usr/share/man/man1'. Wait...done.
 ...
-mandb: 12 manual pages were added.
+11890 manual pages were added.
+0 stray cats were added.
+0 old database entries were purged.
 ```
 - Rebuilds the search index. Use it if `man -k` prints `nothing appropriate`. `sudo` runs a command as the administrator (topic 028).
 
@@ -173,7 +184,7 @@ cd: cd [-L|[-P [-e]] [-@]] [dir]
     Change the shell working directory.
 
     Change the current directory to DIR.  The default DIR is the value of the
-    HOME shell variable.
+    HOME shell variable. If DIR is "-", it is converted to $OLDPWD.
 ...
 ```
 - Builtins have no man page of their own (`man cd` opens the giant bash manual). Use `help`.
@@ -187,11 +198,11 @@ info coreutils 'ls invocation'
 ls /usr/share/doc/ | head -5
 ```
 ```
-alternatives
+annobin-plugin
+attr
 audit
 authselect
-bash
-bash-completion
+authselect-libs
 ```
 - One folder per package. `head -5` shows only the first 5 lines (topic 009).
 
@@ -199,9 +210,9 @@ bash-completion
 rpm -qd openssh-server
 ```
 ```
-/usr/share/doc/openssh-server/HOWTO.ssh-keycat
 /usr/share/man/man5/moduli.5.gz
 /usr/share/man/man5/sshd_config.5.gz
+/usr/share/man/man8/sftp-server.8.gz
 /usr/share/man/man8/sshd.8.gz
 ```
 - Lists the **documentation files** a package installed (`-q` query, `-d` docs). On Ubuntu: `dpkg -L openssh-server | grep doc`.
@@ -215,7 +226,7 @@ type -a ls ; which ls ; whereis ls
 ls is aliased to `ls --color=auto'
 ls is /usr/bin/ls
 /usr/bin/ls
-ls: /usr/bin/ls /usr/share/man/man1/ls.1.gz /usr/share/man/man1p/ls.1p.gz
+ls: /usr/bin/ls /usr/share/man/man1/ls.1.gz
 ```
 
 | Command | What it searches | Notes |

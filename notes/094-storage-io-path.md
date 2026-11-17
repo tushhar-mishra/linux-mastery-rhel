@@ -70,15 +70,15 @@ The VFS keeps a **dentry cache** (path component → inode lookups, including "n
 
 `write()` copies data into the page cache, marks the pages **dirty**, and **returns immediately. The data is not on disk yet.** Flusher threads write it back later:
 
-| Tunable (default) | Meaning |
+| Tunable (kernel default) | Meaning |
 |---|---|
 | `vm.dirty_background_ratio` (10) | Above 10% of available memory dirty → start background writeback |
-| `vm.dirty_ratio` (20) | Above 20% → **the writing process itself is throttled** until writeback catches up |
+| `vm.dirty_ratio` (20; **30** on RHEL VMs and servers, set by tuned's `virtual-guest`/`throughput-performance` profiles) | Above this share → **the writing process itself is throttled** until writeback catches up |
 | `vm.dirty_expire_centisecs` (3000 = 30 s) | Dirty data older than this is written at the next flush |
 | `vm.dirty_writeback_centisecs` (500 = 5 s) | How often the flushers wake |
 | `vm.dirty_bytes`, `vm.dirty_background_bytes` | Absolute alternatives (better on large-RAM hosts) |
 
-This is the classic "**fast, then freezes**": the first gigabytes go into RAM at memory speed; once dirty data passes `dirty_ratio`, writers slow to disk speed.
+This is the classic "**fast, then freezes**": the first gigabytes go into RAM at memory speed; once dirty data passes `dirty_ratio`, writers slow to disk speed. Check your real values with `sysctl -a | grep dirty` and `tuned-adm active` (topic 056).
 
 ### Durability
 
@@ -225,7 +225,7 @@ sudo fio --name=randread --rw=randread --bs=4k --size=1G --iodepth=32 --ioengine
 ## Quick recap
 
 - app → syscall → **VFS** → **page cache** → **filesystem** (journal) → **block layer** (scheduler) → **device mapper** (LVM/LUKS/multipath) → driver → device.
-- `write()` returning ≠ on disk. Dirty pages are flushed later (`dirty_background_ratio` 10, `dirty_ratio` 20, 30 s expiry). **`fsync()`** for durability; temp file + fsync + `rename()` for atomic updates.
+- `write()` returning ≠ on disk. Dirty pages are flushed later (`dirty_background_ratio` 10, `dirty_ratio` 20 (30 under tuned), 30 s expiry). **`fsync()`** for durability; temp file + fsync + `rename()` for atomic updates.
 - Journaling = metadata consistency, not data survival.
 - Schedulers: `none` (NVMe), `mq-deadline` (default elsewhere). `dmsetup ls --tree`/`table` show the stack.
 - Measure with `iostat -xz 1` (await, aqu-sz; `%util` misleads on NVMe), `pidstat -d`, `fio`.

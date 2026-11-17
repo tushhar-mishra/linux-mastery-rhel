@@ -174,15 +174,15 @@ strace -c ls / > /dev/null
 strace -f -e trace=execve,clone,clone3,wait4,exit_group bash -c 'ls / > /dev/null; true'
 ```
 ```
-343   execve("/usr/bin/bash", ["bash", "-c", "ls / > /dev/null; true"], …) = 0
-343   clone(…flags=CLONE_CHILD_CLEARTID|CLONE_CHILD_SETTID|SIGCHLD…) = 344   ← fork: child 344
-343   wait4(-1,  <unfinished ...>                                           ← parent waits
-344   execve("/usr/bin/ls", ["ls", "/"], …) = 0                             ← child becomes ls
-344   exit_group(0)                     = ?
-343   <... wait4 resumed>[{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 344   ← reaped
-343   --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=344, …} ---
+execve("/usr/bin/bash", ["bash", "-c", "ls / > /dev/null; true"], … /* 24 vars */) = 0
+clone(child_stack=NULL, flags=CLONE_CHILD_CLEARTID|CLONE_CHILD_SETTID|SIGCHLD, …) = 3785   ← fork: child 3785
+[pid  3784] wait4(-1,  <unfinished ...>                                      ← parent waits
+[pid  3785] execve("/usr/bin/ls", ["ls", "/"], … /* 24 vars */) = 0         ← child becomes ls
+[pid  3785] exit_group(0)               = ?
+[pid  3785] +++ exited with 0 +++
+<... wait4 resumed>[{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 3785    ← reaped
 ```
-- The whole fork → exec → exit → wait cycle, live.
+- The whole fork → exec → exit → wait cycle, live. Lines from other processes are tagged `[pid N]`; untagged lines (and the `<... resumed>` line) belong to the first process, bash. (With `-o FILE`, every line starts with its PID instead.)
 
 | Option | Meaning |
 |---|---|

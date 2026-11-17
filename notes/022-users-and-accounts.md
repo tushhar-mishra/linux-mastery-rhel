@@ -97,8 +97,8 @@ getent passwd diana
 ```
 New password:
 Retype new password:
-passwd: all authentication tokens updated successfully.
-diana:x:1002:1002:Diana Prince:/home/diana:/bin/bash
+passwd: password updated successfully
+diana:x:1001:1001:Diana Prince:/home/diana:/bin/bash
 ```
 
 | `useradd` option | Meaning |
@@ -121,6 +121,7 @@ sudo useradd -r -s /sbin/nologin -d /var/lib/myapp myapp  # service account
 echo 'Secr3t!Pass' | sudo passwd --stdin clark            # set a password non-interactively (RHEL only)
 echo 'clark:Secr3t!Pass' | sudo chpasswd                  # same, works on Ubuntu too
 ```
+- A system account made with `-r` gets a UID below 1000 (here `myapp:x:993:990::/var/lib/myapp:/sbin/nologin`), and **no home directory is created**, even though `-d` names one. Add `-m` if the service needs it, or let its systemd unit create it (`StateDirectory=`, topic 098).
 
 ### Inspect
 
@@ -168,12 +169,15 @@ SYS_UID_MAX               999
 CREATE_HOME     yes
 UMASK           022
 GROUP=100
+GROUPS=
 HOME=/home
 INACTIVE=-1
 EXPIRE=
 SHELL=/bin/bash
 SKEL=/etc/skel
+USRSKEL=/usr/etc/skel
 CREATE_MAIL_SPOOL=yes
+LOG_INIT=yes
 ```
 - Where the defaults come from.
 

@@ -229,13 +229,14 @@ a.b
 
 ```bash
 grep -rn --include='*.conf' '^Listen' /etc/httpd/
-grep -rlw 'PermitRootLogin' /etc/ssh/
-grep -rl 'password' /etc 2>/dev/null
+sudo grep -rlw 'PermitRootLogin' /etc/ssh/
+sudo grep -rl 'password' /etc 2>/dev/null
 ```
 ```
 /etc/ssh/sshd_config
 ```
 - `-l` lists only file names. Great for "which config file sets this?"
+- `sudo` matters here: `sshd_config` and the files in `sshd_config.d/` are readable only by root (mode `600`). Without it, grep prints `Permission denied` for each one and exits with status 2.
 
 ### Regex in other tools
 

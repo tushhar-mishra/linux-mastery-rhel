@@ -183,9 +183,9 @@ systemctl list-timers
 ```
 NEXT                        LEFT       LAST                        PASSED  UNIT                 ACTIVATES
 Tue 2026-11-17 02:32:41 UTC 10h left   Mon 2026-11-16 02:31:10 UTC 13h ago backup.timer         backup.service
-Tue 2026-11-17 00:00:00 UTC 8h left    Mon 2026-11-16 00:00:00 UTC 15h ago logrotate.timer      logrotate.service
+Tue 2026-11-17 00:30:40 UTC 9h left    Mon 2026-11-16 00:21:13 UTC 15h ago logrotate.timer      logrotate.service
 ```
-- When it next runs, when it last ran, and which service it starts. The built-in timers (`logrotate`, `dnf-makecache`, `systemd-tmpfiles-clean`, `sysstat-collect`) are listed here too.
+- When it next runs, when it last ran, and which service it starts. The built-in timers (`logrotate`, `dnf-makecache`, `systemd-tmpfiles-clean`, `sysstat-collect`) are listed here too. `logrotate` isn't exactly at midnight because its timer has `RandomizedDelaySec=1h`, which spreads thousands of servers so they don't all rotate logs at the same second.
 
 ```bash
 sudo systemctl start backup.service      # run the job right now to test it
@@ -193,7 +193,6 @@ journalctl -u backup.service -n 20       # its output and errors
 systemd-analyze calendar 'Mon..Fri *-*-* 02:30:00'
 ```
 ```
-  Original form: Mon..Fri *-*-* 02:30:00
 Normalized form: Mon..Fri *-*-* 02:30:00
     Next elapse: Tue 2026-11-17 02:30:00 UTC
        From now: 10h left

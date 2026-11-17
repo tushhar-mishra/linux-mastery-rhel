@@ -143,10 +143,15 @@ find . \( -name '*.log' -o -name '*.txt' \) -print       # ✔ both
 sudo find / -xdev -type f -perm -4000 2>/dev/null
 ```
 ```
+/usr/lib/polkit-1/polkit-agent-helper-1
+/usr/bin/umount
+/usr/bin/mount
+/usr/bin/chage
 /usr/bin/passwd
+/usr/bin/crontab
 /usr/bin/su
 /usr/bin/sudo
-/usr/bin/mount
+/usr/sbin/unix_chkpwd
 ...
 ```
 - **SUID** programs: they run with their owner's (root's) rights (topic 027). Any unexpected entry here is a security red flag.
@@ -218,15 +223,15 @@ locate sshd_config
 sudo lsof /var/log/messages
 ```
 ```
-COMMAND  PID USER FD   TYPE DEVICE SIZE/OFF   NODE NAME
-rsyslogd 812 root 7w   REG  253,0  612455 1048630 /var/log/messages
+COMMAND   PID USER   FD   TYPE DEVICE SIZE/OFF     NODE NAME
+rsyslogd 1240 root    8w   REG    8,4   535345 50636504 /var/log/messages
 ```
 - `rsyslogd` (PID 812) has it open on file descriptor 7, for writing (`w`).
 
 ```bash
 sudo lsof +L1                 # deleted files still held open (topic 008)
 sudo lsof -u alice            # everything alice's processes have open
-sudo lsof -p 812              # everything one process has open
+sudo lsof -p 1240             # everything one process has open
 sudo lsof -i :22              # who is using TCP/UDP port 22
 sudo lsof +D /mnt/data        # who is using anything under /mnt/data (why can't I unmount?)
 ```

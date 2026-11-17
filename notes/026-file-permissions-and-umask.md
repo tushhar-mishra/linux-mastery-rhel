@@ -92,7 +92,10 @@ A new **file** starts from `666` (`rw-rw-rw-`; never executable by default). A n
 
 Subtraction gives wrong answers: with umask `027`, files are `640` (not "666−027=639"). With umask `033`, files are `644` (not 633). Think "which bits does the mask switch off?"
 
-The umask is a property of each **process**, inherited from its parent. On RHEL 10 the login process sets it via PAM (`pam_umask` reads `UMASK 022` from `/etc/login.defs`). Services get theirs from systemd (`UMask=` in the unit, topic 098).
+The umask is a property of each **process**, inherited from its parent.
+- **Login sessions** (console, SSH): PAM sets it. `pam_umask` sits in `/etc/pam.d/postlogin` (a symlink managed by authselect, topic 029) and reads `UMASK 022` from `/etc/login.defs`. Change that line to `027` and the next login gets `0027`.
+- **Services**: they get theirs from systemd (`UMask=` in the unit, default `0022`, topic 098).
+- `/etc/bashrc` only steps in if the umask is `0`.
 
 ## Commands
 

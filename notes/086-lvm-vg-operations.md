@@ -160,6 +160,7 @@ The wrong device or UUID here destroys data.
 
 | Symptom | Cause | Fix |
 |---|---|---|
+| `lvcreate` asks `WARNING: xfs signature detected … Wipe it? [y/n]` and, in a script, aborts with `Failed to wipe start of new LV` | The new LV landed on extents that still hold an old filesystem signature (common after removing and re-creating LVs) | Answer `y` interactively; in scripts use `lvcreate -y -Wy …`. Note that `-q` does **not** mean yes: it answers no |
 | `pvs`/`vgs` show nothing for a moved disk | It's not in the LVM devices file | `vgimportdevices VG` or `lvmdevices --adddev DEV` |
 | `Volume group "X" is exported` | Not imported | `vgimport X` |
 | `Multiple VGs found with the same name` | Name clash | `vgrename <VG-UUID> newname` |

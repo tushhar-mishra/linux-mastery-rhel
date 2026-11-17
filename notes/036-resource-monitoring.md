@@ -106,7 +106,7 @@ Device            r/s     w/s     rkB/s     wkB/s  r_await w_await aqu-sz  %util
 nvme0n1         12.00  850.00    192.00  98000.00    0.40    4.10   3.50  88.00
 dm-0             0.00  850.00      0.00  98000.00    0.00    4.30   3.66  88.00
 ```
-- `-x` extended, `-z` hide idle devices, then interval and count.
+- `-x` extended, `-z` hide idle devices, then interval and count. The real `-x` output has about 20 columns (merges, request sizes, discards, flushes); only the most useful ones are shown here.
 
 | Column | Meaning |
 |---|---|
@@ -130,6 +130,7 @@ all   26.10    0.00    1.20    0.10    0.00    0.20    0.00  72.40
   1    2.00    0.00    3.00    0.50    0.00    0.50    0.00  94.00
 ...
 ```
+- (Trimmed: the real output also has `%guest` and `%gnice` columns, which matter only on hosts running VMs.)
 - The "all" average looks fine (72% idle), but **CPU 0 is pegged at 100%**: a single-threaded process that can't use more cores. Averages hide this.
 
 ```bash
@@ -153,6 +154,7 @@ sar -d -p                  # disks with readable names
 sar -n DEV                 # network per interface
 sar -f /var/log/sa/sa15 -s 02:00:00 -e 04:00:00 -u    # the 15th of the month, 02:00-04:00
 ```
+- Right after installing sysstat, `sar` says `Cannot open /var/log/sa/saDD: No such file or directory`. The first sample is written by `sysstat-collect.timer` within 10 minutes, so wait and try again. (The package enables `sysstat.service` and its timers itself; the `enable --now` above just makes sure.)
 ```
 02:00:01 AM     CPU     %user     %nice   %system   %iowait    %steal     %idle
 02:10:01 AM     all      4.10      0.00      1.20     61.30      0.00     33.40
@@ -172,7 +174,7 @@ ss -s                          # socket summary (topic 095)
 ### Try it (load generator)
 
 ```bash
-sudo dnf install -y stress-ng                 # EPEL on some systems; apt install stress-ng on Ubuntu
+sudo dnf install -y stress-ng                 # in AppStream on RHEL 10; apt install stress-ng on Ubuntu
 vmstat 2 &                                    # in one window
 stress-ng --cpu 2 --timeout 60s               # watch r and us rise
 stress-ng --vm 1 --vm-bytes 75% --timeout 60s # watch available drop, si/so appear

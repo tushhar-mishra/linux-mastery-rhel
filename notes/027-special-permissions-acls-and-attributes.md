@@ -75,8 +75,8 @@ Attributes are filesystem flags, checked **before** normal permissions, even for
 ls -l /usr/bin/passwd ; ls -ld /tmp
 ```
 ```
--rwsr-xr-x. 1 root root 32648 Jun 10 12:00 /usr/bin/passwd
-drwxrwxrwt. 18 root root 4096 Nov 16 12:40 /tmp
+-rwsr-xr-x. 1 root root 91424 Feb 23  2026 /usr/bin/passwd
+drwxrwxrwt. 10 root root 4096 Nov 16 23:15 /tmp
 ```
 - `rws` for the owner = SUID with execute. `rwt` for others = sticky with execute. `/tmp` is `1777`.
 
@@ -93,6 +93,7 @@ chmod u-s,g-s,-t x   # remove them
 ### Recipe: a shared team directory
 
 ```bash
+sudo dnf install -y acl                           # setfacl/getfacl; missing on some minimal images
 sudo groupadd -g 5000 projects
 sudo mkdir -p /shared/projects
 sudo chgrp projects /shared/projects
@@ -197,6 +198,7 @@ rm: cannot remove '/etc/resolv.conf': Operation not permitted
 
 | Symptom | Cause | Fix |
 |---|---|---|
+| `setfacl: command not found` | The `acl` package isn't installed (some minimal and cloud images) | `sudo dnf install -y acl` |
 | Files in a shared directory get the creator's group | SGID not set, or set after the files existed | `chmod g+s dir`; `chgrp -R grp dir` for existing files |
 | Team members can't edit each other's files | umask 022 makes files `644` | Default ACL `g:grp:rwX`, or umask 002 for the team |
 | Users delete each other's files | No sticky bit | `chmod +t dir` |

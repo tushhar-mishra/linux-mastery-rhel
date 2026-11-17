@@ -155,7 +155,7 @@ To keep it after a reboot, add `/dev/sr0  /mnt/iso  iso9660  ro,nofail  0 0` to 
 |---|---|
 | Search names and summaries | `dnf search nginx` |
 | Details | `dnf info nginx` |
-| Which package provides a file or command | `dnf provides '*/bin/semanage'` |
+| Which package provides a file or command | `dnf provides semanage` (or a full path) |
 | List | `dnf list --installed` · `dnf list --available` · `dnf list 'openssh*'` |
 | Install | `sudo dnf install -y nginx` |
 | Install a local RPM file (dependencies from repos) | `sudo dnf install ./app-1.0.rpm` |
@@ -168,15 +168,16 @@ To keep it after a reboot, add `/dev/sr0  /mnt/iso  iso9660  ro,nofail  0 0` to 
 | Cache | `sudo dnf clean all` · `sudo dnf makecache` |
 
 ```bash
-dnf provides '*/bin/semanage'
+dnf provides semanage
 ```
 ```
-policycoreutils-python-utils-3.8-1.el10.noarch : SELinux policy core python utilities
-Repo        : rhel-10-for-x86_64-appstream-rpms
+policycoreutils-python-utils-3.11-1.el10.noarch : SELinux policy core python utilities
+Repo        : appstream
 Matched from:
 Filename    : /usr/sbin/semanage
 ```
-- The fix for "command not found" when you don't know the package name.
+- The fix for "command not found" when you don't know the package name. A bare command name is searched in the usual bin directories.
+- For a full path, give it exactly (`dnf provides /usr/sbin/semanage`). Careful with wildcards: `'*/bin/semanage'` finds **nothing**, because the file is in `/usr/sbin` and `/bin/` doesn't appear in that path; `'*/semanage'` matches too much (headers, man pages).
 
 ```bash
 sudo dnf install -y nginx
@@ -235,6 +236,8 @@ rpm -qc openssh-server
 ```
 /etc/pam.d/sshd
 /etc/ssh/sshd_config
+/etc/ssh/sshd_config.d/40-redhat-crypto-policies.conf
+/etc/ssh/sshd_config.d/50-redhat.conf
 /etc/sysconfig/sshd
 ```
 
@@ -265,7 +268,7 @@ S.5....T.  c /etc/ssh/sshd_config
 | Logs | `/var/log/dnf.log`, `dnf history` | `/var/log/apt/history.log`, `/var/log/dpkg.log` |
 
 ### Try it
-1. `dnf provides '*/bin/htop'` (or enable EPEL), install it, then find its files with `rpm -ql`.
+1. `dnf provides htop` (or enable EPEL), install it, then find its files with `rpm -ql`.
 2. Edit `/etc/ssh/sshd_config` (add a comment), then run `rpm -V openssh-server` and read the codes.
 3. Install a package, then undo it with `dnf history undo`.
 4. Build the offline DVD repo, disable the network repos with `--disablerepo='*' --enablerepo='dvd-*'`, and install `zsh`.
@@ -303,5 +306,5 @@ S.5....T.  c /etc/ssh/sshd_config
 **Interview questions**
 
 1. *rpm vs dnf?* rpm installs, queries and verifies single package files but doesn't resolve dependencies. dnf works with repositories, resolves dependencies, verifies signatures and keeps a transaction history.
-2. *How do you find which package provides a command?* `dnf provides '*/bin/cmd'` (or `rpm -qf $(command -v cmd)` if it's already installed; `dpkg -S` on Ubuntu).
+2. *How do you find which package provides a command?* `dnf provides cmd` (or the full path, e.g. `dnf provides /usr/sbin/semanage`) (or `rpm -qf $(command -v cmd)` if it's already installed; `dpkg -S` on Ubuntu).
 3. *How do you undo a bad update?* `dnf history` to find the transaction, then `dnf history undo <id>`. For big changes, prefer a VM or LVM snapshot taken beforehand.

@@ -75,10 +75,12 @@ sudo firewall-cmd --list-all
 ```
 ```
 running
-public
+public (default)
   interfaces: enp0s3 enp0s8
 public (default, active)
   target: default
+  ingress-priority: 0
+  egress-priority: 0
   icmp-block-inversion: no
   interfaces: enp0s3 enp0s8
   sources:
@@ -92,7 +94,7 @@ public (default, active)
   icmp-blocks:
   rich rules:
 ```
-- Which zone each interface is in, and what that zone allows. `target: default` = reject anything not allowed.
+- Which zone each interface is in, and what that zone allows. `target: default` = reject anything not allowed. `ingress-priority`/`egress-priority` (firewalld 2.x) order zones when traffic could match several; leave them at 0.
 
 ```bash
 sudo firewall-cmd --get-services | tr ' ' '\n' | grep -x http
@@ -107,7 +109,7 @@ sudo firewall-cmd --permanent --add-service=http
 sudo firewall-cmd --permanent --add-service=https
 sudo firewall-cmd --permanent --add-port=8080/tcp
 sudo firewall-cmd --reload
-sudo firewall-cmd --list-services --list-ports
+sudo firewall-cmd --list-services ; sudo firewall-cmd --list-ports      # two commands: --list-* options can't be combined
 ```
 ```
 success

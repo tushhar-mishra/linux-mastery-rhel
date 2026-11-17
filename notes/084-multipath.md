@@ -95,13 +95,14 @@ sudo multipath -ll
 ```
 ```
 mpatha (360014052e3a1d2b7c4d4e9f0a1b2c3d4) dm-3 LIO-ORG,lun1
-size=5.0G features='0' hwhandler='1 alua' wp=rw
-|-+- policy='service-time 0' prio=50 status=active
-| `- 3:0:0:0 sdb 8:16 active ready running
-`-+- policy='service-time 0' prio=50 status=enabled
+size=5.0G features='1 queue_if_no_path' hwhandler='1 alua' wp=rw
+`-+- policy='service-time 0' prio=50 status=active
+  |- 3:0:0:0 sdb 8:16 active ready running
   `- 4:0:0:0 sdc 8:32 active ready running
 ```
-- One device, `mpatha` (= `/dev/mapper/mpatha`), with its WWID, vendor `LIO-ORG`, size, and write permission (`wp=rw`). Two path groups, each with one path, both `active ready running`. `policy='service-time'` = send I/O to the path with the shortest expected service time.
+- One device, `mpatha` (= `/dev/mapper/mpatha`), with its WWID, vendor `LIO-ORG`, size, and write permission (`wp=rw`).
+- One **path group** holding both paths, each `active ready running`: the target reports both as equally good (ALUA "active/optimized", same `prio=50`), so I/O uses both. Arrays with a standby controller show a second, lower-priority group instead. `policy='service-time'` = send each I/O to the path with the shortest expected service time.
+- `features='1 queue_if_no_path'`: if every path fails, I/O waits instead of failing. The built-in settings for this array type turn it on.
 
 ### Configuration
 
@@ -151,7 +152,7 @@ sudo nmcli con up path2 ; sleep 10 ; sudo multipath -ll | grep -E 'sd[bc]'
 ```
 ```
   `- 3:0:0:0 sdb 8:16 active ready running
-  `- 4:0:0:0 sdc 8:32 failed faulty running
+  `- 4:0:0:0 sdc 8:32 active faulty offline
 ...
   `- 4:0:0:0 sdc 8:32 active ready running
 ```

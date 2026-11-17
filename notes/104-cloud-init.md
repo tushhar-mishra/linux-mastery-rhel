@@ -100,7 +100,7 @@ sudo virt-install --name web01 --memory 2048 --vcpus 2 --osinfo rhel10.0 --impor
 ### Check what happened (inside the VM)
 
 ```bash
-cloud-init status --long
+sudo cloud-init status --long
 ```
 ```
 status: done
@@ -112,9 +112,10 @@ errors: []
 recoverable_errors: {}
 ```
 - `done` with no errors; the datasource was the NoCloud seed on the CD-ROM. `status: error` or `running` for a long time means look at the logs.
+- **Use sudo for every `cloud-init` command on RHEL 10.** `/run/cloud-init` is mode 0700, so as a normal user even `cloud-init status` or `schema` crashes with `PermissionError: [Errno 13] Permission denied: '/run/cloud-init/cloud.cfg'`.
 
 ```bash
-cloud-init status --wait                       # block until finished (useful in scripts/CI)
+sudo cloud-init status --wait                  # block until finished. Exit code: 0 = done, 1 = error, 2 = done with recoverable errors (degraded)
 sudo cloud-init analyze show | tail -5         # time per stage and module
 sudo tail -20 /var/log/cloud-init-output.log   # output of packages / runcmd
 sudo grep -iE 'warn|error|traceback' /var/log/cloud-init.log | head
@@ -130,7 +131,7 @@ Finished at Tue, 17 Nov 2026 14:41:09 +0000. Datasource DataSourceNoCloud [seed=
 ### Validate before you boot
 
 ```bash
-cloud-init schema --config-file user-data --annotate
+sudo cloud-init schema --config-file user-data --annotate
 ```
 ```
 Valid schema user-data
@@ -161,6 +162,8 @@ sudo cloud-init clean --logs --seed --machine-id   # before turning a configured
 
 | Symptom | Cause | Fix |
 |---|---|---|
+| `extended_status: degraded done`, `detail: DataSourceNone`, warning `Used fallback datasource` | No datasource was found (no seed ISO, no metadata service), so your user data never ran | Check the seed volume label is `cidata`, or the cloud metadata endpoint; `sudo cloud-init status --wait` returns 2 here |
+| `PermissionError … /run/cloud-init/cloud.cfg` | Ran `cloud-init` as a normal user | Use `sudo` |
 | Nothing was applied; no user created | The first line isn't `#cloud-config`, invalid YAML, or the datasource wasn't found | `cloud-init schema --annotate`; `cloud-init status --long` (datasource); check that the seed ISO label is `cidata` |
 | Can't SSH in with the key | Wrong user name, key typo, or `ssh_pwauth` expectations | Console login, or read `cloud-init.log`; RHEL's default image user is `cloud-user`, Ubuntu's is `ubuntu` |
 | The boot hangs for minutes | Looking for a metadata service that doesn't exist (wrong datasource) | Set `datasource_list` in `/etc/cloud/cloud.cfg.d/`; provide a NoCloud seed |

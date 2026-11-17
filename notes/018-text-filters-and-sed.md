@@ -131,14 +131,17 @@ du -sh /var/* 2>/dev/null | sort -h | tail -3
 cut -d: -f7 /etc/passwd | sort | uniq -c | sort -rn
 ```
 ```
-     30 /usr/sbin/nologin
-      4 /bin/bash
-      1 /usr/sbin/shutdown
-      1 /usr/sbin/halt
+     15 /usr/sbin/nologin
+      6 /sbin/nologin
+      2 /bin/bash
+      1 /sbin/shutdown
+      1 /sbin/halt
       1 /bin/sync
+      1 /bin/false
 ```
 - The most important pipeline pattern in Linux: **extract → sort → uniq -c → sort -rn → head**. It's a frequency count, most common first.
 - `uniq -c` puts a count before each unique line.
+- `/sbin/nologin` and `/usr/sbin/nologin` are the same program (/sbin links to /usr/sbin, topic 006), but `uniq` compares **text**, so they count separately. Normalise first if you need true totals: `sed 's#^/sbin/#/usr/sbin/#'`.
 
 | `uniq` option | Effect |
 |---|---|
@@ -206,19 +209,23 @@ olleh
 ### diff and comm
 
 ```bash
-diff -u /etc/ssh/sshd_config.bak /etc/ssh/sshd_config
+sudo diff -u /etc/ssh/sshd_config.bak /etc/ssh/sshd_config
 ```
 ```
---- /etc/ssh/sshd_config.bak	2026-11-16 11:40:00
-+++ /etc/ssh/sshd_config	2026-11-16 11:41:12
-@@ -40,7 +40,7 @@
+--- /etc/ssh/sshd_config.bak	2026-09-14 12:52:16.544114070 +0000
++++ /etc/ssh/sshd_config	2026-11-16 23:10:17.126612168 +0000
+@@ -37,7 +37,7 @@
+ # Authentication:
+ 
  #LoginGraceTime 2m
 -#PermitRootLogin prohibit-password
 +PermitRootLogin no
  #StrictModes yes
+ #MaxAuthTries 6
+ #MaxSessions 10
 ```
 - `-u` = "unified" format: the same format Git and code reviews use.
-- Lines starting with `-` were removed, lines with `+` were added, and lines with a space are unchanged context. `@@ -40,7 +40,7 @@` means "from line 40, 7 lines, in both files".
+- Lines starting with `-` were removed, lines with `+` were added, and lines with a space are unchanged context. `@@ -37,7 +37,7 @@` means "starting at line 37, 7 lines, in both files" (3 context lines, the change, 3 more context lines).
 
 ```bash
 comm -12 <(sort a.txt) <(sort b.txt)

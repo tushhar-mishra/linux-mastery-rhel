@@ -154,12 +154,15 @@ Release     : 1.el10
 Architecture: noarch
 ...
 /usr/bin/hello-tool
-2 packages and 1 specfiles checked; 0 errors, 1 warnings, 0 badness; has taken 0.3 s
+hello-tool.noarch: W: no-documentation
+hello-tool.spec: W: no-%check-section
+hello-tool.spec: W: invalid-url Source0: hello-tool-1.0.tar.gz
+ 1 packages and 1 specfiles checked; 0 errors, 4 warnings, 4 filtered, 0 badness; has taken 0.9 s
 ```
-- One binary RPM and one SRPM. `rpmlint` warnings are style advice (for example, a missing man page); errors must be fixed.
+- One binary RPM and one SRPM. `rpmlint` warnings are style advice (no documentation, no `%check`, a Source0 that isn't a full URL); errors must be fixed. The SRPM is in `SRPMS/`, not in `RPMS/noarch/`, so only one package was linted.
 
 ```bash
-sudo dnf install ./hello-tool-1.0-1.el10.noarch.rpm       # dnf resolves Requires (better than rpm -ivh)
+sudo dnf install ~/rpmbuild/RPMS/noarch/hello-tool-1.0-1.el10.noarch.rpm   # dnf resolves Requires (better than rpm -ivh)
 hello-tool ; rpm -qf /usr/bin/hello-tool ; rpm -V hello-tool
 sudo dnf remove hello-tool
 rpmbuild --rebuild somepackage.src.rpm                     # rebuild someone else's SRPM
@@ -187,10 +190,11 @@ systemctl daemon-reload >/dev/null 2>&1 || :
 
 ```bash
 sudo dnf install -y rpm-sign createrepo_c
-gpg --quick-gen-key 'Build Bot <build@example.com>'
+gpg --quick-gen-key 'Build Bot <build@example.com>'   # asks for a passphrase (rpm --addsign asks again)
 echo '%_gpg_name Build Bot <build@example.com>' >> ~/.rpmmacros
 rpm --addsign ~/rpmbuild/RPMS/noarch/*.rpm
 gpg --export -a 'Build Bot' > RPM-GPG-KEY-internal
+sudo cp RPM-GPG-KEY-internal /var/www/html/      # clients download the key from here (gpgkey= below)
 sudo mkdir -p /var/www/html/repo ; sudo cp ~/rpmbuild/RPMS/noarch/*.rpm /var/www/html/repo/
 sudo createrepo_c /var/www/html/repo                 # builds repodata/
 ```
@@ -203,6 +207,7 @@ baseurl=http://repo.example.com/repo
 gpgcheck=1
 gpgkey=http://repo.example.com/RPM-GPG-KEY-internal
 ```
+- On the first install dnf shows the key's fingerprint and imports it (`Importing GPG key 0x202A2FC8 … Key imported successfully`). Before the key is imported, `rpm -qpi` on a signed package warns `Signature, key ID 202a2fc8: NOKEY`; that is normal, not an error.
 
 ### Try it
 1. Package a script as above, install it with `dnf`, check `rpm -qf` and `rpm -V`, then remove it.

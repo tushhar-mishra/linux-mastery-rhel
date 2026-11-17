@@ -137,8 +137,10 @@ id -Z
 ```
 system_u:system_r:httpd_t:s0      1210 ?        00:00:00 httpd
 system_u:system_r:sshd_t:s0-s0:c0.c1023 1050 ?  00:00:00 sshd
+system_u:system_r:sshd_session_t:s0-s0:c0.c1023 2370 ? 00:00:00 sshd-session
 unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
 ```
+- RHEL 10's policy runs each SSH login's `sshd-session` process in its own domain, `sshd_session_t`, separate from the listening daemon (`sshd_t`).
 - `ls -l` shows a `.` after the permission bits when a file has an SELinux label (topic 007).
 
 ### Watch a domain transition
@@ -162,7 +164,7 @@ sudo ausearch -m AVC,USER_AVC -ts recent
 ```
 ```
 type=AVC msg=audit(1763316002.512:412): avc:  denied  { read } for  pid=1210 comm="httpd"
-  name="index.html" dev="dm-0" ino=3407950 scontext=system_u:system_r:httpd_t:s0
+  name="index.html" dev="sda4" ino=144181 scontext=system_u:system_r:httpd_t:s0
   tcontext=unconfined_u:object_r:user_home_t:s0 tclass=file permissive=0
 ```
 - **Who** (`comm="httpd"`, `scontext=…httpd_t`) was denied **what** (`{ read }`) on **which** object (`name="index.html"`, `tcontext=…user_home_t`, `tclass=file`). `permissive=0` = it was really blocked.
@@ -216,6 +218,7 @@ Profiles live in `/etc/apparmor.d/`. Docker and snap packages use AppArmor profi
 | Symptom | Cause | Fix |
 |---|---|---|
 | "Permission denied" although rwx looks fine | An SELinux denial | `ausearch -m avc -ts recent`; fix the label, boolean or port (073/074) |
+| `ausearch -m AVC` says `<no matches>`, yet access is clearly denied | (1) `ausearch` was run **without a terminal** (a script, cron, `ssh host 'cmd'`): it then reads events from stdin instead of the log files. (2) The policy has a `dontaudit` rule for this access, so nothing is logged | (1) Add `--input-logs` in scripts and remote commands. (2) `sudo semodule -DB` logs everything; `sudo semodule -B` restores |
 | `setenforce: SELinux is disabled` | Booted with SELinux disabled | Remove `selinux=0`, relabel, reboot |
 | Nobody can log in after editing files from `rd.break` | Wrong labels on `/etc/shadow` etc. | `touch /.autorelabel`; reboot (topic 057) |
 | `semanage: command not found` | Package missing | `dnf install policycoreutils-python-utils` |

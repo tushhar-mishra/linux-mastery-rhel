@@ -89,7 +89,7 @@ root            0      0      0  00 [------]
 alice        1.1G     1G   1.5G  00 [6 days]
 bob        120.0M      0      0  00 [------]
 ```
-- alice is **over her soft limit** and has 6 days of grace left to clean up; after that, she can't write until she does. bob has no limit.
+- alice is **over her soft limit** and has 6 days of grace left to clean up; after that, she can't write until she does. bob has no limit. Right after someone first crosses the soft limit, the column may still show `[------]`; the countdown appears once XFS rechecks them at their next write.
 
 ```bash
 sudo xfs_quota -x -c 'report -ugph' /shared     # users, groups and projects
@@ -107,7 +107,8 @@ sudo xfs_quota -x -c 'project -s webapp' /shared          # tag the existing tre
 sudo xfs_quota -x -c 'limit -p bsoft=200m bhard=300m webapp' /shared
 sudo xfs_quota -x -c 'report -pbih' /shared
 ```
-- Now **anything** under `/shared/webapp`, whoever writes it, counts towards 300 MiB. `df` on that directory reports the project limit as the size.
+- Now **anything** under `/shared/webapp`, whoever writes it (root included), counts towards 300 MiB. `df /shared/webapp` reports the project's **soft** limit as the size (here 200M), or the hard limit if no soft limit is set.
+- When a project hits its hard limit, writes fail with **`No space left on device`**, not "Disk quota exceeded" (on XFS, a project behaves like a small separate disk). Check `report -p` before blaming the disk.
 
 ### Turning enforcement on and off
 

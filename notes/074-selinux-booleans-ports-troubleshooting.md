@@ -48,7 +48,7 @@ httpd_anon_write --> off
 httpd_builtin_scripting --> on
 httpd_can_check_spam --> off
 httpd_can_connect_ftp --> off
-httpd_can_network_connect --> off
+httpd_can_connect_ldap --> off
 ```
 
 ```bash
@@ -56,6 +56,7 @@ sudo semanage boolean -l | grep httpd_can_network_connect
 ```
 ```
 httpd_can_network_connect      (off  ,  off)  Allow httpd to can network connect
+httpd_can_network_connect_cobbler (off  ,  off)  Allow httpd to can network connect cobbler
 httpd_can_network_connect_db   (off  ,  off)  Allow httpd to can network connect db
 ```
 - `(current, default)` plus a description. `semanage boolean -l -C` lists only booleans you changed.
@@ -88,11 +89,13 @@ sudo semanage port -l | grep -w http_port_t
 ```
 ```
 http_port_t                    tcp      80, 81, 443, 488, 8008, 8009, 8443, 9000
+http_port_t                    udp      80, 443
 ```
+- The UDP line is for HTTP/3 (QUIC), which runs over UDP.
 
 ```bash
 sudo semanage port -a -t http_port_t -p tcp 8888     # add
-sudo semanage port -m -t http_port_t -p tcp 8080     # 8080 already belongs to another type → modify
+sudo semanage port -m -t http_port_t -p tcp 8080     # 8080 already belongs to another type → modify (with -a, newer semanage says "already defined, modifying instead")
 sudo semanage port -d -t http_port_t -p tcp 8888     # delete your definition
 sudo semanage port -l -C                             # only your customisations
 ```
@@ -162,9 +165,13 @@ sudo ausearch -m AVC -ts recent | audit2why
 ```
 	Was caused by:
 	The boolean httpd_can_network_connect was set incorrectly.
+	Description:
+	Allow httpd to can network connect
+
 	Allow access by executing:
 	# setsebool -P httpd_can_network_connect 1
 ```
+- **Don't apply its advice blindly.** For a web page `mv`'d from a home directory (label `user_home_t`), audit2why suggests `setsebool -P httpd_read_user_content 1`. That would work, but it lets Apache read **every** user's files. The right fix is one `restorecon` on the misplaced file (topic 073). Always ask first: "is the label wrong?"
 
 ### Custom modules: the last resort
 

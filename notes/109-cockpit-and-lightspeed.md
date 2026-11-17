@@ -14,7 +14,7 @@ Two convenience tools that sit on top of everything you've learned:
 | **Cockpit** | A browser-based admin interface on **HTTPS port 9090**. It uses the system's own APIs (systemd, NetworkManager, udisks/storaged, journald, firewalld), so a change made in Cockpit is visible in the CLI, and vice versa |
 | **Command Line Assistant** (powered by **RHEL Lightspeed**) | An AI helper in the terminal (`c "question"`). It answers natural-language questions using Red Hat documentation and knowledge-base content, and explains errors and logs you pipe into it |
 
-Cockpit also runs on Ubuntu/Debian (`apt install cockpit`). Lightspeed is RHEL-only (RHEL 9.6+ and 10, with a registered system).
+Cockpit also runs on Ubuntu/Debian (`apt install cockpit`). Lightspeed is RHEL-only (RHEL 9.6+ and 10, with a registered system). Rebuilds such as AlmaLinux don't ship `command-line-assistant` at all (`dnf` says "No matching Packages").
 
 ## Why it exists
 

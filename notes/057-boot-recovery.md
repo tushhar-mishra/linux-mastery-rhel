@@ -61,11 +61,14 @@ exit                             # leave the chroot
 exit                             # continue booting: relabel runs, then it reboots by itself
 ```
 ```
+Press Enter for maintenance
+(or press Control-D to continue):          ← press Enter: no password is asked
+sh-5.2# mount -o remount,rw /sysroot
+sh-5.2# chroot /sysroot
 sh-5.2# passwd root
-Changing password for user root.
 New password:
 Retype new password:
-passwd: all authentication tokens updated successfully.
+passwd: password updated successfully
 ```
 After the automatic reboot, log in as root with the new password.
 

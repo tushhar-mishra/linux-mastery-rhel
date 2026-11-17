@@ -162,6 +162,7 @@ Server: nginx/1.26.3
 # /etc/nginx/conf.d/static.conf
 server {
     listen 80;
+    listen [::]:80;
     server_name static.example.com;
     root /srv/static;
     index index.html;
@@ -171,6 +172,7 @@ server {
     }
 }
 ```
+- `listen 80;` covers IPv4 only. Add `listen [::]:80;` too: `localhost` and many clients connect over IPv6 first, and without it those requests silently land on nginx's default site instead of yours.
 - `server_name` selects the vhost. `location` blocks match URL paths. `try_files` = serve the file if it exists, else return 404.
 
 **A reverse proxy with load balancing:**
@@ -184,12 +186,14 @@ upstream app_backend {
 
 server {
     listen 80;
+    listen [::]:80;
     server_name app.example.com;
     return 301 https://$host$request_uri;          # force HTTPS
 }
 
 server {
     listen 443 ssl;
+    listen [::]:443 ssl;
     http2 on;
     server_name app.example.com;
     ssl_certificate     /etc/pki/tls/certs/app.crt;

@@ -109,8 +109,9 @@ sudo semanage fcontext -l | grep -E '^/var/www(\(|/)' | head -5
 ```
 /var/www(/.*)?                                     all files          system_u:object_r:httpd_sys_content_t:s0
 /var/www(/.*)?/logs(/.*)?                          all files          system_u:object_r:httpd_log_t:s0
+/var/www/[^/]*/cgi-bin(/.*)?                       all files          system_u:object_r:httpd_sys_script_exec_t:s0
+/var/www/calamaris(/.*)?                           all files          system_u:object_r:calamaris_www_t:s0
 /var/www/cgi-bin(/.*)?                             all files          system_u:object_r:httpd_sys_script_exec_t:s0
-/var/www/html(/.*)?/uploads(/.*)?                  all files          system_u:object_r:httpd_sys_rw_content_t:s0
 ```
 
 ### Common file types

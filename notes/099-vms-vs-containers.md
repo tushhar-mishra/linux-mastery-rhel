@@ -74,8 +74,8 @@ uname -r ; podman run --rm registry.access.redhat.com/ubi10/ubi uname -r
 ```
 ```
 8
-6.12.0-55.el10.x86_64
-6.12.0-55.el10.x86_64
+6.12.0-264.16.1.el10_3.x86_64
+6.12.0-264.16.1.el10_3.x86_64
 ```
 - The container reports the **host's kernel version**, because there is no other kernel. A VM would report its own.
 

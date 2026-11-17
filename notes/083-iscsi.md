@@ -98,7 +98,8 @@ sudo firewall-cmd --permanent --add-service=iscsi-target ; sudo firewall-cmd --r
 
 ```bash
 sudo dnf install -y iscsi-initiator-utils           # Ubuntu: open-iscsi
-cat /etc/iscsi/initiatorname.iscsi
+sudo systemctl start iscsid                          # first start generates the name if the file is missing
+sudo grep InitiatorName /etc/iscsi/initiatorname.iscsi    # root-only file (mode 600)
 ```
 ```
 InitiatorName=iqn.1994-05.com.redhat:server1
@@ -111,7 +112,6 @@ sudo iscsiadm -m node -T iqn.2026-11.lan.example:storage.t1 -p 192.168.56.11 -l
 ```
 ```
 192.168.56.11:3260,1 iqn.2026-11.lan.example:storage.t1
-Logging in to [iface: default, target: iqn.2026-11.lan.example:storage.t1, portal: 192.168.56.11,3260]
 Login to [iface: default, target: iqn.2026-11.lan.example:storage.t1, portal: 192.168.56.11,3260] successful.
 ```
 
@@ -134,6 +134,7 @@ sudo systemctl enable iscsi          # log back in to saved targets at every boo
 
 ```bash
 sudo parted -s /dev/sdb mklabel gpt mkpart data xfs 1MiB 100%
+# parted may warn "not properly aligned for best performance": LIO reports an odd optimal I/O size; 1 MiB alignment is fine
 sudo mkfs.xfs /dev/sdb1
 sudo mkdir -p /iscsidata
 echo "UUID=$(sudo blkid -s UUID -o value /dev/sdb1) /iscsidata xfs _netdev,nofail 0 0" | sudo tee -a /etc/fstab

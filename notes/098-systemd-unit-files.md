@@ -138,7 +138,7 @@ What happens with a dependency `dep.service` that always fails:
 | `on-abnormal` | Signal, timeout, watchdog (not a clean non-zero exit) |
 | `always` | Exits for any reason (except `systemctl stop`) |
 
-Crash loops are throttled: more than `StartLimitBurst=` starts (default 5) within `StartLimitIntervalSec=` (default 10 s) → systemd gives up with **`start-limit-hit`**. Clear it with `systemctl reset-failed UNIT`.
+Crash loops are throttled: more than `StartLimitBurst=` starts (default 5) within `StartLimitIntervalSec=` (default 10 s) → systemd logs **`Start request repeated too quickly`** and stops restarting. The unit stays `failed`; on systemd 257 its Result is the last real failure (e.g. `exit-code`), and some versions show `start-limit-hit` instead. Clear it with `systemctl reset-failed UNIT`.
 
 ### Stopping
 
@@ -241,7 +241,7 @@ journalctl -u crashy -n 5
 crashy.service: Main process exited, code=exited, status=1/FAILURE
 crashy.service: Scheduled restart job, restart counter is at 3.
 crashy.service: Start request repeated too quickly.
-crashy.service: Failed with result 'start-limit-hit'.
+crashy.service: Failed with result 'exit-code'.
 ```
 ```bash
 sudo systemctl reset-failed crashy
@@ -394,7 +394,7 @@ sudo systemd-run --on-calendar='*-*-* 03:00' /usr/local/bin/cleanup.sh     # a t
 | `status=203/EXEC` | Wrong path, not executable, missing interpreter, SELinux label | `ls -lZ`; move it to `/usr/local/bin`; `restorecon`; `ausearch -m avc` |
 | `start` succeeded but the unit failed moments later | `Type=simple` with a program that dies at start | `Type=exec`; read the journal |
 | Exits immediately with status 0 | The program daemonised itself | Foreground flag, or `Type=forking` + `PIDFile=` |
-| `start-limit-hit` | A throttled crash loop | Fix the crash; `reset-failed` |
+| `Start request repeated too quickly` in the journal (Result `exit-code` or `start-limit-hit`) | A throttled crash loop | Fix the crash; `reset-failed` |
 | Starts before the network or DB is ready | Missing `After=`, or `network.target` used instead of `network-online.target` | Add ordering; app-level retries |
 | Changes are ignored | Edited `/usr/lib/…`, or no `daemon-reload` | `systemctl edit`; `daemon-reload` |
 | `stop` hangs for 90 s | The process ignores SIGTERM | Fix its signal handling; tune `TimeoutStopSec=` |

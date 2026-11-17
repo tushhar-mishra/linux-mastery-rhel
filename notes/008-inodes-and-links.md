@@ -78,8 +78,8 @@ ln a.txt b.txt
 ls -li a.txt b.txt
 ```
 ```
-3407940 -rw-r--r--. 2 alice alice 6 Nov 16 10:20 a.txt
-3407940 -rw-r--r--. 2 alice alice 6 Nov 16 10:20 b.txt
+17358831 -rw-r--r--. 2 alice alice 6 Nov 16 10:20 a.txt
+17358831 -rw-r--r--. 2 alice alice 6 Nov 16 10:20 b.txt
 ```
 - `-i` adds the inode number as the first column. Both names show **the same inode** (`3407940`) and a link count of **2**. They are the same file.
 
@@ -88,7 +88,7 @@ rm a.txt ; cat b.txt ; ls -li b.txt
 ```
 ```
 hello
-3407940 -rw-r--r--. 1 alice alice 6 Nov 16 10:20 b.txt
+17358831 -rw-r--r--. 1 alice alice 6 Nov 16 10:20 b.txt
 ```
 - The data survived. The link count dropped to 1.
 
@@ -133,9 +133,11 @@ ln -sr /srv/app/current /usr/local/app
 ln /etc/hosts /home/alice/h
 ```
 ```
-ln: failed to create hard link '/home/alice/h' => '/etc/hosts': Invalid cross-device link
+ln: failed to create hard link '/home/alice/h' => '/etc/hosts': Operation not permitted
 ```
-- This only fails if `/home` is a **different filesystem** from `/etc` (common in production). Hard links can't cross filesystems.
+- There are two separate rules, and either one can stop you:
+  - **Ownership protection.** RHEL turns on `fs.protected_hardlinks = 1`. A normal user may only hard-link files they own (or can read and write). Otherwise anyone could pin a copy of a sensitive file's inode. That's the error above, seen when `/home` and `/etc` are on the same filesystem.
+  - **Filesystem boundary.** If `/home` is a **different filesystem** from `/etc` (common in production), you get `Invalid cross-device link` instead, even as root. Hard links can't cross filesystems because inode numbers only mean something inside one filesystem.
 
 ```bash
 namei -l /usr/bin/python3
@@ -158,14 +160,16 @@ find / -xdev -xtype l 2>/dev/null                # broken symlinks
 - `find` is covered in topic 020. `-xdev` = don't leave this filesystem; `-xtype l` = links whose target is missing.
 
 ```bash
-lsof +L1
+sudo dnf install -y lsof          # not part of a minimal install
+sudo lsof +L1
 ```
 ```
-COMMAND   PID USER   FD   TYPE DEVICE   SIZE/OFF NLINK    NODE NAME
-nginx    1234 root    5w   REG  253,0 5368709120     0 1048577 /var/log/nginx/access.log (deleted)
+COMMAND   PID    USER   FD   TYPE DEVICE SIZE/OFF NLINK     NODE NAME
+sleep    5957 vagrant    5w   REG    8,4 52428800     0 16882551 /tmp/big.log (deleted)
 ```
 - `lsof` = **l**ist **o**pen **f**iles. `+L1` shows open files whose link count is **below 1**, i.e. deleted but still open.
-- `NLINK 0` and `(deleted)`: here, a 5 GB log nginx is still holding open. `FD 5w` means file descriptor 5, open for writing (topic 016). Restart or reload nginx to free the space.
+- `NLINK 0` and `(deleted)`: a 50 MB file that was `rm`'d while a process still held it open. `FD 5w` means file descriptor 5, open for writing (topic 016). The space only comes back when that process closes the file or exits. In real life this is usually a big log a service is still writing: restart or reload the service to free the space.
+- To reproduce it: `(exec 5>/tmp/big.log; dd if=/dev/zero bs=1M count=50 >&5; sleep 300) & sleep 1; rm /tmp/big.log; sudo lsof +L1`.
 
 ### Symlinks you'll see on every RHEL system
 
@@ -208,6 +212,7 @@ Never put a trailing slash when removing a symlink to a directory: `rm dirlink`.
 | Symptom | Cause | Fix |
 |---|---|---|
 | `Invalid cross-device link` | Hard link across filesystems | Use a symlink, or copy |
+| `ln: failed to create hard link … Operation not permitted` | `fs.protected_hardlinks`: you don't own the target | Use a symlink, or copy the file |
 | `hard link not allowed for directory` | Directories can't be hard-linked | Use a symlink |
 | `No such file or directory` opening a link that `ls` shows | Dangling link, or a relative target computed from the wrong place | `readlink -f link`; fix the target or use an absolute path |
 | `Too many levels of symbolic links` | Links point to each other in a loop | `namei -l path` shows the chain |

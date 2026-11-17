@@ -76,22 +76,25 @@ sudo nmcli con up bond0
 cat /proc/net/bonding/bond0
 ```
 ```
-Ethernet Channel Bonding Driver: v6.12.0-55.el10.x86_64
+Ethernet Channel Bonding Driver: v6.12.0-264.16.1.el10_3.x86_64
 
 Bonding Mode: fault-tolerance (active-backup)
 Primary Slave: None
 Currently Active Slave: enp0s9
 MII Status: up
 MII Polling Interval (ms): 100
+...
 
 Slave Interface: enp0s9
 MII Status: up
 Speed: 1000 Mbps
+Duplex: full
 Link Failure Count: 0
 
 Slave Interface: enp0s10
 MII Status: up
 Speed: 1000 Mbps
+Duplex: full
 Link Failure Count: 0
 ```
 - The mode, which port is **currently active**, each port's link status, and how many times each port has failed.
@@ -114,7 +117,7 @@ Currently Active Slave: enp0s10
 sudo nmcli con mod bond0 bond.options "mode=802.3ad,miimon=100,lacp_rate=fast,xmit_hash_policy=layer3+4"
 sudo nmcli con up bond0
 ```
-- The switch ports **must** be configured as an LACP port-channel too. Otherwise `/proc/net/bonding/bond0` shows a partner MAC of `00:00:00:00:00:00` and traffic misbehaves.
+- The switch ports **must** be configured as an LACP port-channel too. Otherwise `/proc/net/bonding/bond0` shows a partner MAC of `00:00:00:00:00:00` and traffic misbehaves. Read the file with `sudo cat`: the partner details are hidden from normal users. Without LACP on the switch you also see each port in its **own** "Aggregator ID" (1 and 2), which means only one link carries traffic.
 
 ### VLANs and bridges on top
 

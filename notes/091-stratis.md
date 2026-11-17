@@ -37,7 +37,8 @@ LVM is **building furniture from parts**: you choose every board and screw. Stra
 - `stratisd` writes its own metadata onto each disk, then uses device-mapper to build a thin pool across them.
 - Each filesystem is a **thin volume** with a large virtual size (1 TiB by default, or `--size`) and XFS on top. As the filesystem fills, stratisd grows the XFS automatically. So **`df` shows the virtual size, not real capacity**; the real limit is the pool (`stratis pool list`).
 - Snapshots are thin snapshots: instant, sharing data with the origin.
-- Because the filesystems only exist after `stratisd` has started and assembled the pool, fstab entries must say so: **`x-systemd.requires=stratisd.service`**. Otherwise systemd tries to mount before the device exists, and the boot hangs or drops to emergency mode.
+- Because the filesystems only exist after the pool has been assembled, fstab entries must tell systemd to wait for that. Stratis 3.x ships a unit for exactly this: **`stratis-fstab-setup@POOL-UUID.service`**, which sets up one pool early in boot (before local filesystems are mounted). Without it, systemd tries to mount before the device exists, and the boot hangs or drops to emergency mode.
+- **Don't use the old advice `x-systemd.requires=stratisd.service`.** On RHEL 10 (Stratis 3.9) `stratisd.service` is ordered after `multi-user.target`, so a boot-time mount that requires it creates an **ordering cycle**. systemd "solves" the cycle by dropping start jobs: in the lab the machine booted with **no NetworkManager, no sshd, no chronyd** and a read-only root, which on a remote server means it's unreachable.
 - Encrypted pools use LUKS2 (topic 088) under the hood, unlocked with a kernel-keyring key or Clevis (Tang/TPM2).
 
 ## Commands
@@ -58,10 +59,12 @@ sudo stratis pool add-data pool1 /dev/vdc          # grow the pool with another 
 sudo stratis pool list
 ```
 ```
-Name                     Total / Used / Free    Properties                                   UUID   Alerts
-pool1   20 GiB / 526 MiB / 19.49 GiB   ~Ca,~Cr, Op   9e1b…
+Name               Total / Used / Free        Properties                                   UUID   Alerts
+pool1   10 GiB / 963.01 MiB / 9.06 GiB   ~Le,~Ca,~Cr, Op   cc241523-4cd6-4a3b-9966-a1de0121106a
 ```
-- `Total / Used / Free` is the **real** physical capacity. `~Ca` = no cache, `~Cr` = not encrypted, `Op` = overprovisioning allowed.
+- `Total / Used / Free` is the **real** physical capacity. Properties: `~` means "not set". `~Ca` = no cache, `~Cr` = not encrypted, `Op` = overprovisioning allowed (see `stratis pool list --help` for the other codes on your version).
+- The pool **UUID** is what the fstab line below needs.
+- If `pool create` says a device "appears to be owned" although `blkid -p` shows nothing, udev still remembers an old signature: `sudo udevadm trigger --settle /dev/vdb`, then retry.
 
 ```bash
 sudo stratis blockdev list
@@ -87,10 +90,13 @@ Filesystem                                 Type  Size  Used Avail Use% Mounted o
 ### Persistent mount (the required option)
 
 ```bash
-UUID=$(sudo blkid -s UUID -o value /dev/stratis/pool1/fs1)
-echo "UUID=$UUID /data xfs defaults,x-systemd.requires=stratisd.service 0 0" | sudo tee -a /etc/fstab
+FS=$(sudo blkid -s UUID -o value /dev/stratis/pool1/fs1)     # the filesystem's UUID
+POOL=cc241523-4cd6-4a3b-9966-a1de0121106a                     # the pool's UUID, from "stratis pool list"
+echo "UUID=$FS /data xfs defaults,x-systemd.requires=stratis-fstab-setup@$POOL.service,x-systemd.after=stratis-fstab-setup@$POOL.service 0 0" | sudo tee -a /etc/fstab
 sudo systemctl daemon-reload && sudo mount -a
+sudo reboot        # then: findmnt /data ; journalctl -b | grep -c "ordering cycle"   (should be 0)
 ```
+- `x-systemd.requires=` pulls the setup unit in; `x-systemd.after=` makes the mount wait for it. Verified across a real reboot: the filesystem mounts and no cycles appear.
 
 ### Snapshots
 
@@ -119,8 +125,8 @@ sudo stratis pool destroy pool1                    # the pool must have no files
 ```
 
 ### Try it
-1. Create a pool from one disk, add a filesystem, mount it persistently with the `x-systemd.requires` option, and reboot.
-2. Remove `x-systemd.requires=stratisd.service` from fstab in a lab, reboot, and see the failure; fix it from the emergency shell.
+1. Create a pool from one disk, add a filesystem, mount it persistently with the `stratis-fstab-setup@POOL-UUID.service` options, and reboot.
+2. In a lab VM **with console access**, try the old `x-systemd.requires=stratisd.service` instead and reboot: read `journalctl -b | grep "ordering cycle"` from the console to see which services systemd dropped, then fix fstab (`mount -o remount,rw /` first).
 3. Snapshot, delete a file, restore it from the snapshot.
 4. Add a second disk with `add-data` and watch the pool's Total grow.
 
@@ -134,7 +140,9 @@ sudo stratis pool destroy pool1                    # the pool must have no files
 | Symptom | Cause | Fix |
 |---|---|---|
 | `stratis pool create` refuses a disk | An existing signature or partition table | `blkid -p DEV`; `wipefs -a DEV` if safe |
-| The boot hangs / emergency mode | fstab lacks `x-systemd.requires=stratisd.service` | Add it; `systemctl daemon-reload` |
+| The boot hangs / emergency mode | The fstab entry doesn't wait for the pool | Add `x-systemd.requires=` and `x-systemd.after=stratis-fstab-setup@POOL-UUID.service` |
+| Boots, but no network or SSH; journal shows `Found ordering cycle … Job sshd.service/start deleted to break ordering cycle` | fstab uses `x-systemd.requires=stratisd.service`, which creates a cycle on Stratis 3.x | Console: `mount -o remount,rw /`, fix the fstab line, reboot |
+| `pool create` says a device "appears to be owned", but `blkid -p` is empty | udev still has old signature info | `udevadm trigger --settle DEV` |
 | `stratis` commands can't connect | `stratisd` isn't running | `systemctl enable --now stratisd` |
 | Writes fail although `df` shows space | The pool is physically full | `stratis pool add-data POOL DEV` |
 | `pool destroy` fails | Filesystems still exist | Destroy them first |
@@ -143,11 +151,11 @@ sudo stratis pool destroy pool1                    # the pool must have no files
 
 - Stratis = pools of whole disks + thin XFS filesystems, managed by `stratisd` with the `stratis` CLI.
 - `stratis pool create P DEVS` → `stratis filesystem create P FS` → mount `/dev/stratis/P/FS`.
-- fstab **must** include `x-systemd.requires=stratisd.service`.
+- fstab **must** wait for the pool: `x-systemd.requires=…,x-systemd.after=stratis-fstab-setup@POOL-UUID.service`. The old `x-systemd.requires=stratisd.service` causes an ordering cycle on RHEL 10.
 - `df` shows the virtual size; real capacity is `stratis pool list`. Snapshots: `stratis filesystem snapshot P FS SNAP`.
 
 **Interview questions**
 
 1. *What is Stratis built on?* device-mapper thin provisioning and XFS, managed by the `stratisd` daemon.
 2. *Why does `df` show 1 TiB on a 20 GiB Stratis pool?* Stratis filesystems are thinly provisioned with a large virtual size; real capacity is the pool's.
-3. *What fstab option does a Stratis filesystem need, and why?* `x-systemd.requires=stratisd.service`, so systemd waits for stratisd to set up the pool before mounting.
+3. *What fstab options does a Stratis filesystem need, and why?* `x-systemd.requires=` and `x-systemd.after=stratis-fstab-setup@POOL-UUID.service`, so systemd sets up that pool before mounting. (Older guides say `x-systemd.requires=stratisd.service`; on current Stratis that creates an ordering cycle.)

@@ -140,8 +140,9 @@ drwxr-x---. 2 chrony chrony      6 Oct  3 10:12 chrony
 date
 ```
 ```
-Mon Nov 16 09:47:12 UTC 2026
+Mon Nov 16 08:22:20 PM UTC 2026
 ```
+- The format follows your **locale** (language and region settings, `LANG`). RHEL's default `en_US.UTF-8` gives a 12-hour clock with AM/PM. `LC_TIME=C date` prints the classic 24-hour form (`Mon Nov 16 20:22:20 UTC 2026`), which scripts should use, or better, an explicit format such as `date +%F_%T`.
 
 ```bash
 cal -3
@@ -216,7 +217,7 @@ Changing password for user alice.
 Current password:
 New password:
 Retype new password:
-passwd: all authentication tokens updated successfully.
+passwd: password updated successfully
 ```
 - Changes your own password. Nothing appears while you type a password; that is normal.
 

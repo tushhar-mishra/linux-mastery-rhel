@@ -132,16 +132,18 @@ touch app.log app2.log db.log notes.txt Doc1 Doc2 DocA .hidden
 echo *
 ```
 ```
-Doc1 Doc2 DocA app.log app2.log db.log notes.txt
+app2.log app.log db.log Doc1 Doc2 DocA notes.txt
 ```
 - `.hidden` is missing: `*` skips dot files. `echo *` is also a way to list files when `ls` is broken.
+- The order follows your **locale** (`en_US.UTF-8`): it ignores case and punctuation at first, so `app2.log` sorts before `app.log` and `Doc1` sits among the lowercase names. With `LC_ALL=C` you get strict byte order: `Doc1 Doc2 DocA app.log app2.log db.log notes.txt` (see "locale" below).
 
 ```bash
 echo .*
 ```
 ```
-. .. .hidden
+.hidden
 ```
+- Since bash 5.2, `.*` no longer matches `.` and `..` (the `globskipdots` option, on by default). Older shells printed `. .. .hidden`, which is why old scripts warn that `rm -rf .*` could climb into the parent directory. Don't rely on either behaviour in scripts: use `shopt -s dotglob` or an explicit pattern such as `.[!.]*`.
 
 ```bash
 ls *.pdf
@@ -155,7 +157,7 @@ ls: cannot access '*.pdf': No such file or directory
 echo rm *.log
 ```
 ```
-rm app.log app2.log db.log
+rm app2.log app.log db.log
 ```
 - **Preview trick:** put `echo` in front of a destructive command to see exactly what it would run. Then remove the `echo`.
 
@@ -171,7 +173,8 @@ cd /etc
 find /etc -name *.conf
 ```
 ```
-find: paths must precede expression: `dnf.conf'
+find: paths must precede expression: `dhcpcd.conf'
+find: possible unquoted pattern after predicate `-name'?
 ```
 - Bash expanded `*.conf` using the files in your **current** directory *before* `find` ran, so `find` received several names and got confused.
 
@@ -197,7 +200,7 @@ locale
 ```
 LANG=en_US.UTF-8
 LC_CTYPE="en_US.UTF-8"
-LC_COLLATE="en_US.UTF-8"
+LC_NUMERIC="en_US.UTF-8"
 ...
 LC_ALL=
 ```

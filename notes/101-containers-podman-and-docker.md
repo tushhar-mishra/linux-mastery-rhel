@@ -74,8 +74,8 @@ grep "^$USER:" /etc/subuid /etc/subgid
 ```
 ```
 true overlay netavark
-alice:524288:65536
-alice:524288:65536
+/etc/subuid:alice:524288:65536
+/etc/subgid:alice:524288:65536
 ```
 - Rootless, overlay storage, netavark networking. alice owns 65,536 subordinate UIDs starting at 524288 for container users.
 
@@ -93,8 +93,8 @@ podman save -o myweb.tar localhost/myweb:1.0 ; podman load -i myweb.tar   # move
 podman image prune -a
 ```
 ```
-REPOSITORY                           TAG         IMAGE ID      CREATED      SIZE
-registry.access.redhat.com/ubi10/ubi latest      7c3e1a7f2b9d  2 weeks ago  214 MB
+REPOSITORY                            TAG         IMAGE ID      CREATED      SIZE
+registry.access.redhat.com/ubi10/ubi  latest      747428888698  4 days ago  220 MB
 ```
 
 ### Run and manage containers
@@ -107,7 +107,7 @@ curl -s http://localhost:8080 | head -1
 podman ps
 ```
 ```
-<html><body><h1>It works!</h1></body></html>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 CONTAINER ID  IMAGE                           COMMAND           CREATED        STATUS        PORTS                 NAMES
 3f2a9c1b7e44  docker.io/library/httpd:latest  httpd-foreground  5 seconds ago  Up 5 seconds  0.0.0.0:8080->80/tcp  web
 ```
@@ -145,7 +145,12 @@ podman network create appnet
 podman run -d --name db  --network appnet -e MARIADB_ROOT_PASSWORD=Secr3t -v dbdata:/var/lib/mysql docker.io/library/mariadb
 podman run -d --name app --network appnet docker.io/library/httpd
 podman exec app getent hosts db                     # names resolve via aardvark-dns on user networks
-
+```
+```
+10.89.0.3       db.dns.podman
+```
+- The name resolves to the container's address on `appnet`; aardvark-dns adds the `dns.podman` search domain.
+```bash
 podman pod create --name webpod -p 8090:80          # ports are published on the POD
 podman run -d --pod webpod --name web3 docker.io/library/httpd
 podman kube generate webpod > webpod.yaml           # Kubernetes YAML from a pod

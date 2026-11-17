@@ -80,10 +80,15 @@ meta-data=/dev/vdb1              isize=512    agcount=4, agsize=65536 blks
          =                       sectsz=512   attr=2, projid32bit=1
          =                       crc=1        finobt=1, sparse=1, rmapbt=1
          =                       reflink=1    bigtime=1 inobtcount=1 nrext64=1
+         =                       exchange=0   metadir=0
 data     =                       bsize=4096   blocks=262144, imaxpct=25
-naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=0
 log      =internal log           bsize=4096   blocks=16384, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
 realtime =none                   extsz=4096   blocks=0, rtextents=0
+         =                       rgcount=0    rgsize=0 extents
+         =                       zoned=0      start=0 reserved=0
 ```
 - `agcount=4`: 4 allocation groups. `bsize=4096`: 4 KiB blocks. `crc=1`: metadata checksums (detect corruption). `reflink=1`: supports instant copy-on-write file copies (`cp --reflink`). `log=internal`: the journal lives inside the filesystem.
 
@@ -140,13 +145,13 @@ grep -v nodev /proc/filesystems
 ```
 ```
 	xfs
+	fuseblk
+	vfat
 	ext3
 	ext2
 	ext4
-	vfat
-	iso9660
 ```
-- More appear as their kernel modules load (topic 055).
+- Only filesystems whose driver is **loaded right now** are listed. Just after boot this machine showed only `xfs`, `fuseblk` and `vfat`; the `ext*` lines appeared after an ext4 filesystem was mounted, because mounting loads the module automatically (topic 055). So "not in this list" doesn't mean "not supported".
 
 ### Cloned disks: duplicate UUIDs
 

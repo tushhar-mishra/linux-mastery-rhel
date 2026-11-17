@@ -123,8 +123,8 @@ drwx------. 3 alice alice  95 Nov 16 10:02 .
 drwxr-xr-x. 5 root  root   44 Nov 10 09:00 ..
 -rw-------. 1 alice alice 812 Nov 16 10:01 .bash_history
 -rw-r--r--. 1 alice alice  18 Oct  3 12:00 .bash_logout
--rw-r--r--. 1 alice alice 141 Oct  3 12:00 .bash_profile
--rw-r--r--. 1 alice alice 492 Oct  3 12:00 .bashrc
+-rw-r--r--. 1 alice alice 144 Oct  3 12:00 .bash_profile
+-rw-r--r--. 1 alice alice 522 Oct  3 12:00 .bashrc
 drwxr-xr-x. 2 alice alice   6 Nov 16 10:02 docs
 ```
 - `-a` shows hidden files, including `.` (this directory) and `..` (the parent).
@@ -163,16 +163,17 @@ touch notes.txt ; stat notes.txt
 ```
   File: notes.txt
   Size: 0         	Blocks: 0          IO Block: 4096   regular empty file
-Device: fd00h/64768d	Inode: 3407937     Links: 1
+Device: 8,4	Inode: 697072      Links: 1
 Access: (0644/-rw-r--r--)  Uid: ( 1000/   alice)   Gid: ( 1000/   alice)
 Context: unconfined_u:object_r:user_home_t:s0
-Access: 2026-11-16 10:05:11.312 +0000
-Modify: 2026-11-16 10:05:11.312 +0000
-Change: 2026-11-16 10:05:11.312 +0000
- Birth: 2026-11-16 10:05:11.312 +0000
+Access: 2026-11-16 10:05:11.046819562 +0000
+Modify: 2026-11-16 10:05:11.046819562 +0000
+Change: 2026-11-16 10:05:11.046819562 +0000
+ Birth: 2026-11-16 10:05:11.046819562 +0000
 ```
 - `touch` creates an empty file, or updates the times of an existing one.
 - `stat` shows everything in the inode: `Size` and `Blocks` (disk space used), `Inode` (its number), `Links` (link count), `Access (0644…)` (permissions as a number and letters, topic 026), `Uid/Gid` (owner and group), `Context` (SELinux label), and the four timestamps.
+- `Device: 8,4` is the device the file lives on, as major,minor numbers (8,4 = `sda4`; `lsblk` shows the same pair). Timestamps are kept to the nanosecond.
 
 ```bash
 file notes.txt /etc/passwd /usr/bin/ls
@@ -207,13 +208,14 @@ cp -v a.txt b.txt /tmp/
 **`cp -r src dst` gotcha:** if `dst` already exists, you get `dst/src`. If it doesn't exist, `dst` *becomes* the copy.
 
 ```bash
-cp -a /etc/ssh/sshd_config{,.$(date +%F)}
-ls /etc/ssh/sshd_config*
+sudo cp -a /etc/ssh/sshd_config{,.$(date +%F)}
+ls -d /etc/ssh/sshd_config*
 ```
 ```
-/etc/ssh/sshd_config  /etc/ssh/sshd_config.2026-11-16
+/etc/ssh/sshd_config  /etc/ssh/sshd_config.2026-11-16  /etc/ssh/sshd_config.d
 ```
-- A classic "back up before editing" trick. `{,.$(date +%F)}` expands to two words: the name, and the name plus today's date (topics 013–014).
+- A classic "back up before editing" trick. `{,.$(date +%F)}` expands to two words: the name, and the name plus today's date (topics 013–014). `sudo` is needed because `/etc/ssh` belongs to root (topic 028).
+- `ls -d` lists the matching names themselves. Without `-d`, the pattern also matches the `sshd_config.d` **directory**, and `ls` would print everything inside it too.
 
 ### Move and rename
 

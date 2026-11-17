@@ -64,6 +64,7 @@ sysctl vm.swappiness  # sysctl reads/writes kernel settings (topic 055)
 ```
 vm.swappiness = 30
 ```
+- The kernel default is 60. RHEL VMs show 30 because the **tuned** service applies the `virtual-guest` profile, which lowers it (topic 056). Check with `tuned-adm active`.
 
 ```bash
 grep VmSwap /proc/*/status 2>/dev/null | sort -k2 -n | tail -3

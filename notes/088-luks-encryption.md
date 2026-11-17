@@ -47,7 +47,7 @@ The data is a **safe's contents**, locked with **one master combination** (the m
 ## Commands
 
 ```bash
-sudo dnf install -y cryptsetup          # usually already installed
+sudo dnf install -y cryptsetup          # present on normal installs; some cloud/minimal images lack it
 lsblk -f                                # confirm the target is EMPTY
 sudo cryptsetup luksFormat /dev/vdb
 ```
@@ -163,6 +163,8 @@ sudo wipefs -a /dev/vdb
 
 | Symptom | Cause | Fix |
 |---|---|---|
+| `Device /dev/vdb is not a valid LUKS device.` | The header at the start of the disk was overwritten (a stray `dd`, `mkfs` or partitioning tool) | `cryptsetup luksHeaderRestore DEV --header-backup-file FILE`. Without a backup the data is gone |
+| `No usable keyslot is available.` | All keyslots were wiped (`cryptsetup erase`), or the last key was removed | Nothing to recover: this is what erase is for. Restore from backups |
 | `No key available with this passphrase` | Wrong passphrase or key, or a damaged header | Try other keys; restore the header backup |
 | The boot waits for a passphrase, or hangs | crypttab says `none`, or a wrong key file path | Unlock at the console; fix crypttab; `nofail` for non-critical volumes |
 | `Device secure already exists` | It's already open | `cryptsetup status secure`; close it first |

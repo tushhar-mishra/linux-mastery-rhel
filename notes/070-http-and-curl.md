@@ -99,9 +99,10 @@ curl -sS -o /dev/null -w '%{http_code}\n' https://example.com/   # just the stat
 ```
 ```
 HTTP/2 200
-content-type: text/html
-etag: "84238dfc8092e5d9c0dac8ef93371a07:1736799080.121134"
-content-length: 1256
+date: Tue, 17 Nov 2026 00:35:25 GMT
+content-type: text/html; charset=utf-8
+server: cloudflare
+last-modified: Mon, 16 Nov 2026 00:26:08 GMT
 ...
 200
 ```
@@ -130,27 +131,37 @@ curl -v https://example.com/ -o /dev/null
 ```
 ```
 * Host example.com:443 was resolved.
-* IPv4: 93.184.215.14
-*   Trying 93.184.215.14:443...
-* Connected to example.com (93.184.215.14) port 443
+* IPv6: (none)
+* IPv4: 104.20.23.154, 172.66.147.243
+*   Trying 104.20.23.154:443...
 * ALPN: curl offers h2,http/1.1
 * TLSv1.3 (OUT), TLS handshake, Client hello (1):
+*  CAfile: /etc/pki/tls/certs/ca-bundle.crt
 * TLSv1.3 (IN), TLS handshake, Server hello (2):
-* SSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384 / x25519 / RSASSA-PSS
+...
+* SSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384 / X25519MLKEM768 / id-ecPublicKey
+* ALPN: server accepted h2
 * Server certificate:
-*  subject: CN=www.example.org
-*  expire date: Jan 15 23:59:59 2027 GMT
+*  subject: CN=example.com
+*  start date: Sep 26 22:49:11 2026 GMT
+*  expire date: Dec 25 22:56:35 2026 GMT
 *  subjectAltName: host "example.com" matched cert's "example.com"
+*  issuer: C=US; O=SSL Corporation; CN=Cloudflare TLS Issuing ECC CA 3
 *  SSL certificate verify ok.
+...
+* Connected to example.com (104.20.23.154) port 443
+...
 > GET / HTTP/2
 > Host: example.com
 > User-Agent: curl/8.12.1
 > Accept: */*
 >
 < HTTP/2 200
-< content-type: text/html
+< content-type: text/html; charset=utf-8
 ```
 - `*` lines = curl's own steps (DNS, TCP, TLS, certificate checks). `>` = what **you sent**. `<` = what the **server answered**. Where the output stops tells you which layer failed.
+- `CAfile` is the trust store curl checks the certificate against (RHEL's system bundle, topic 064).
+- `X25519MLKEM768` is the key exchange: classic X25519 combined with ML-KEM, a **post-quantum** algorithm. RHEL 10's OpenSSL 3.5 offers it by default, and many big sites accept it.
 
 ### Time each phase
 

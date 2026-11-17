@@ -37,7 +37,7 @@ Logging in is **arriving at the office in the morning**: you go through the full
 | `/etc/profile.d/*.sh` | All users (drop-in files) | Through `/etc/profile`; also through `/etc/bashrc` for non-login interactive shells |
 | `~/.bash_profile` | One user | Login shells. bash reads the **first one that exists** of `~/.bash_profile`, `~/.bash_login`, `~/.profile` |
 | `~/.bashrc` | One user | Interactive non-login shells. RHEL's `~/.bash_profile` sources it, so login shells get it too |
-| `/etc/bashrc` | All users | Sourced by `~/.bashrc` on RHEL (aliases, prompt, history defaults) |
+| `/etc/bashrc` | All users | Sourced by `/etc/profile` (login shells) and by `~/.bashrc` (other interactive shells) on RHEL; a guard stops it running twice. Holds aliases, prompt and history defaults |
 | `~/.bash_logout` | One user | Run when a **login** shell exits |
 | `/etc/environment` | All sessions (not only bash) | Read by PAM's `pam_env` at login. Simple `KEY=value` lines, not a script |
 
@@ -47,9 +47,10 @@ Logging in is **arriving at the office in the morning**: you go through the full
 
 **Login shell** (SSH, `su -`):
 ```
-/etc/profile → /etc/profile.d/*.sh → ~/.bash_profile → ~/.bashrc → /etc/bashrc
+/etc/profile → /etc/profile.d/*.sh → /etc/bashrc → ~/.bash_profile → ~/.bashrc (→ /etc/bashrc again, skipped)
 … when it exits: ~/.bash_logout
 ```
+- On RHEL 10, the last lines of `/etc/profile` source `/etc/bashrc` themselves. When `~/.bashrc` later tries to source it again, a guard variable (`BASHRCSOURCED`) makes the second run do nothing, so nothing is set twice.
 
 **Non-login interactive shell** (new tab, `bash`):
 ```
@@ -122,15 +123,20 @@ su - "$USER"
 - A clean login shell that re-reads everything. The best test.
 
 ```bash
-bash -lx -c exit 2>&1 | grep -E 'profile|bashrc' | head
+bash -lx -c exit 2>&1 | grep -E '^\++ \. '
 ```
 ```
-+ . /etc/profile.d/bash_completion.sh
++ . /etc/profile.d/70-systemd-shell-extra.sh
 + . /etc/profile.d/colorgrep.sh
-+ . /home/alice/.bashrc
++ . /etc/profile.d/colorls.sh
+...
++ . /etc/profile.d/which2.sh
++ . /etc/profile.d/sh.local
 + . /etc/bashrc
++ . /home/alice/.bashrc
+++ . /etc/bashrc
 ```
-- `-l` = login shell, `-x` = trace every line. This shows exactly which files ran and in what order. Remove the `grep` to see every command.
+- `-l` = login shell, `-x` = trace every line. This shows exactly which files ran and in what order. Each `+` is one level of nesting: `~/.bash_profile` itself doesn't appear because bash reads it directly, but the `.bashrc` it sources does, and the `++` line is `/etc/bashrc` being skipped by its guard. Remove the `grep` to see every command.
 
 ```bash
 grep -r 'EDITOR' /etc/profile /etc/profile.d /etc/bashrc ~/.bash* 2>/dev/null

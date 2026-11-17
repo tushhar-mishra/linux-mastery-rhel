@@ -72,7 +72,7 @@ hello.sh Alice ; echo "exit status: $?"
 ```
 ```
 Hello, Alice!
-You are alice on server1.example.com, kernel 6.12.0-55.el10.x86_64
+You are alice on server1.example.com, kernel 6.12.0-211.53.1.el10_2.x86_64
 exit status: 0
 ```
 

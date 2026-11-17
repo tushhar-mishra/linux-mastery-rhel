@@ -174,6 +174,7 @@ ss -tuln
 ```
 Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port
 udp   UNCONN 0      0          127.0.0.1:323        0.0.0.0:*
+udp   UNCONN 0      0              [::1]:323           [::]:*
 tcp   LISTEN 0      128          0.0.0.0:22         0.0.0.0:*
 tcp   LISTEN 0      128             [::]:22            [::]:*
 ```
@@ -183,11 +184,12 @@ tcp   LISTEN 0      128             [::]:22            [::]:*
 grep -wE '^(ssh|http|https|domain)' /etc/services | head -6
 ```
 ```
-ssh             22/tcp
-http            80/tcp          www www-http
-https           443/tcp
-domain          53/tcp
+ssh             22/tcp                          # The Secure Shell (SSH) Protocol
+ssh             22/udp                          # The Secure Shell (SSH) Protocol
+domain          53/tcp                          # name-domain server
 domain          53/udp
+http            80/tcp          www www-http    # WorldWideWeb HTTP
+http            80/udp          www www-http    # HyperText Transfer Protocol
 ```
 
 ```bash

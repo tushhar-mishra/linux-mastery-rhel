@@ -139,10 +139,12 @@ pstree -p -s $$
 ```
 1050 sshd: /usr/sbin/sshd -D [listener] 0 of 10-100 startups
 2370 sshd-session: alice [priv]
-1050 2370
+2380 sshd-session: alice@pts/0
+1050
 systemd(1)───sshd(1050)───sshd-session(2370)───sshd-session(2380)───bash(2381)───pstree(2502)
 ```
-- `pgrep -a` shows PID and full command line. `-x` = exact name only. `-u alice` = only alice's.
+- `pgrep -a` shows PID and full command line. Its pattern is matched **anywhere in the name**, so `sshd` also catches every `sshd-session`. `-x` = exact name only (`pgrep -x sshd` → just 1050). `-u alice` = only alice's.
+- `pidof` always matches the exact program name, so it finds only the listener: each login runs a separate `sshd-session` program (OpenSSH 9.8+).
 - `pstree -s PID` shows the chain of ancestors.
 
 ### Sending signals

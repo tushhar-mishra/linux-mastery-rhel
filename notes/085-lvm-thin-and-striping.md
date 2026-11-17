@@ -37,7 +37,7 @@ Words:
 1. A thin pool is built from two hidden LVs: `[pool_tdata]` (the data space) and `[pool_tmeta]` (the mapping metadata), plus a spare metadata LV `[lvol0_pmspare]` for repairs.
 2. A new thin LV owns **no** chunks. On the **first write** to a region, the pool allocates a chunk and records the mapping in the metadata. Reads of never-written areas return zeros.
 3. **Deleting files doesn't give space back** to the pool. The filesystem still "owns" those blocks until it sends **discards** (`fstrim`, or the `discard` mount option).
-4. **When the pool is full**, new writes **queue**, then fail (after about 60 seconds by default). Filesystems on the thin LVs see I/O errors: they may shut down, go read-only or be damaged. A full **metadata** area is even worse than full data.
+4. **When the pool is full**, new writes **queue**, then fail (after about 60 seconds by default; at once with `--errorwhenfull y`). The kernel logs `device-mapper: thin: …: switching pool to out-of-data-space (error IO) mode`. In the lab, XFS on the thin LV returned `No space left on device` and stayed mounted, while `df` inside it still showed free space, which is very confusing if you don't know about the pool. Depending on timing and filesystem, you can also get I/O errors, a filesystem shutdown or damage. A full **metadata** area is even worse than full data.
 5. **Thin snapshots** just share chunks with the origin; they need no fixed size, so they never overflow on their own (only the pool can).
 6. LVM can **auto-extend** a pool when it passes a threshold, if the VG has free space and the LVM monitoring service (`dmeventd`) is running.
 
@@ -63,10 +63,10 @@ sudo lvcreate -V 2G -T vg_thin/pool -n app1               # thin LVs with 2 GiB 
 sudo lvcreate -V 2G -T vg_thin/pool -n app2
 ```
 ```
-  Logical volume "app2" created.
-  WARNING: Sum of all thin volume sizes (4.00 GiB) exceeds the size of thin pool vg_thin/pool (3.00 GiB).
   WARNING: You have not turned on protection against thin pools running out of space.
   WARNING: Set activation/thin_pool_autoextend_threshold below 100 to trigger automatic extension of thin pools before they get full.
+  WARNING: Sum of all thin volume sizes (4.00 GiB) exceeds the size of thin pool vg_thin/pool and the amount of free space in volume group (<1.99 GiB).
+  Logical volume "app2" created.
 ```
 - 4 GiB promised on a 3 GiB pool: overprovisioned. LVM warns but allows it.
 
@@ -103,9 +103,9 @@ sudo rm /mnt/app1/blob ; sudo lvs -o lv_name,data_percent vg_thin/pool     # sti
 sudo fstrim -v /mnt/app1 ; sudo lvs -o lv_name,data_percent vg_thin/pool
 ```
 ```
-/mnt/app1: 1.9 GiB (2046820352 bytes) trimmed
+/mnt/app1: 2 GiB (2147483648 bytes) trimmed
   LV   Data%
-  pool 0.12
+  pool 2.10
 ```
 - Enable the weekly timer: `sudo systemctl enable --now fstrim.timer`. Mounting with `-o discard` trims continuously, at a small runtime cost.
 
@@ -124,6 +124,7 @@ thin_pool_autoextend_percent   = 20
 ```bash
 sudo lvchange --errorwhenfull y vg_thin/pool   # fail writes immediately when full instead of queueing
 ```
+- To recover, add space: `vgextend` if needed, then `lvextend -L +2G vg_thin/pool`. Writes work again immediately (the kernel logs `growing the data device`), and LVM may grow the pool's metadata at the same time.
 
 ### Thin snapshots
 

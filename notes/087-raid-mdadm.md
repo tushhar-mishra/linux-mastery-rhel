@@ -57,12 +57,17 @@ lsblk                                     # choose EMPTY disks (never the OS dis
 sudo mdadm --create /dev/md0 --level=1 --raid-devices=2 /dev/vdb /dev/vdc
 ```
 ```
+To optimize recovery speed, it is recommended to enable write-intent bitmap, do you want to enable it now? [y/N]? y
 mdadm: Note: this array has metadata at the start and
-    may not be suitable as a boot device.
-Continue creating array? y
+    may not be suitable as a boot device.  If you plan to
+    store '/boot' on this device please ensure that
+    your boot-loader understands md/v1.x metadata, or use
+    --metadata=0.90
+Continue creating array [y/N]? y
 mdadm: Defaulting to version 1.2 metadata
 mdadm: array /dev/md0 started.
 ```
+- A **write-intent bitmap** records which areas changed, so after a crash or a briefly missing disk only those areas are resynced instead of the whole disk. Say yes (or add `--bitmap=internal`).
 
 ```bash
 sudo mdadm -C /dev/md1 -l 5 -n 3 -x 1 /dev/vd{d,e,f,g}      # RAID 5 on 3 disks + 1 hot spare
@@ -79,6 +84,7 @@ Personalities : [raid1] [raid6] [raid5] [raid4]
 md0 : active raid1 vdc[1] vdb[0]
       5237760 blocks super 1.2 [2/2] [UU]
       [=====>...............]  resync = 27.4% (1436288/5237760) finish=0.3min speed=203111K/sec
+      bitmap: 1/1 pages [4KB], 65536KB chunk
 ```
 - `[2/2]` = 2 members expected, 2 working. `[UU]` = both Up (`_` would mark a missing one). The resync line shows progress.
 
@@ -116,6 +122,7 @@ sudo systemctl daemon-reload && sudo mount -a
 ```
 ARRAY /dev/md0 metadata=1.2 UUID=3b1c…:9f2e…:…
 ```
+- Run it only when the array is **clean**. During a rebuild the new disk counts as a spare, the line gets `spares=1`, and mdadm will later expect a spare that doesn't exist.
 - If the root filesystem is on RAID, also rebuild the initramfs (`dracut -f`, topic 053).
 
 ### Alerts (essential)

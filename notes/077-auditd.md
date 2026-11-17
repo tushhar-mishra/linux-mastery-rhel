@@ -77,6 +77,7 @@ backlog 0
 ```bash
 sudo augenrules --load ; sudo auditctl -l | head -3
 ```
+- With watch rules (`-w`), `augenrules --load` prints `Old style watch rules are slower`. It still works; the faster form is a syscall rule with a path filter, e.g. `-a always,exit -F arch=b64 -F path=/etc/passwd -F perm=wa -k identity`.
 - `-w PATH` = watch this file or directory. `-p` = which access: `r` read, `w` write, `x` execute, `a` attribute change. `-k KEY` = a label to search by later.
 
 ### System-call rules
@@ -151,7 +152,7 @@ sudo service auditd restart           # not systemctl restart (refused on RHEL)
 ### Starting from a good baseline
 
 ```bash
-rpm -ql audit | grep -i 'rules$' | head     # sample rule files shipped with the package
+rpm -ql audit-rules | grep -i 'rules$' | head    # sample rule files (RHEL 10: in the audit-rules package)
 ```
 Security profiles (CIS, STIG) from the `scap-security-guide` package include complete audit rule sets, applied with OpenSCAP.
 
@@ -172,6 +173,8 @@ Security profiles (CIS, STIG) from the `scap-security-guide` package include com
 
 | Symptom | Cause | Fix |
 |---|---|---|
+| `ausearch`/`aureport` print `<no matches>` (or an empty report) in a script, cron job or `ssh host 'ausearch …'`, but work at your prompt | Without a terminal on stdin, they read events from **stdin**, not from the log files | Add `--input-logs` (or `-if /var/log/audit/audit.log`) |
+| `auditctl: command not found` | On RHEL 10, `auditctl`, `augenrules` and the sample rules are in the separate **`audit-rules`** package | `sudo dnf install -y audit-rules` |
 | `systemctl restart auditd` is refused | `RefuseManualStop=yes` | `service auditd restart` |
 | New rules in `rules.d` aren't active | Not loaded | `augenrules --load`; check `auditctl -l` |
 | `The audit system is in immutable mode` | `-e 2` is loaded | Change the rules, then reboot |

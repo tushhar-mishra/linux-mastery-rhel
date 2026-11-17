@@ -67,20 +67,23 @@ ls /etc/hosts*
 echo "Kernel $(uname -r) on $(hostname), $(wc -l < /etc/passwd) accounts"
 ```
 ```
-Kernel 6.12.0-55.el10.x86_64 on server1.example.com, 42 accounts
+Kernel 6.12.0-211.53.1.el10_2.x86_64 on server1.example.com, 27 accounts
 ```
 
 ```bash
 echo $(ls /etc/ssh) ; echo "---" ; echo "$(ls /etc/ssh)"
 ```
 ```
-moduli ssh_config ssh_config.d sshd_config sshd_config.d
+moduli ssh_config ssh_config.d sshd_config sshd_config.d ssh_host_ecdsa_key ssh_host_ecdsa_key.pub …
 ---
 moduli
 ssh_config
 ssh_config.d
 sshd_config
 sshd_config.d
+ssh_host_ecdsa_key
+ssh_host_ecdsa_key.pub
+…
 ```
 - **Unquoted**: newlines are word-split, so everything lands on one line. **Quoted**: newlines are kept.
 
@@ -88,7 +91,7 @@ sshd_config.d
 ls -l "$(type -P grep)"
 ```
 ```
--rwxr-xr-x. 1 root root 166352 Jun 10 12:00 /usr/bin/grep
+-rwxr-xr-x. 1 root root 169800 Oct 29  2024 /usr/bin/grep
 ```
 - `type -P` prints the path of a program. Substitution feeds it to `ls`.
 
@@ -115,8 +118,11 @@ while IFS= read -r line; do
 done < /etc/hosts
 ```
 ```
-Line: 127.0.0.1   localhost localhost.localdomain
-Line: ::1         localhost localhost.localdomain
+Line: # Loopback entries; do not change.
+Line: # For historical reasons, localhost precedes localhost.localdomain:
+Line: 127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+Line: ::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+...
 ```
 - `read -r line` reads one line into `line`. `IFS=` keeps leading spaces. `-r` keeps backslashes. `< /etc/hosts` feeds the file in (topic 016).
 - This is the **safe** way to handle lines that contain spaces. `for x in $(cat file)` splits on every space (topic 043).
@@ -188,8 +194,9 @@ set +x
 ```
 ```
 + echo 'hello world'
++ set +x
 ```
-- The `+` line shows the command **after** expansion, exactly as it ran. This is the #1 tool for "why does my script do that?"
+- The `+` line shows the command **after** expansion, exactly as it ran. The redirection (`> /tmp/out.txt`) isn't shown, and the `set +x` itself is traced before tracing stops. This is the #1 tool for "why does my script do that?"
 - For a whole script: `bash -x script.sh`. Add line numbers with `PS4='+ ${LINENO}: '`.
 
 ```bash

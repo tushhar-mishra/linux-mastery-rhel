@@ -86,9 +86,12 @@ flatpak remote-delete flathub
 flatpak search gimp
 ```
 ```
-Name   Description                       Application ID   Version  Branch Remotes
-GIMP   Create images and edit photographs org.gimp.GIMP   3.0.4    stable flathub
+Name                           Description                               Application ID     Version Branch Remotes
+GIMP User Manual               GIMP User Manual                          org.gimp.GIMP.Manual 2.10  2.10   flathub
+GNU Image Manipulation Program High-end image creation and manipulation  org.gimp.GIMP      3.2.8   stable flathub
+...
 ```
+- Search uses each remote's app catalogue ("appstream" data). Right after `remote-add` it may not be downloaded yet, and search says **`No matches found`**. Fetch it with `sudo flatpak update --appstream`, then search again.
 
 ```bash
 sudo flatpak install -y flathub org.gimp.GIMP        # system-wide
@@ -98,7 +101,7 @@ flatpak list --app
 ```
 ```
 Name   Application ID   Version  Branch Installation
-GIMP   org.gimp.GIMP    3.0.4    stable system
+GIMP   org.gimp.GIMP    3.2.8    stable system
 ```
 
 ```bash
@@ -145,6 +148,7 @@ Snaps are mounted as compressed **squashfs** images under `/snap/`, which is why
 
 | Symptom | Cause | Fix |
 |---|---|---|
+| `flatpak search` finds nothing right after adding a remote | The app catalogue (appstream data) hasn't been downloaded yet | `sudo flatpak update --appstream` |
 | `No remote refs found similar to 'flathub'` | The remote exists in the other scope (system vs user) | `flatpak remotes -d`; add it in the right scope |
 | `rhel` remote: 401 unauthorized | Missing Red Hat registry credentials | `podman login registry.redhat.io` |
 | `flatpak run` fails over SSH | No graphical session | Run it from the desktop |

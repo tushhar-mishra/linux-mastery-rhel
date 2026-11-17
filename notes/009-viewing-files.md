@@ -132,17 +132,17 @@ bob:x:1001:1001::/home/bob:/bin/bash
 sudo tail -F /var/log/secure
 ```
 ```
-Nov 16 10:31:02 server1 sshd[2711]: Accepted publickey for alice from 192.168.56.1 port 51022 ssh2: ED25519 SHA256:abc...
-Nov 16 10:31:02 server1 sshd[2711]: pam_unix(sshd:session): session opened for user alice(uid=1000) by alice(uid=0)
+Nov 16 20:26:06 server1 sshd-session[5976]: Accepted publickey for alice from 192.168.56.1 port 56497 ssh2: ED25519 SHA256:wyQC5ags7i8+vyyHlciARilNROwtWnoKxE8O6r0A+x4
+Nov 16 20:26:07 server1 sshd-session[5976]: pam_unix(sshd:session): session opened for user alice(uid=1000) by alice(uid=0)
 ```
 - Keeps printing new lines as they're written. Ctrl+C to stop.
-- Each line has a timestamp, the hostname, the program and its process ID (`sshd[2711]`), then the message. Here, Alice logged in with an SSH key. On Ubuntu this file is `/var/log/auth.log`.
+- Each line has a timestamp, the hostname, the program and its process ID (`sshd-session[5976]`), then the message. Since OpenSSH 9.8, each login is handled by a separate `sshd-session` program, so that is the name you see; older systems say `sshd[PID]`. Here, Alice logged in with an SSH key. On Ubuntu this file is `/var/log/auth.log`.
 
 ```bash
 wc /etc/passwd
 ```
 ```
-  42   85 2311 /etc/passwd
+  27   54 1397 /etc/passwd
 ```
 - Three numbers: **lines**, **words**, **bytes**.
 
@@ -150,7 +150,7 @@ wc /etc/passwd
 wc -l < /etc/passwd
 ```
 ```
-42
+27
 ```
 - Just the number, with no file name. `<` feeds the file in as input (topic 016); handy in scripts.
 
@@ -163,17 +163,18 @@ wc -l < /etc/passwd
 | `-L` | Length of the longest line |
 
 ```bash
-file notes.txt report.csv /usr/bin/ls backup.tar.gz
+file notes.txt win.txt /usr/bin/ls backup.tar.gz
 ```
 ```
 notes.txt:     ASCII text
-report.csv:    CSV text, with CRLF line terminators
-/usr/bin/ls:   ELF 64-bit LSB pie executable, x86-64 ...
+win.txt:       ASCII text, with CRLF line terminators
+/usr/bin/ls:   ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, …
 backup.tar.gz: gzip compressed data, from Unix, original size modulo 2^32 10240
 ```
 - `file` looks at the actual bytes (the "magic number" at the start), not the name. `with CRLF line terminators` warns you it came from Windows.
 
 ```bash
+sudo dnf install -y binutils      # strings comes from binutils, not in a minimal install
 strings /usr/bin/ls | grep -i usage
 ```
 ```

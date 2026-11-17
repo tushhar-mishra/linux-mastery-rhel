@@ -57,14 +57,15 @@ virtio_net            110592  0
 modinfo xfs | head -8
 ```
 ```
-filename:       /lib/modules/6.12.0-55.el10.x86_64/kernel/fs/xfs/xfs.ko.xz
+filename:       /lib/modules/6.12.0-211.53.1.el10_2.x86_64/kernel/fs/xfs/xfs.ko.xz
 license:        GPL
-description:    SGI XFS with ACLs, security attributes, realtime, quota, no debug enabled
+description:    SGI XFS with ACLs, security attributes, scrub, quota, no debug enabled
+author:         Silicon Graphics, Inc.
 alias:          fs-xfs
-depends:        libcrc32c
-retpoline:      Y
+rhelversion:    10.2
+srcversion:     1384C8F91CCC074AE08623D
+depends:
 intree:         Y
-signer:         Red Hat Enterprise Linux kernel signing key
 ```
 - `depends:` = what must load first. `signer:` = who signed it (needed for Secure Boot). `intree: Y` = part of the official kernel source.
 
@@ -81,8 +82,10 @@ lsmod | grep conntrack_ftp
 sudo modprobe -r nf_conntrack_ftp       # unload (and now-unused dependencies)
 ```
 ```
-insmod /lib/modules/6.12.0-55.el10.x86_64/kernel/net/netfilter/nf_conntrack.ko.xz
-insmod /lib/modules/6.12.0-55.el10.x86_64/kernel/net/netfilter/nf_conntrack_ftp.ko.xz
+insmod /lib/modules/6.12.0-211.53.1.el10_2.x86_64/kernel/net/ipv4/netfilter/nf_defrag_ipv4.ko.xz
+insmod /lib/modules/6.12.0-211.53.1.el10_2.x86_64/kernel/net/ipv6/netfilter/nf_defrag_ipv6.ko.xz
+insmod /lib/modules/6.12.0-211.53.1.el10_2.x86_64/kernel/net/netfilter/nf_conntrack.ko.xz
+insmod /lib/modules/6.12.0-211.53.1.el10_2.x86_64/kernel/net/netfilter/nf_conntrack_ftp.ko.xz
 ```
 
 | Command | Purpose |
@@ -103,6 +106,7 @@ insmod /lib/modules/6.12.0-55.el10.x86_64/kernel/net/netfilter/nf_conntrack_ftp.
 | Stop it loading **at all** | Also add `install MOD /bin/false` |
 
 ```bash
+sudo dnf install -y kernel-modules-extra-$(uname -r)                 # br_netfilter is NOT in the base kernel package on RHEL 10
 echo br_netfilter | sudo tee /etc/modules-load.d/k8s.conf           # Kubernetes nodes need this
 echo 'options bonding max_bonds=2' | sudo tee /etc/modprobe.d/bonding.conf
 cat /sys/module/bonding/parameters/max_bonds                         # a loaded module's current value
@@ -136,11 +140,11 @@ net.ipv4.ip_forward = 1
 sysctl -a 2>/dev/null | wc -l ; sysctl -a 2>/dev/null | grep -E '^vm\.(swappiness|dirty_ratio)'
 ```
 ```
-1092
-vm.dirty_ratio = 20
+1141
+vm.dirty_ratio = 30
 vm.swappiness = 30
 ```
-
+- Both are 30 here because the **tuned** `virtual-guest` profile changes them (the kernel defaults are 20 and 60). `tuned-adm active` shows the profile; topic 056 covers it.
 ### Make sysctl values permanent
 
 ```bash
@@ -153,8 +157,14 @@ sudo sysctl --system
 ```
 ```
 * Applying /usr/lib/sysctl.d/10-default-yama-scope.conf ...
+* Applying /usr/lib/sysctl.d/10-map-count.conf ...
+* Applying /usr/lib/sysctl.d/50-coredump.conf ...
 * Applying /usr/lib/sysctl.d/50-default.conf ...
+...
+* Applying /usr/lib/sysctl.d/50-redhat.conf ...
 * Applying /etc/sysctl.d/90-k8s.conf ...
+* Applying /etc/sysctl.d/99-sysctl.conf ...
+* Applying /etc/sysctl.conf ...
 net.ipv4.ip_forward = 1
 ...
 ```
@@ -205,6 +215,7 @@ net.ipv4.ip_forward = 1
 | `Key was rejected by service` | Secure Boot and an unsigned module | Sign it and enrol the key with `mokutil` |
 | A blacklisted module still loads | `blacklist` only stops alias autoloading, or it's in the initramfs | Add `install MOD /bin/false`; `dracut -f` |
 | `sysctl: cannot stat /proc/sys/net/bridge/…` | The module providing that key isn't loaded | Load it (`br_netfilter`) first |
+| `modprobe: FATAL: Module br_netfilter not found` | On RHEL 10 it ships in `kernel-modules-extra`, which must match the **running** kernel exactly | `sudo dnf install kernel-modules-extra-$(uname -r)`; if that version is gone from the repo, update the kernel and reboot first |
 | A sysctl value reverts after reboot | It was only set with `-w` | Put it in `/etc/sysctl.d/*.conf` |
 | A sysctl value differs from your file | Another file sorts later, or tuned sets it | `sysctl --system` output; `tuned-adm active` |
 

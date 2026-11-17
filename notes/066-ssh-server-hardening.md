@@ -55,9 +55,11 @@ port 22
 permitrootlogin no
 maxauthtries 3
 passwordauthentication no
-allowgroups sshusers wheel
 banner /etc/ssh/sshd-banner
+allowgroups sshusers
+allowgroups wheel
 ```
+- `sshd -T` prints the **effective** settings after all files are merged. List keywords such as `AllowGroups` come out one value per line. Cloud images often ship `50-cloud-init.conf` with `PasswordAuthentication yes`; your `00-local.conf` still wins because it is read first.
 
 ### A hardened baseline
 

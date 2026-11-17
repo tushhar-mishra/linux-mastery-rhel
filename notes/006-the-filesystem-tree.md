@@ -117,25 +117,31 @@ lrwxrwxrwx. 1 root root 9 Oct  1 12:00 /lib64 -> usr/lib64
 df -hT
 ```
 ```
-Filesystem            Type      Size  Used Avail Use% Mounted on
-/dev/mapper/rhel-root xfs        17G  2.1G   15G  13% /
-devtmpfs              devtmpfs  4.0M     0  4.0M   0% /dev
-tmpfs                 tmpfs     1.8G     0  1.8G   0% /dev/shm
-tmpfs                 tmpfs     732M  8.6M  724M   2% /run
-/dev/sda1             xfs       960M  312M  649M  33% /boot
-tmpfs                 tmpfs     366M  4.0K  366M   1% /run/user/1000
+Filesystem     Type      Size  Used Avail Use% Mounted on
+/dev/sda4      xfs        19G  1.3G   18G   7% /
+devtmpfs       devtmpfs  940M     0  940M   0% /dev
+tmpfs          tmpfs     972M     0  972M   0% /dev/shm
+efivarfs       efivarfs  256K   17K  235K   7% /sys/firmware/efi/efivars
+tmpfs          tmpfs     389M   11M  378M   3% /run
+tmpfs          tmpfs     1.0M     0  1.0M   0% /run/credentials/systemd-journald.service
+/dev/sda3      xfs       960M  138M  823M  15% /boot
+/dev/sda2      vfat      200M  9.1M  191M   5% /boot/efi
+tmpfs          tmpfs     1.0M     0  1.0M   0% /run/credentials/getty@tty1.service
+tmpfs          tmpfs     195M  8.0K  195M   1% /run/user/1000
 ```
 - `df` = **d**isk **f**ree. `-h` = human-readable sizes (G, M). `-T` = show the filesystem type.
-- `Filesystem` is where the data comes from. `/dev/mapper/rhel-root` is an LVM volume (topic 049); `/dev/sda1` is a disk partition; `tmpfs`/`devtmpfs` live in RAM.
+- `Filesystem` is where the data comes from. `/dev/sda4` is a disk partition (the Vagrant lab's root). After a normal RHEL install, root usually shows as `/dev/mapper/rhel-root`, an LVM volume (topic 049). `tmpfs`/`devtmpfs` live in RAM. `vfat` on `/boot/efi` is the UEFI system partition (topic 053).
+- The small `/run/credentials/…` tmpfs mounts are new in RHEL 10: systemd gives some services a private, in-memory folder for secrets they're handed at start. They're harmless; ignore them when you look for real disks. `efivarfs` exposes the firmware's UEFI variables.
 - `Size / Used / Avail / Use%` show space. Watch `Use%`: at 100%, programs fail to write.
 - `Mounted on` is the mount point in the tree.
+- Tip: `df -hT -x tmpfs -x devtmpfs -x efivarfs` hides the in-memory entries.
 
 ```bash
 df -i /
 ```
 ```
-Filesystem             Inodes IUsed   IFree IUse% Mounted on
-/dev/mapper/rhel-root 8910848 71234 8839614    1% /
+Filesystem      Inodes IUsed   IFree IUse% Mounted on
+/dev/sda4      9611776 42355 9569421    1% /
 ```
 - `-i` shows **inodes** instead of bytes. An inode is the record that describes one file (topic 008). Each file uses one. If `IUse%` hits 100%, you can't create files even if bytes are free.
 
@@ -144,7 +150,7 @@ findmnt /boot
 ```
 ```
 TARGET SOURCE    FSTYPE OPTIONS
-/boot  /dev/sda1 xfs    rw,relatime,seclabel,attr2,inode64,logbufs=8,logbsize=32k,noquota
+/boot  /dev/sda3 xfs    rw,relatime,seclabel,attr2,inode64,logbufs=8,logbsize=32k,noquota
 ```
 - What is mounted at `/boot`. `rw` = read-write. The other options are covered in topic 048. `findmnt` alone prints the whole mount tree.
 
@@ -152,9 +158,10 @@ TARGET SOURCE    FSTYPE OPTIONS
 du -xsh /var/* 2>/dev/null | sort -h | tail -5
 ```
 ```
-24M     /var/cache
-41M     /var/log
-188M    /var/lib
+24K	/var/tmp
+2.0M	/var/log
+13M	/var/cache
+16M	/var/lib
 ```
 - `du` = **d**isk **u**sage: how much space files take. `-s` = one total per argument, `-h` = human-readable, `-x` = stay on this filesystem (don't count other mounts).
 - `2>/dev/null` throws away "permission denied" errors (topic 016). `sort -h` orders by human sizes and `tail -5` keeps the last 5, so the biggest end up at the bottom.
@@ -163,9 +170,9 @@ du -xsh /var/* 2>/dev/null | sort -h | tail -5
 cat /proc/meminfo | head -3
 ```
 ```
-MemTotal:        3743112 kB
-MemFree:         2611456 kB
-MemAvailable:    3201224 kB
+MemTotal:        1989028 kB
+MemFree:         1443288 kB
+MemAvailable:    1561688 kB
 ```
 - A virtual file: the kernel generates these numbers at the moment you read them.
 
@@ -174,7 +181,7 @@ file /etc/passwd /usr/bin/ls /dev/sda /dev/null
 ```
 ```
 /etc/passwd: ASCII text
-/usr/bin/ls: ELF 64-bit LSB pie executable, x86-64, ...
+/usr/bin/ls: ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, …, stripped
 /dev/sda:    block special (8/0)
 /dev/null:   character special (1/3)
 ```
@@ -185,7 +192,7 @@ file /etc/passwd /usr/bin/ls /dev/sda /dev/null
 rpm -qf /etc/ssh/sshd_config
 ```
 ```
-openssh-server-9.9p1-7.el10.x86_64
+openssh-server-9.9p1-25.el10_2.alma.1.x86_64
 ```
 - Which installed package owns this file (`-q` query, `-f` file). Ubuntu: `dpkg -S /etc/ssh/sshd_config`.
 

@@ -108,6 +108,7 @@ search example.com
 nameserver 192.168.56.1
 nameserver 1.1.1.1
 ```
+- With several active connections, NetworkManager **merges** the DNS servers of all of them into `/etc/resolv.conf`. The C library only uses the first **three** `nameserver` lines; if there are more, NetworkManager adds a `# NOTE: the libc resolver may not support more than 3 nameservers` comment, and the extras are silently ignored. Use `ipv4.ignore-auto-dns yes` on connections whose DHCP DNS you don't want, or set `ipv4.dns-priority`.
 - **Changing the profile you're connected through over SSH can cut your session.** Use the console, or make the change and the `con up` in one command line.
 
 ### Create a new profile
@@ -161,19 +162,23 @@ id=lab
 uuid=2a6b5c9e-1d6f-3a8b-9e0c-7d1f2e3a4b5c
 type=ethernet
 interface-name=enp0s8
-autoconnect=true
+
+[ethernet]
 
 [ipv4]
-method=manual
-address1=192.168.56.10/24,192.168.56.1
+address1=192.168.56.10/24
 dns=192.168.56.1;1.1.1.1;
 dns-search=example.com;
+gateway=192.168.56.1
+method=manual
 
 [ipv6]
 addr-gen-mode=default
 method=auto
+
+[proxy]
 ```
-- `address1=IP/prefix,gateway`. Keep the file mode **600** (root only). After editing by hand: `nmcli con reload` then `nmcli con up lab`. Prefer `nmcli`; it validates what you type.
+- `address1=IP/prefix`, with the default gateway on its own `gateway=` line (older versions wrote `address1=IP/prefix,gateway`, and that form is still accepted). Settings left at their default (such as `autoconnect=true`) aren't written at all. Keep the file mode **600** (root only). After editing by hand: `nmcli con reload` then `nmcli con up lab`. Prefer `nmcli`; it validates what you type.
 
 ### Hostname
 

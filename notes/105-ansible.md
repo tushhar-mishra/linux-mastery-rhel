@@ -160,13 +160,13 @@ ansible-playbook -i inventory.ini site.yml
 ansible-playbook -i inventory.ini site.yml
 ```
 ```
-PLAY RECAP ****************************************************************
-localhost : ok=9  changed=7  unreachable=0  failed=0  skipped=0  rescued=0  ignored=0
+PLAY RECAP *********************************************************************
+localhost                  : ok=9    changed=8    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 ...
-PLAY RECAP ****************************************************************
-localhost : ok=8  changed=0  unreachable=0  failed=0  skipped=0  rescued=0  ignored=0
+PLAY RECAP *********************************************************************
+localhost                  : ok=8    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 ```
-- First run: things were created (`changed=7`, and the handler ran). Second run: **`changed=0`**. That is idempotency.
+- First run: all seven tasks changed something and the handler ran (`changed=8`; `ok=9` also counts fact gathering). Second run: **`changed=0`**. That is idempotency.
 
 ```bash
 sudo chmod 0755 /srv/shared                                       # someone changes it by hand
@@ -177,8 +177,11 @@ TASK [Shared directory with set-GID] ***************************************
 --- before
 +++ after
 @@ -1,4 +1,4 @@
+ {
 -    "mode": "02755",
 +    "mode": "02770",
+     "path": "/srv/shared"
+ }
 changed: [localhost]
 ```
 - The dry run shows exactly what it would fix. Note `chmod 0755` kept the set-GID bit (`02755`), GNU chmod's behaviour on directories (topic 027). Run it for real and the drift is corrected.

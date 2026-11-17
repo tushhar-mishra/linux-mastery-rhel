@@ -65,6 +65,7 @@ cp /boot/config-$(uname -r) .config
 make olddefconfig
 scripts/config --set-str CONFIG_SYSTEM_TRUSTED_KEYS "" --set-str CONFIG_LOCALVERSION "-lab"    # drop RHEL's key paths; tag our build
 make menuconfig              # optional: browse/change options in a text UI
+make localmodconfig          # optional, small labs: keep only the modules loaded right now (much faster build)
 time make -j"$(nproc)"
 ```
 ```
@@ -76,7 +77,8 @@ Kernel: arch/x86/boot/bzImage is ready  (#1)
 
 real	38m12.554s
 ```
-- A build from the full distribution config takes from tens of minutes to over an hour, depending on CPUs.
+- A build from the full distribution config takes from tens of minutes to over an hour, depending on CPUs, and needs 20+ GB of disk. On a 1-vCPU lab VM, even a `localmodconfig` build compiled only about 10% of the files in an hour, so give the VM several CPUs (`nproc`) before you start.
+- `localmodconfig` builds a kernel that only supports the hardware and features in use **now**: plug in a new device or load a new filesystem later and its module won't exist. Fine for a lab, not for a fleet kernel.
 
 ### Install and boot
 

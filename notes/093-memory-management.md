@@ -78,7 +78,7 @@ The kernel keeps free memory above **watermarks** (derived from `vm.min_free_kby
 
 `vm.swappiness` (0–200) biases reclaim between anonymous pages (→ swap) and file pages (→ drop cache). It is **not** "the percentage of RAM at which swapping starts" (topic 050).
 
-**Measure pressure, not just usage.** **PSI** (Pressure Stall Information) reports the share of time tasks were stalled waiting for memory. It's a much better early warning than "free is low", and it exists per cgroup too (`memory.pressure`).
+**Measure pressure, not just usage.** **PSI** (Pressure Stall Information) reports the share of time tasks were stalled waiting for memory. It's a much better early warning than "free is low", and it exists per cgroup too (`memory.pressure`). **On RHEL, PSI is built into the kernel but switched off** (`CONFIG_PSI_DEFAULT_DISABLED=y`): `/proc/pressure/` and the cgroup `*.pressure` files don't exist until you boot with the kernel argument `psi=1` (`sudo grubby --update-kernel=ALL --args=psi=1`, then reboot; topic 054).
 
 ### 4. Overcommit
 
@@ -212,6 +212,7 @@ Nov 17 11:02:41 server1 kernel: Out of memory: Killed process 4242 (java) total-
 
 | Symptom | Interpretation | Next step |
 |---|---|---|
+| `/proc/pressure/memory: No such file or directory` | PSI is disabled by default on RHEL kernels | Kernel argument `psi=1`, reboot |
 | `free` near 0, `available` high | The page cache doing its job | Nothing to fix |
 | Swap used, but `si`/`so` ≈ 0 | Cold pages parked in swap | Usually harmless |
 | Sustained `si`/`so`, high major faults, rising PSI | **Thrashing**: working set > RAM | Find the top PSS users; add RAM or cap workloads |

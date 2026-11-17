@@ -106,6 +106,7 @@ Reference ID    : C0A80A05 (ntp1.example.com)
 Stratum         : 3
 System time     : 0.000000312 seconds slow of NTP time
 Last offset     : -0.000450123 seconds
+...
 Frequency       : 12.104 ppm fast
 Leap status     : Normal
 ```

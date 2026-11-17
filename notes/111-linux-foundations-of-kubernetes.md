@@ -131,7 +131,7 @@ nr_throttled 61233
 
 ```bash
 sudo nsenter -t $PID -n ss -tanp                    # the pod's sockets
-sudo nsenter -t $PID -n cat /etc/resolv.conf 2>/dev/null || sudo cat /proc/$PID/root/etc/resolv.conf
+sudo cat /proc/$PID/root/etc/resolv.conf            # the pod's own file (or: nsenter -t $PID -m cat /etc/resolv.conf)
 sudo nsenter -t $PID -n tcpdump -nn -i eth0 port 53
 ```
 ```
@@ -140,6 +140,7 @@ nameserver 172.30.0.10
 options ndots:5
 ```
 - Cluster DNS, search domains and `ndots:5`: `api.example.com` (2 dots) is first tried as `api.example.com.shop.svc.cluster.local` and so on, before the real name.
+- **`nsenter -n` enters only the network namespace.** Commands still see the host's files, so `nsenter -t $PID -n cat /etc/resolv.conf` prints the **node's** resolver config, a classic wrong conclusion. Read files through `/proc/$PID/root/` or add `-m` (mount namespace). Network tools (`ss`, `tcpdump`, `ip`) are fine with `-n` alone, and use the node's binaries, so they work even in images without them.
 
 ### Services as netfilter rules
 

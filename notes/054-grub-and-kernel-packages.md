@@ -36,15 +36,18 @@ GRUB is a **restaurant menu board**. Each BLS file is **one dish card** (which k
 
 A BLS entry looks like this:
 ```
-title Red Hat Enterprise Linux (6.12.0-55.el10.x86_64) 10.1 (Coughlan)
-version 6.12.0-55.el10.x86_64
-linux /vmlinuz-6.12.0-55.el10.x86_64
-initrd /initramfs-6.12.0-55.el10.x86_64.img
-options root=/dev/mapper/rhel-root ro crashkernel=… rd.lvm.lv=rhel/root rd.lvm.lv=rhel/swap rhgb quiet
+title AlmaLinux (6.12.0-264.16.1.el10_3.x86_64) 10.2 (Lavender Lion)
+version 6.12.0-264.16.1.el10_3.x86_64
+linux /vmlinuz-6.12.0-264.16.1.el10_3.x86_64
+initrd /initramfs-6.12.0-264.16.1.el10_3.x86_64.img $tuned_initrd
+options root=UUID=19e02f53-9057-42f4-a3e9-fbd26b47a357 ro console=tty0 biosdevname=0 net.ifnames=0 $tuned_params no_timer_check
 grub_users $grub_users
 grub_arg --unrestricted
-grub_class rhel
+grub_class almalinux
 ```
+- On RHEL the title reads `Red Hat Enterprise Linux (…)`, `grub_class` is `rhel`, and an LVM install has `root=/dev/mapper/rhel-root … rd.lvm.lv=rhel/root rd.lvm.lv=rhel/swap rhgb quiet` in `options`.
+- `$tuned_params` and `$tuned_initrd` are GRUB variables that the **tuned** service fills in (from `/boot/grub2/grubenv`) when a profile needs extra kernel arguments (topic 056). Empty by default.
+- The entry files are readable only by root: use `sudo` to look at them.
 
 **Installing a new kernel** (`dnf update kernel`): the package scripts build an initramfs for it (with dracut), write a new BLS entry, and make it the **default**. The old kernels stay. dnf keeps **3** by default (`installonly_limit=3` in `/etc/dnf/dnf.conf`) and removes the oldest beyond that, **never the running one**. The new kernel is used only after a **reboot**.
 
@@ -59,26 +62,29 @@ sudo grubby --default-kernel
 sudo grubby --info=ALL | grep -E '^(index|kernel|title)'
 ```
 ```
-/boot/vmlinuz-6.12.0-55.el10.x86_64
+/boot/vmlinuz-6.12.0-264.16.1.el10_3.x86_64
 index=0
-kernel="/boot/vmlinuz-6.12.0-55.el10.x86_64"
-title="Red Hat Enterprise Linux (6.12.0-55.el10.x86_64) 10.1 (Coughlan)"
+kernel="/boot/vmlinuz-6.12.0-264.16.1.el10_3.x86_64"
+title="AlmaLinux (6.12.0-264.16.1.el10_3.x86_64) 10.2 (Lavender Lion)"
 index=1
-kernel="/boot/vmlinuz-6.12.0-40.el10.x86_64"
-title="Red Hat Enterprise Linux (6.12.0-40.el10.x86_64) 10.0 (Coughlan)"
-index=2
-kernel="/boot/vmlinuz-0-rescue-…"
-title="Red Hat Enterprise Linux (0-rescue-…) 10.1 (Coughlan)"
+kernel="/boot/vmlinuz-6.12.0-211.53.1.el10_2.x86_64"
+title="AlmaLinux (6.12.0-211.53.1.el10_2.x86_64) 10.2 (Lavender Lion)"
 ```
+- Right after `dnf update kernel`: the new kernel is entry 0 and the **default**, but you're still running the old one until you reboot (`uname -r` says `…211.53.1…`).
+- A full installation also has a `0-rescue-…` entry: a generic rescue kernel and initramfs that boot even if a normal initramfs is broken. Cloud and Vagrant images often leave it out.
 
 ```bash
-sudo grubby --set-default /boot/vmlinuz-6.12.0-40.el10.x86_64     # roll back to the older kernel
+sudo grubby --set-default /boot/vmlinuz-6.12.0-211.53.1.el10_2.x86_64     # roll back to the older kernel
 sudo grub2-editenv list
 ```
 ```
-The default is /boot/loader/entries/…-6.12.0-40.el10.x86_64.conf with index 1 and kernel /boot/vmlinuz-6.12.0-40.el10.x86_64
-saved_entry=…-6.12.0-40.el10.x86_64
+The default is /boot/loader/entries/15dcd4833218444982bb89aa3b3562be-6.12.0-211.53.1.el10_2.x86_64.conf with index 1 and kernel /boot/vmlinuz-6.12.0-211.53.1.el10_2.x86_64
+saved_entry=15dcd4833218444982bb89aa3b3562be-6.12.0-211.53.1.el10_2.x86_64
+menu_auto_hide=1
+boot_success=1
+boot_indeterminate=0
 ```
+- `saved_entry` is the BLS file name (machine ID + kernel version). `menu_auto_hide`, `boot_success` and `boot_indeterminate` drive RHEL's hidden GRUB menu: it stays hidden while the last boot succeeded, and reappears after a failed one (or press Esc during boot).
 
 ### Kernel arguments
 
@@ -94,7 +100,7 @@ args="ro crashkernel=… rd.lvm.lv=rhel/root rd.lvm.lv=rhel/swap audit=1"
 - Takes effect at the next boot; confirm with `cat /proc/cmdline` afterwards.
 
 ```bash
-sudo grubby --update-kernel=/boot/vmlinuz-6.12.0-55.el10.x86_64 --args="systemd.unit=multi-user.target"
+sudo grubby --update-kernel=/boot/vmlinuz-6.12.0-264.16.1.el10_3.x86_64 --args="systemd.unit=multi-user.target"
 ```
 - For one specific kernel only.
 
@@ -145,8 +151,8 @@ sudo dnf --showduplicates list kernel
 uname -r                                           # still the old one until you reboot
 ```
 ```
-kernel-6.12.0-40.el10.x86_64
-kernel-6.12.0-55.el10.x86_64
+kernel-6.12.0-211.53.1.el10_2.x86_64
+kernel-6.12.0-264.16.1.el10_3.x86_64
 ```
 
 ```bash
