@@ -206,6 +206,8 @@ zone "example.lan" IN { type secondary; primaries { 192.168.56.11; };
 3. Change a record **without** bumping the serial and `rndc reload`: does a secondary (if you built one) update? Then bump the serial.
 4. Remove a trailing dot on purpose, run `named-checkzone`, and `dig` the broken name.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 081` for every step, or `sudo ./checks/check 081 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Internal DNS** for data centres and labs; split-horizon DNS (different answers inside and outside).
@@ -237,3 +239,19 @@ zone "example.lan" IN { type secondary; primaries { 192.168.56.11; };
 1. *Recursive vs iterative DNS queries?* A recursive query asks the server for the final answer (it does all the work). In iterative queries, each server returns its best referral (root → TLD → authoritative) and the asker follows them.
 2. *What is the SOA serial for?* It's the zone's version number. Secondaries compare it and only transfer the zone when it increases, so it must be bumped on every change.
 3. *A vs CNAME?* An A record maps a name directly to an IPv4 address; a CNAME makes a name an alias of another (canonical) name, which is then resolved.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"You added a new A record to a BIND zone and reloaded, but clients still get NXDOMAIN, and the secondary server doesn't have it either. What did you forget?"*
+
+**Model answer:**
+1. Check the primary: `dig @primary newhost.example.lan`. If even it doesn't answer, check `named-checkzone example.lan /var/named/example.lan.zone` and the journal for load errors.
+2. If the primary answers but the secondary doesn't: you didn't **bump the SOA serial**. Secondaries only transfer when the serial increases. Increase it, then `rndc reload`.
+3. Clients may be getting a **cached negative answer** from their resolver. The SOA's minimum/negative TTL decides how long that lasts; flush the resolver's cache, or wait.
+4. Also check:
+   - a missing trailing dot in a name (`www.example.lan` becomes `www.example.lan.example.lan.`);
+   - file permissions or SELinux labels on the zone file (`named_zone_t`).
+
+**Likely follow-ups:**
+- *Authoritative vs recursive server?* Authoritative owns zones and answers for them; recursive resolvers find answers for clients and cache them.
+- *Why is an open resolver dangerous?* It can be abused for DNS amplification attacks.

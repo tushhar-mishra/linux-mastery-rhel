@@ -33,6 +33,20 @@ For every packet, the kernel:
 4. The winning route gives: the outgoing **interface** (`dev`), the **gateway** (`via`, if any) and the preferred **source address** (`src`).
 5. If there's a gateway, it ARPs for the **gateway's** MAC (not the final destination's) and sends the frame there (topic 058).
 
+```mermaid
+flowchart TD
+    P["Packet to 10.20.5.7"] --> M["Collect every route whose network<br/>contains 10.20.5.7"]
+    M --> L{"Longest prefix?"}
+    L -- "10.20.5.0/24 beats 10.20.0.0/16<br/>beats default 0.0.0.0/0" --> T{"Several with the<br/>same prefix?"}
+    T -- "yes" --> MET["lowest metric wins"]
+    T -- "no" --> W
+    MET --> W["Winner gives dev, via, src"]
+    W --> G{"Has a gateway (via)?"}
+    G -- "yes" --> AG["ARP for the gateway's MAC,<br/>send the frame to the gateway"]
+    G -- "no" --> AD["ARP for 10.20.5.7 itself,<br/>deliver directly"]
+    M -- "no route at all" --> U(["Network is unreachable"])
+```
+
 **Replies need a route back.** If host B has no route back to host A's network, A's packets arrive but B's replies go out the wrong way, or nowhere. Half of "routing" problems are a missing **return** route, and many are actually **firewall** problems.
 
 **Policy routing (advanced):** Linux can keep **several routing tables** and choose which one to use based on **rules** (`ip rule`), for example by **source** address. That's how a host with two uplinks sends replies out of the same interface the request came in on.
@@ -144,6 +158,8 @@ ip route get 8.8.8.8 from 192.168.56.100
 3. Build the three-VM router lab (or use server2 as the router with a second NIC).
 4. Turn `ip_forward` off on the router and watch the pings stop at hop 1.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 061` for every step, or `sudo ./checks/check 061 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Multi-homed servers** (frontend + backend + storage networks): one default route, specific routes for the rest.
@@ -178,3 +194,20 @@ ip route get 8.8.8.8 from 192.168.56.100
 1. *How does Linux choose a route?* It picks the route with the longest matching prefix for the destination; among equal prefixes, the lowest metric. The default route (/0) is used only when nothing more specific matches.
 2. *What does a Linux machine need to act as a router?* `net.ipv4.ip_forward=1`, correct routes on both sides (including return routes), and the firewall allowing forwarded traffic.
 3. *How do you make a static route permanent on RHEL?* `nmcli con mod CONN +ipv4.routes "NET/PREFIX GATEWAY"`, then `nmcli con up CONN`.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A host with two interfaces (front-end and back-end) can reach the back-end network, but connections from back-end clients to its back-end IP hang. What's your hypothesis?"*
+
+**Model answer:**
+1. **Asymmetric routing:** the request arrives on the back-end interface, but the reply follows the **default route** out of the front-end interface.
+2. Then reverse-path filtering (`rp_filter`) or a stateful firewall on the way drops it, or the client ignores a reply from the wrong source.
+3. Check: `ip route get <client-ip> from <backend-ip>`. Which interface does the reply use?
+4. Fix:
+   - add a specific route for the client networks via the back-end gateway (`nmcli con mod backend +ipv4.routes "10.50.0.0/16 10.20.0.1"`);
+   - or use policy routing, so traffic **from** the back-end IP uses its own table (`ip rule add from 10.20.0.5 table 100`).
+5. Make sure only one interface has a default gateway (`ipv4.never-default yes` on the other).
+
+**Likely follow-ups:**
+- *How does Linux pick between two matching routes?* Longest prefix first, then the lowest metric.
+- *What must be true for a Linux box to route between networks?* `ip_forward=1`, routes both ways, and firewall permission to forward.

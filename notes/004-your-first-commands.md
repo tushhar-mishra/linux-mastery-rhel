@@ -248,6 +248,8 @@ exit
 3. Run `type pwd echo ls cd ll` and note which are builtins, aliases or files.
 4. Type `ls /etc/sys` and press Tab twice.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 004` for every step, or `sudo ./checks/check 004 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Every day, everywhere.** Each tool (kubectl, docker, aws, git, terraform) follows `command [options] [arguments]`.
@@ -277,3 +279,17 @@ exit
 1. *What happens when you type `ls -l` and press Enter?* Bash splits and expands the line, finds `ls` (alias → builtin → PATH), forks a child process, which runs `/usr/bin/ls` with `execve`. Bash waits, then saves the exit status in `$?`.
 2. *Builtin vs external command?* A builtin runs inside the shell process (`cd`, `echo`, `export`). An external command is a separate program file run in a child process. `type` tells you which.
 3. *What does exit code 137 mean?* 128 + 9: the process was killed by SIGKILL. Typical causes are `kill -9`, the out-of-memory killer, or a container runtime enforcing a memory limit.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A deployment script fails with exit code 127 on one server and 137 on another. What does each tell you, and what do you check next?"*
+
+**Model answer:**
+1. **127 = command not found.** The script called something that isn't installed or isn't in the `PATH` the script runs with. Check `type cmd`, the package, and the PATH in that environment (cron and systemd use a short PATH).
+2. **137 = 128 + 9 = killed by SIGKILL.** Something killed it: often the OOM killer, a memory-limited cgroup, or a timeout that sends `kill -9`.
+3. For 137, check `journalctl -k | grep -i oom` (or `dmesg`) and the service's memory limit.
+4. In both cases, the script's own log and `$?` after each step tell you **which** command it was.
+
+**Likely follow-ups:**
+- *What does exit code 126 mean?* The file was found but couldn't be executed: missing `x` permission or a bad interpreter line.
+- *How does bash decide what `ls` is?* Alias → keyword → function → builtin → a search of PATH. `type -a ls` shows every match.

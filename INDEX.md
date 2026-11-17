@@ -3,7 +3,7 @@
 One learning path, in reading order. Each topic only uses ideas from topics before it. When a later idea has to appear early, it is explained right there in a line or two.
 
 **Main system:** RHEL 10 (and its free rebuilds, AlmaLinux and Rocky Linux). Ubuntu/Debian differences are noted wherever they matter.
-**Every topic has the same shape:** What it is · Why it exists · Analogy · How it works inside · Commands (with sample output and a "Try it" lab) · Where you'll use it · When it breaks · Quick recap with interview questions.
+**Every topic has the same shape:** What it is · Why it exists · Analogy · How it works inside · Commands (with real output and a "Try it" lab you can check with `sudo ./checks/check NNN`) · Where you'll use it · When it breaks · Quick recap with interview questions and a scenario question (model answer + likely follow-ups).
 
 ---
 
@@ -60,7 +60,7 @@ One learning path, in reading order. Each topic only uses ideas from topics befo
 | 032 | [Flatpak and snap](notes/032-flatpak-and-snap.md) | Sandboxed app formats, remotes, system vs user installs |
 | 033 | [Processes and signals](notes/033-processes-and-signals.md) | PIDs, process states, `ps`, `kill`, signals, job control |
 | 034 | [top and load average](notes/034-top-and-load-average.md) | CPU states, load average meaning, memory columns, top keys |
-| 035 | [Process priority: nice and renice](notes/035-process-priority-nice.md) | The scheduler, nice values, when priority helps |
+| 035 | [Process priority: nice and renice](notes/035-process-priority-nice.md) | The scheduler, nice values, scheduling policies (`chrt`), why nice only works inside one cgroup, CPU weights, affinity, `ionice` per I/O scheduler |
 | 036 | [Resource monitoring](notes/036-resource-monitoring.md) | `free`, `vmstat`, `iostat`, `mpstat`, `pidstat`, `sar`, the USE method |
 | 037 | [systemd: services and targets](notes/037-systemd-services-and-targets.md) | Units, `systemctl`, enable vs start, targets, masking, a first unit file |
 | 038 | [Logging: journald, rsyslog and logrotate](notes/038-logging-journald-rsyslog-logrotate.md) | `journalctl` filters, persistent journal, log files, rotation |

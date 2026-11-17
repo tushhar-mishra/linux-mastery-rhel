@@ -55,6 +55,23 @@ Starting a big factory in the morning:
 | 7 | **systemd (PID 1)** | Starts units towards `default.target`: sysinit → basic → multi-user (→ graphical), mounting fstab entries and starting services in parallel | `/etc/systemd/system/default.target` |
 | 8 | **Login** | getty on consoles (topic 003), the graphical login screen, sshd | |
 
+```mermaid
+flowchart TD
+    FW["1 · UEFI firmware<br/>POST, NVRAM boot entry, finds the ESP"] --> SH["2 · shim<br/>(Microsoft-signed)"]
+    SH -- "verifies" --> GR["3 · GRUB2<br/>menu, loads vmlinuz + initramfs + kernel args"]
+    GR -- "verifies (Secure Boot)" --> K["4 · kernel<br/>CPU, memory, built-in drivers, unpacks initramfs"]
+    K --> I["5 · initramfs (systemd, initrd.target)<br/>storage drivers, RAID, LVM, LUKS → mounts root at /sysroot"]
+    I -- "rd.break stops here" --> SW["6 · switch-root<br/>/sysroot becomes /"]
+    SW --> PID1["7 · systemd PID 1<br/>sysinit → basic → multi-user (→ graphical)"]
+    PID1 --> LG["8 · login<br/>getty, sshd, GDM"]
+    FW -. "fails: no boot device" .-> E1(["firmware / ESP problem"])
+    GR -. "fails: grub> prompt" .-> E2(["GRUB config problem"])
+    I -. "fails: dracut emergency shell" .-> E3(["root device / LVM / LUKS problem"])
+    PID1 -. "fails: emergency mode" .-> E4(["fstab / unit problem"])
+```
+
+The dotted lines show **where** a boot stops for each kind of fault, which tells you which part to fix (topic 057).
+
 **Old BIOS + MBR machines:** firmware → MBR boot code in sector 0 → GRUB's core image → then the same from stage 3.
 
 ### Files in /boot
@@ -171,6 +188,8 @@ sudo shutdown -c                        # cancel a scheduled shutdown
 3. Reboot and watch the console in the VM window: GRUB menu → kernel messages → systemd's "[ OK ] Started …" lines.
 4. `lsinitrd | less` and find the LVM and XFS pieces in your initramfs.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 053` for every step, or `sudo ./checks/check 053 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **"Server won't boot" incidents:** identify the stage from what's on the console, then fix that stage (table below; topic 057 has the procedures).
@@ -204,3 +223,21 @@ sudo shutdown -c                        # cancel a scheduled shutdown
 1. *Walk me through the Linux boot process.* Firmware (UEFI) runs shim from the ESP, which verifies and runs GRUB. GRUB loads the kernel and initramfs with arguments. The kernel unpacks the initramfs, whose systemd activates storage and mounts the real root at /sysroot, then switch-root hands over to systemd as PID 1, which starts units until default.target is reached.
 2. *What is the initramfs for?* It's a temporary root filesystem in RAM containing just the drivers and tools (LVM, RAID, encryption, filesystem drivers) needed to find and mount the real root filesystem.
 3. *A server stops at a `dracut-initqueue timeout`. What does that tell you?* The kernel and initramfs loaded fine, but the initramfs couldn't find the root device: wrong UUID or `rd.lvm.lv`, a missing driver, a failed disk or an encryption problem.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A VM doesn't come back after a reboot. You only have the console. How do you work out where in the boot it's failing?"*
+
+**Model answer:**
+1. Look at **what the screen shows**, because each stage fails differently:
+   - firmware "no bootable device" → disk, ESP or boot entry;
+   - a `grub>` or `grub rescue>` prompt → GRUB config or `/boot` problem;
+   - the kernel panics "unable to mount root fs" → the kernel or initramfs can't see the root device;
+   - a **dracut emergency shell** after `dracut-initqueue timeout` → the root UUID, LVM or LUKS, or a missing driver;
+   - **"You are in emergency mode"** → the root was mounted, but an **fstab** entry or a critical unit failed.
+2. If GRUB shows, remove `rhgb quiet` from the kernel line (`e`) so you can see all the messages.
+3. Fix that stage (topic 057), then reboot and confirm, and read `journalctl -b -1` afterwards for the full story.
+
+**Likely follow-ups:**
+- *What's in the initramfs, and who builds it?* The drivers and tools to find and mount the root (LVM, RAID, crypt, filesystems); `dracut` builds it on RHEL, initramfs-tools on Ubuntu.
+- *How do you see how long each part of boot took?* `systemd-analyze`, `systemd-analyze blame`, `critical-chain`.

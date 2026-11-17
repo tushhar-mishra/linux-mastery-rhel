@@ -196,6 +196,8 @@ net.ipv4.ip_forward = 1
 3. Blacklist a harmless module (for example `pcspkr`, the PC speaker), reboot, and confirm it's not loaded.
 4. Set `net.ipv4.ip_forward=1` with `-w`, reboot (gone), then make it permanent in `/etc/sysctl.d/`.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 055` for every step, or `sudo ./checks/check 055 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Kubernetes node prep:** load `overlay` and `br_netfilter` via `/etc/modules-load.d/`; set `ip_forward` and `bridge-nf-call-iptables` via `/etc/sysctl.d/`. These are in every kubeadm guide.
@@ -231,3 +233,17 @@ net.ipv4.ip_forward = 1
 1. *`modprobe` vs `insmod`?* `modprobe` finds the module by name under `/lib/modules` and loads its dependencies first; `insmod` loads one `.ko` file by path with no dependency handling.
 2. *How do you make a sysctl change survive a reboot?* Put `key = value` in a file under `/etc/sysctl.d/` and apply it with `sysctl --system` (`sysctl -w` alone is lost at reboot).
 3. *How do you stop a kernel module from ever loading?* In `/etc/modprobe.d/`, add `blacklist MOD` and `install MOD /bin/false`, and rebuild the initramfs if the module is included there.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"You turned on IP forwarding with `sysctl -w` for a router VM. It worked, but after a reboot forwarding was off again. Explain, and make it stick properly."*
+
+**Model answer:**
+1. `sysctl -w` (or writing to `/proc/sys`) changes the **running** kernel only; it's lost at reboot.
+2. Persist it: `echo 'net.ipv4.ip_forward = 1' | sudo tee /etc/sysctl.d/90-router.conf`, then `sudo sysctl --system`.
+3. Check **who else** sets it: files in `/etc/sysctl.d/`, `/usr/lib/sysctl.d/` and tuned profiles. The file read last wins; `sysctl --system` prints the order.
+4. Verify after a reboot: `sysctl net.ipv4.ip_forward`.
+
+**Likely follow-ups:**
+- *How do you keep a module from loading?* `blacklist` plus `install MOD /bin/false` in `/etc/modprobe.d/`; rebuild the initramfs if it's in there.
+- *How do you load a module at every boot?* A file in `/etc/modules-load.d/` with its name.

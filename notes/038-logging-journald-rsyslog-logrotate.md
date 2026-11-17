@@ -27,16 +27,19 @@ journald is a **CCTV recorder** for the whole building. It records everything wi
 
 ## How it works inside
 
+```mermaid
+flowchart LR
+    KR["kernel ring buffer<br/>(dmesg)"] --> J
+    SO["services' stdout/stderr"] --> J
+    SL["syslog() calls, logger"] --> J
+    J["systemd-journald"] --> JF[("journal files<br/>/run/log/journal (RAM, lost at reboot)<br/>or /var/log/journal (disk)")]
+    J -- "rsyslog reads it<br/>(imjournal module)" --> RS["rsyslogd"]
+    RS --> TF[("/var/log/messages, secure,<br/>cron, maillog …")]
+    RS --> REM[("remote log server<br/>TCP/UDP 514")]
+    LT["logrotate.timer → logrotate<br/>(daily)"] -. "rename, recreate,<br/>compress, delete old" .-> TF
 ```
-kernel ring buffer ─┐
-services' stdout   ─┼─► systemd-journald ──► journal files: /run/log/journal (RAM) or /var/log/journal (disk)
-syslog() calls     ─┘          │
-                               │ (rsyslog reads it via its imjournal module)
-                               ▼
-                           rsyslogd ──► /var/log/messages, secure, cron, maillog …
-                                    └─► remote log server (TCP/UDP 514)
-logrotate.timer ─► logrotate ─► rotates/compresses the text files
-```
+
+On **Ubuntu** the text files are `/var/log/syslog` and `/var/log/auth.log` instead of `messages` and `secure`.
 
 - **journald** stores each entry with **metadata fields**: `_SYSTEMD_UNIT` (which service), `_PID`, `_UID`, `PRIORITY`, `_BOOT_ID` (which boot), the hostname, and more. That's why `journalctl` can filter so precisely. Files are indexed and checksummed.
 - **Where the journal lives** (setting `Storage=`; the defaults are in `/usr/lib/systemd/journald.conf`, and you override them with a drop-in in `/etc/systemd/journald.conf.d/`. RHEL 10 no longer ships `/etc/systemd/journald.conf` at all):
@@ -237,6 +240,8 @@ sudo lastb -n 5  # failed logins
 3. Write `/etc/rsyslog.d/test.conf` with `local5.* /var/log/local5.log`, restart rsyslog, `logger -p local5.info hello`, and check the file.
 4. Create a logrotate config for `/var/log/local5.log` and test it with `-d`, then `-f`.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 038` for every step, or `sudo ./checks/check 038 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Every incident:** `journalctl -u <service> --since …`, `journalctl -b -1` after an unexpected reboot, `journalctl -k` for disk and OOM messages.
@@ -270,3 +275,20 @@ sudo lastb -n 5  # failed logins
 1. *journald vs rsyslog?* journald is systemd's structured, indexed binary journal with rich metadata. rsyslog writes traditional text files and forwards to central servers. On RHEL, rsyslog reads its input from journald.
 2. *How do you make the journal survive reboots?* Create `/var/log/journal` (then `systemd-tmpfiles --create` and restart journald), or set `Storage=persistent` in a journald drop-in.
 3. *An app keeps writing to `app.log-20261116` after rotation. Why?* It still has the old file (inode) open. logrotate renamed it but the app never reopened. Add a `postrotate` reload/signal, or use `copytruncate`.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A server rebooted unexpectedly overnight. How do you find out why?"*
+
+**Model answer:**
+1. `last -x reboot shutdown | head` and `journalctl --list-boots`: when it went down and came back.
+2. **The previous boot's last messages**: `journalctl -b -1 -n 100`, and `-p warning`. This needs a **persistent journal**; otherwise those logs were in RAM and are gone.
+3. Clean shutdown or crash?
+   - Clean: you'll see systemd stopping units, and who or what asked (`systemd-logind`, a `shutdown` command, an update tool).
+   - Crash or power loss: the log just stops.
+4. Kernel panics: check `/var/crash` if kdump is configured (topic 103); hypervisor or BMC logs for power and hardware events.
+5. Also check `/var/log/messages` and the hypervisor's events (live migration, host failure).
+
+**Likely follow-ups:**
+- *How do you make the journal persistent on RHEL?* Create `/var/log/journal` (or `Storage=persistent`) and restart journald.
+- *How do you test an rsyslog rule?* `logger -p local5.info "test"` and check the target file.

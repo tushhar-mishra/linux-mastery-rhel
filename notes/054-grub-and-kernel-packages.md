@@ -175,6 +175,8 @@ Don't use `grub2-install` on UEFI with Secure Boot: it bypasses the signed shim 
 3. At the GRUB menu, press `e`, add `systemd.unit=multi-user.target`, boot with Ctrl+X, and confirm it wasn't saved.
 4. `cat /boot/loader/entries/*.conf` and match each line to the table above.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 054` for every step, or `sudo ./checks/check 054 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Kernel updates** in patch cycles: `dnf update kernel` + a planned reboot. Live-patching (kpatch) can apply some security fixes without a reboot.
@@ -206,3 +208,18 @@ Don't use `grub2-install` on UEFI with Secure Boot: it bypasses the signed shim 
 1. *How do you make a kernel argument permanent on RHEL?* `grubby --update-kernel=ALL --args="…"`, then verify with `grubby --info=ALL` and, after a reboot, `cat /proc/cmdline`.
 2. *Why does RHEL keep several kernels installed?* Kernels are "install-only" packages: a new kernel is added alongside the old ones, so if it fails you can boot the previous one from the GRUB menu.
 3. *What is BLS?* The Boot Loader Specification: each kernel gets its own small config file in `/boot/loader/entries/`, which GRUB reads with `blscfg`, instead of everything being generated into one big grub.cfg.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"After a kernel update, a server boots but the storage driver from a vendor doesn't load, and the app can't see its disks. What are your options?"*
+
+**Model answer:**
+1. **Immediate:** reboot into the previous kernel from the GRUB menu; it's still installed (install-only packages, `installonly_limit=3`).
+2. Make that kernel the default until fixed: `grubby --set-default /boot/vmlinuz-<old>` and confirm with `grubby --default-kernel`.
+3. Root cause: the vendor module is built for one kernel (`modinfo` shows `vermagic`). Get the version for the new kernel, or a DKMS/kmod package, and check Secure Boot signing.
+4. Then update, set the new kernel as default again and reboot in a window.
+5. Prevention: test kernel updates on a staging host with the same drivers first.
+
+**Likely follow-ups:**
+- *How do you add a kernel argument permanently?* `grubby --update-kernel=ALL --args="…"`; check with `cat /proc/cmdline` after rebooting.
+- *How do you change a kernel argument for one boot only?* At the GRUB menu press `e`, edit the `linux` line, Ctrl+X.

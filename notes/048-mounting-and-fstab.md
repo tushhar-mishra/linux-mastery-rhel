@@ -155,6 +155,8 @@ sudo chown alice:devs /data ; sudo chmod 2775 /data   # topic 026/027
 3. Mount the VFAT one with `uid=` of a normal user and confirm that user can write to it.
 4. Make an fstab typo on purpose, then run `findmnt --verify` and see it caught before rebooting.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 048` for every step, or `sudo ./checks/check 048 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Every new disk or volume** ends with an fstab line.
@@ -189,3 +191,22 @@ sudo chown alice:devs /data ; sudo chmod 2775 /data   # topic 026/027
 1. *What are the six fstab fields?* Device, mount point, filesystem type, options, dump flag, fsck order.
 2. *Why mount by UUID instead of `/dev/sdb1`?* Kernel device names can change between boots; the UUID identifies the filesystem itself.
 3. *How do you test an fstab change without rebooting?* `systemctl daemon-reload`, then `mount -a` (mounts every entry and shows errors) and `findmnt --verify`.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A colleague added an NFS share and a new data disk to `/etc/fstab`. The server didn't come back after the reboot and sits at an emergency-mode prompt. What happened, and how do you fix it?"*
+
+**Model answer:**
+1. A mount listed in fstab **failed** (wrong UUID, a typo in the type or options, or the NFS server unreachable), and by default a failed mount blocks boot and drops you into emergency mode.
+2. At the emergency prompt, enter the root password, then:
+   - `journalctl -xb | grep -i mount` shows which entry failed and why;
+   - if `/` is read-only, `mount -o remount,rw /`.
+3. Fix or comment out the bad line, `systemctl daemon-reload`, `mount -a`, `findmnt --verify`, then `reboot`.
+4. Prevention:
+   - `nofail` on non-essential disks;
+   - `_netdev` (and often `nofail`) on network mounts;
+   - always test with `mount -a` and `findmnt --verify` **before** rebooting.
+
+**Likely follow-ups:**
+- *What are the last two fstab fields?* The dump flag (0) and the fsck order (0 for XFS, swap and network; 1 for an ext4 root; 2 for other ext4).
+- *You mounted a disk on `/data` and the old files there vanished. Are they lost?* No. They're hidden under the mount point. Unmount to see them.

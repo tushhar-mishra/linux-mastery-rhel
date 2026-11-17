@@ -158,6 +158,8 @@ chronyc clients                    # who has asked us for the time
 2. Set server1's clock 5 minutes wrong (`sudo date -s "+5 min"` after stopping chronyd), start chronyd, and watch it correct (try `chronyc makestep`).
 3. Change the time zone and see `ls -l /etc/localtime` change.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 069` for every step, or `sudo ./checks/check 069 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Every server**, by default. Larger organisations run internal NTP servers and point all hosts at them; clouds provide their own (AWS `169.254.169.123`, GCP `metadata.google.internal`).
@@ -189,3 +191,19 @@ chronyc clients                    # who has asked us for the time
 1. *Why does accurate time matter on servers?* Log correlation, Kerberos authentication (fails with a few minutes of skew), TLS certificate validity, token expiry, and distributed systems that order events by time.
 2. *What does `^*` mean in `chronyc sources`?* That source is the one currently selected for synchronisation.
 3. *Slewing vs stepping?* Slewing gradually speeds up or slows down the clock so time never jumps (safe for applications). Stepping sets the clock immediately (used at boot or for large offsets).
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"Kerberos logins are failing and the logs on two servers disagree by several minutes. What do you check?"*
+
+**Model answer:**
+1. `timedatectl`: is "System clock synchronized: yes"? Is NTP active?
+2. `chronyc tracking`: the current offset and the selected source. `chronyc sources -v`: is any source `^*`, and is `Reach` 377?
+3. If no source is reachable: firewall (UDP 123 out), DNS for the pool names, or a wrong `server` line in `/etc/chrony.conf`.
+4. Fix the source, then `chronyc makestep` to correct a large offset immediately (chrony normally slews slowly).
+5. Kerberos allows about 5 minutes of skew; TLS, tokens and log correlation all suffer too.
+6. Check VMs: a paused or migrated VM can jump; chrony must run in every guest.
+
+**Likely follow-ups:**
+- *Slew vs step?* Slew adjusts the clock speed gradually; step jumps it (safe at boot, risky for running apps).
+- *Does the time zone affect synchronisation?* No. The clock runs in UTC; the time zone only changes how it's displayed.

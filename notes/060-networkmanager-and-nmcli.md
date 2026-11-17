@@ -230,6 +230,8 @@ networkctl status enp0s8
 3. Add an IPv6 ULA address on both VMs and ping across with `ping fd00:56::11`.
 4. Look at the keyfile before and after each change.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 060` for every step, or `sudo ./checks/check 060 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Every server build:** static IPs for servers, DHCP for clients.
@@ -262,3 +264,21 @@ networkctl status enp0s8
 1. *Device vs connection in NetworkManager?* A device is the network interface itself. A connection is a saved profile of settings (IPs, gateway, DNS, autoconnect) that can be applied to a device.
 2. *How do you set a static IP permanently on RHEL?* `nmcli con mod NAME ipv4.method manual ipv4.addresses IP/PREFIX ipv4.gateway GW ipv4.dns "…" connection.autoconnect yes`, then `nmcli con up NAME`.
 3. *Why don't changes made with `ip addr add` survive a reboot?* `ip` only changes the running kernel. The persistent configuration lives in NetworkManager's profiles (or netplan on Ubuntu), which are applied at boot.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"You changed a server's IP with `nmcli con mod`, but `ip addr` still shows the old address. Then you rebooted remotely and lost the server. What went wrong, and how should it have been done?"*
+
+**Model answer:**
+1. `nmcli con mod` only edits the **saved profile**; nothing changes on the interface until `nmcli con up NAME`. So the old IP stayed live.
+2. The reboot applied the profile. If the new address, prefix or gateway was wrong, the server came up unreachable.
+3. Safe procedure for remote changes:
+   - have console access, or schedule an automatic revert (`at now + 5 min` running `nmcli con up` with the old settings, or a backup copy of the keyfile);
+   - check the profile first (`nmcli con show NAME | grep ipv4`);
+   - apply with `nmcli con up NAME` and reconnect to the **new** address;
+   - only then cancel the revert, and test a reboot in a maintenance window.
+4. Recover now through the console (VM console, iLO/iDRAC) and fix the profile.
+
+**Likely follow-ups:**
+- *Where are NetworkManager profiles stored on RHEL 10?* `/etc/NetworkManager/system-connections/*.nmconnection` (keyfiles); ifcfg files are gone.
+- *How does Ubuntu Server do this?* netplan YAML; `netplan try` reverts automatically unless you confirm.

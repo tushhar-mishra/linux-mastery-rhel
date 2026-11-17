@@ -242,6 +242,8 @@ pushd /etc ; pushd /var/log ; dirs -v ; popd
 3. In an empty directory, run `for f in *.txt; do echo "got: $f"; done`, then with `shopt -s nullglob`.
 4. `cd /etc; find /etc -name *.conf | head` vs `find /etc -name '*.conf' | head`.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 013` for every step, or `sudo ./checks/check 013 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Bulk file operations:** `mv *.log archive/`, `chmod 640 *.conf`. Preview with `echo` first.
@@ -274,3 +276,17 @@ pushd /etc ; pushd /var/log ; dirs -v ; popd
 1. *Who expands `*.txt` in `ls *.txt`: the shell or `ls`?* The shell. `ls` receives the list of matching file names.
 2. *Why quote the pattern in `find . -name '*.log'`?* So the shell doesn't expand it against the current directory first; `find` needs the raw pattern to match in every directory.
 3. *Glob vs regex?* Globs match file names, and `*` means "anything". Regular expressions match text, and `*` means "zero or more of the previous item"; "anything" is `.*`.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"`find /var/log -name *.log` works in your home directory but returns almost nothing when run from `/var/log`. Explain."*
+
+**Model answer:**
+1. The pattern is unquoted, so **the shell expands `*.log` first**, against the current directory.
+2. In your home directory there are no `.log` files, so the glob stays literal and `find` gets `*.log`: it works by luck.
+3. In `/var/log`, the glob expands to, say, `boot.log`, so `find` runs `-name boot.log` (or errors with "paths must precede expression" when several names match).
+4. Fix: quote it: `find /var/log -name '*.log'`. The same applies to `grep`, `tar --exclude` and `rsync` patterns.
+
+**Likely follow-ups:**
+- *Why does `{1..$n}` not work?* Brace expansion happens **before** variable expansion, so it sees the literal `$n`. Use `seq 1 "$n"` or a C-style `for` loop.
+- *Do globs match hidden files?* No, `*` skips names starting with `.` unless `shopt -s dotglob` is on.

@@ -129,6 +129,8 @@ sudo semanage login -a -s staff_u -r s0-s2:c0.c100 alice
 2. Start a container with a volume using `:Z` (topic 101) and look at the volume directory's label on the host: it carries the container's categories.
 3. Read `/etc/selinux/targeted/setrans.conf`.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 076` for every step, or `sudo ./checks/check 076 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Every container on RHEL, Fedora and OpenShift** relies on MCS categories, which is why a misbehaving container can't read its neighbours' data.
@@ -157,3 +159,17 @@ sudo semanage login -a -s staff_u -r s0-s2:c0.c100 alice
 1. *MLS vs MCS?* MLS uses ordered sensitivity levels with "no read up, no write down" rules for classified data. MCS uses categories at a single level (s0) to keep separate instances, such as containers, apart.
 2. *Why do two containers on RHEL show different `:s0:cX,cY` suffixes?* Each gets a unique MCS category pair. Both run as `container_t`, but the category mismatch stops either reading the other's files.
 3. *What does `s0-s0:c0.c1023` mean?* A range from s0 with no categories up to s0 with all 1024 categories: the normal range for unconfined users, so MCS never restricts them.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"Two containers on the same RHEL host both run as `container_t`. If one is compromised, what stops it reading the other's files?"*
+
+**Model answer:**
+1. **MCS categories.** Each container is started with a unique pair, like `system_u:system_r:container_t:s0:c123,c456`, and its files carry the same categories.
+2. The policy only allows access when the process's categories **dominate** the file's. `c123,c456` can't read `c78,c910`, even though the type is the same.
+3. Bind mounts with `:Z` relabel the host directory with that container's private categories; `:z` uses a shared label for content several containers need.
+4. Plus the normal layers: namespaces, the user namespace for rootless containers, dropped capabilities, seccomp.
+
+**Likely follow-ups:**
+- *MLS vs MCS?* MLS enforces ordered levels ("no read up, no write down"); MCS uses only categories to separate instances.
+- *What does `s0-s0:c0.c1023` on your shell mean?* You can access every category, so MCS doesn't restrict normal users.

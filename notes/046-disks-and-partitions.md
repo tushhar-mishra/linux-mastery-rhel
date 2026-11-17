@@ -211,6 +211,8 @@ for h in /sys/class/scsi_host/host*/scan; do echo '- - -' | sudo tee "$h" >/dev/
 3. With parted, give `vdc` a GPT label and one partition using 100%, flagged lvm.
 4. Run `ls -l /dev/disk/by-*/ | grep vdb` and see the stable names.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 046` for every step, or `sudo ./checks/check 046 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Adding storage** to servers and VMs: new data disks for databases, logs, container storage (`/var/lib/containers`).
@@ -242,3 +244,19 @@ for h in /sys/class/scsi_host/host*/scan; do echo '- - -' | sudo tee "$h" >/dev/
 1. *MBR vs GPT?* MBR supports 4 primary partitions and disks up to 2 TiB, with a single copy of the table. GPT supports 128 partitions, enormous disks, GUIDs and a backup table at the end of the disk.
 2. *Why not put `/dev/sdb1` in fstab?* Kernel device names depend on detection order and can change between boots. Filesystem UUIDs and labels don't.
 3. *What does `partprobe` do?* It asks the kernel to re-read a disk's partition table, so new partitions appear without a reboot (unless the disk is busy).
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A new 500 GB data disk was attached to a VM. Walk me through making it usable, safely."*
+
+**Model answer:**
+1. **Identify it** for sure: `lsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINTS` before and after attaching, plus the serial in `/dev/disk/by-id/`. The new one has no partitions or filesystem.
+2. Check it's really empty: `wipefs -n /dev/vdb` (lists signatures without changing anything).
+3. Partition with **GPT**: `parted /dev/vdb mklabel gpt mkpart data xfs 1MiB 100%` (or use the whole disk for LVM).
+4. `partprobe` / `udevadm settle`, then create the filesystem (or the LVM PV).
+5. Mount by **UUID** in fstab, then `mount -a` and `findmnt --verify` before any reboot.
+6. Confirm with `df -hT`, and reboot in a window to prove it comes back.
+
+**Likely follow-ups:**
+- *Why does `/dev/sdb` sometimes become `/dev/sdc` after a reboot?* Kernel names follow detection order; that's why fstab uses UUIDs.
+- *MBR or GPT for a 3 TB disk?* GPT; MBR can't address past 2 TiB.

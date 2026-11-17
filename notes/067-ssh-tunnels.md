@@ -136,6 +136,8 @@ LISTEN 0 128 127.0.0.1:5432 0.0.0.0:* users:(("ssh",pid=4711,fd=5))
 3. Start a SOCKS proxy and fetch a page through it with `curl --proxy socks5h://`.
 4. Find your tunnels with `ss -tlnp` and kill them.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 067` for every step, or `sudo ./checks/check 067 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Bastion access** to private subnets in the cloud (`ProxyJump`). Many teams replace this with AWS SSM, GCP IAP or Teleport, which use the same idea.
@@ -167,3 +169,18 @@ LISTEN 0 128 127.0.0.1:5432 0.0.0.0:* users:(("ssh",pid=4711,fd=5))
 1. *`-L` vs `-R`?* `-L` opens a listener on your (client) machine that forwards to a target reachable from the SSH server. `-R` opens a listener on the SSH server that forwards back to a target reachable from your machine.
 2. *Is a local-forwarded connection encrypted all the way to the target?* No. Only the client-to-SSH-server leg is encrypted; the SSH server talks to the target over a normal connection.
 3. *How does `ssh -J bastion target` differ from SSHing to the bastion and then SSHing again?* `-J` tunnels a direct, end-to-end encrypted SSH session to the target through the bastion, so your keys and session never sit on the bastion. Two hops would mean authenticating from the bastion itself.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"You need to reach a database admin page on port 8080 that only listens on localhost on a server behind a bastion. You only have SSH access. How?"*
+
+**Model answer:**
+1. One command, through the bastion: `ssh -J user@bastion -L 8080:localhost:8080 user@dbserver -N`.
+2. `-J` makes an end-to-end SSH session to `dbserver` through the bastion. `-L` opens `localhost:8080` on **your** laptop and forwards it to `localhost:8080` **as seen from dbserver**.
+3. Browse `http://localhost:8080`.
+4. Put it in `~/.ssh/config` (`ProxyJump bastion`, `LocalForward 8080 localhost:8080`) for repeat use.
+5. It only works if the server allows it (`AllowTcpForwarding`, `PermitOpen`); policy may forbid it, so ask first.
+
+**Likely follow-ups:**
+- *`-L` vs `-R`?* `-L` listens on the client; `-R` listens on the server and forwards back to your side.
+- *Is the traffic encrypted to the target?* Only between you and the SSH server; here the final hop is inside dbserver itself, so nothing crosses the network unencrypted.

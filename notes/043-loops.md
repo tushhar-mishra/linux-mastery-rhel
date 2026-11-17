@@ -190,6 +190,8 @@ Choose: 2
 3. Count processes with `ps | while read` and with `done < <(ps …)`. See which count survives.
 4. Write an `until` loop that waits for `/tmp/ready` to exist; create it from another terminal.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 043` for every step, or `sudo ./checks/check 043 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Fleet one-liners:** `for h in $(cat hosts.txt); do ssh "$h" 'sudo dnf -y upgrade'; done` (before you move to Ansible, topic 105).
@@ -221,3 +223,17 @@ Choose: 2
 1. *What's the best way to read a file line by line in bash?* `while IFS= read -r line; do …; done < file`.
 2. *Why is a counter still 0 after `cmd | while read …; do ((n++)); done`?* Each part of a pipeline runs in a subshell, so the loop's variable changes are lost when it ends. Use `done < <(cmd)`.
 3. *`while` vs `until`?* `while` repeats as long as the condition succeeds; `until` repeats until it succeeds.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A script loops over a list of servers to run a command with SSH, but it stops after the first server. The list has 20 lines. Why?"*
+
+**Model answer:**
+1. The loop is `while read -r host; do ssh "$host" uptime; done < servers.txt`.
+2. `ssh` reads from **stdin**, which is the same file the loop is reading. It swallows the remaining 19 lines, so `read` hits end-of-file.
+3. Fix: stop ssh reading stdin: `ssh -n "$host" uptime` (or `< /dev/null`). Or read the list from a different file descriptor: `while read -r host <&3; do …; done 3< servers.txt`.
+4. Also use `IFS= read -r` and skip blank or comment lines.
+
+**Likely follow-ups:**
+- *Why is a counter 0 after `cmd | while read …`?* The loop runs in a subshell; use `done < <(cmd)`.
+- *Why not `for f in $(ls)`?* Names with spaces split, and globs inside names expand. Loop over a glob instead: `for f in ./*`.

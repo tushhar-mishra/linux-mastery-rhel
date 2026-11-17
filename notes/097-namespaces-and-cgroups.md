@@ -55,6 +55,18 @@ The host is an **apartment building**:
 | **cgroup** | The view of the cgroup tree | `--cgroup` | The container sees its own cgroup as `/` |
 | **time** | Boot/monotonic clock offsets | `--time` | Rarely used |
 
+What one container process actually is: an ordinary host process with its own namespaces (what it can **see**) and a cgroup (what it can **use**):
+
+```mermaid
+flowchart TD
+    P["nginx in a container<br/>PID 4211 on the host = PID 1 inside"]
+    P -- "what it can SEE" --> NS["namespaces<br/>mnt: its own / (image layers)<br/>net: its own eth0, routes, ports<br/>pid: only its own processes<br/>uts, ipc, user, cgroup"]
+    P -- "what it can USE" --> CG["cgroup<br/>memory.max = 512M<br/>cpu.max = 50000 100000<br/>pids.max = 200"]
+    NS --> K[("one shared host kernel")]
+    CG --> K
+    SH["your shell: host namespaces,<br/>user.slice cgroup"] --> K
+```
+
 - New namespaces are created with the `clone()` flags (`CLONE_NEWPID`, `CLONE_NEWNET`…) or `unshare()`.
 - An existing one is joined with `setns()`; `nsenter` and `podman exec` do this.
 - Every process has a link per namespace in `/proc/PID/ns/`. Two processes share a namespace when the inode numbers match.
@@ -284,6 +296,8 @@ Inside: the hostname is `myctr`, `/proc` shows only your processes, `/proc/self/
 3. Reproduce the memory OOM and CPU throttling in hand-made cgroups; then do the same with `systemd-run -p MemoryMax=50M` and `-p CPUQuota=20%`.
 4. Start a Podman container, find its PID (`podman inspect -f '{{.State.Pid}}' NAME`), and compare `/proc/PID/ns/*`, `/proc/PID/cgroup` and `grep Cap /proc/PID/status` with your shell's.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 097` for every step, or `sudo ./checks/check 097 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Kubernetes:**
@@ -322,4 +336,21 @@ Inside: the hostname is `myctr`, `/proc` shows only your processes, `/proc/self/
 
 1. *What is a container, technically?* A normal process tree placed in its own namespaces, limited by a cgroup, with reduced capabilities, a seccomp filter and an SELinux label, running on an overlay root filesystem.
 2. *Namespaces vs cgroups?* Namespaces control what a process can **see** (PIDs, network, mounts, hostname, users); cgroups control what it can **use** (CPU, memory, PIDs, I/O).
-3. *Why is a pod CPU-throttled while the node is only 30% busy?* Its CPU limit becomes a `cpu.max` quota; it uses its quota early in each 100 ms period and must wait for the next, regardless of idle CPUs elsewhere. `cpu.stat` `nr_throttled` shows it.
+3. *Why is a container CPU-throttled while the host is only 30% busy?* Its CPU limit is a `cpu.max` quota; it uses its quota early in each 100 ms period and must wait for the next, regardless of idle CPUs elsewhere. `cpu.stat` `nr_throttled` shows it.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A service running in a container on a 16-core host is slow, but host CPU usage is only 25%. What do you check?"*
+
+**Model answer:**
+1. Find the container's process and cgroup: `podman inspect -f '{{.State.Pid}}' NAME`, then `cat /proc/PID/cgroup`.
+2. Read the cgroup's CPU limit and stats: `cpu.max` (for example `100000 100000` = 1 CPU) and `cpu.stat`. If `nr_throttled` and `throttled_usec` keep rising, the container uses its **quota** early in each 100 ms period and then waits, **even though other cores are idle**.
+3. Fixes:
+   - raise or remove the quota for that workload;
+   - make the app use fewer threads, so it fits the quota;
+   - rely on `cpu.weight` (a share, which never throttles) instead of a hard cap.
+4. Also rule out memory pressure (`memory.events` `high`/`max` counters, PSI) and I/O limits (`io.max`).
+
+**Likely follow-ups:**
+- *Namespaces vs cgroups?* Namespaces limit what a process can see; cgroups limit what it can use.
+- *What does rootless mean?* A user namespace maps root inside the container to your unprivileged UID outside.

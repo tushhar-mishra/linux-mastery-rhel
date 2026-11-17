@@ -233,9 +233,11 @@ journalctl _COMM=sudo --since today
 
 ### Try it
 1. Create group `ops` and users `ann` (in ops) and `ben` (not). Allow `%ops` to run `systemctl restart chronyd` and `systemctl status chronyd` with no password, and nothing else.
-2. Test as ann: `sudo -n systemctl restart chronyd; echo $?` → 0. Then `sudo -n dnf install zsh` → refused (`-n` = never prompt).
+2. Test as ann: `sudo -n systemctl restart chronyd; echo $?` → 0. Then `sudo -n dnf install zsh` → `sudo: a password is required` (no rule lets ann run it without a password, and `-n` = never prompt, so sudo stops there).
 3. Rename the file to `ops.conf` and test again (the rule is now ignored). Rename it back.
-4. Find the denied attempts in `/var/log/secure`.
+4. Give ann a password and, as ann, run `sudo dnf install zsh` **without** `-n`, typing her password: sudo answers "Sorry, user ann is not allowed to execute …". Find the `command not allowed` line in `/var/log/secure` (Ubuntu: `/var/log/auth.log`). An attempt with `-n` that stops at "a password is required" is not logged.
+
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 028` for every step, or `sudo ./checks/check 028 STEP` for one (topic 002 shows how to get the notes there).
 
 ## Where you'll use it
 
@@ -271,3 +273,21 @@ journalctl _COMM=sudo --since today
 1. *How does sudo get root privileges?* It's a SUID-root binary. It checks the sudoers policy and authenticates the caller via PAM, logs the request, then runs the command as the target user.
 2. *sudo vs su?* sudo uses **your** password, applies per-command rules and logs each command under your name. su needs the **target's** password and gives a full shell.
 3. *How can a rule allowing only `vi /etc/hosts` give full root?* vi can run shell commands (`:!sh`), and they run as root. Use `sudoedit`, which runs the editor as the user.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"The on-call team needs to restart the app service without being given full root. How do you set that up, and what mistakes do you avoid?"*
+
+**Model answer:**
+1. A group `oncall`, and a drop-in `/etc/sudoers.d/oncall` written with `visudo -f`:
+   `%oncall ALL=(root) /usr/bin/systemctl restart app.service, /usr/bin/systemctl status app.service`.
+2. Use **full paths** and exact arguments, so `systemctl restart anything` isn't allowed.
+3. Mistakes to avoid:
+   - never allow commands that can start a shell: `vi`, `less`, `find -exec`, `tar`, `systemctl edit`, or a bare `systemctl`;
+   - don't put a dot in the file name (`oncall.conf` is silently ignored);
+   - keep mode 0440, owned by root.
+4. Check with `sudo -l -U username`, and test as a member: allowed command works, anything else is refused (and logged).
+
+**Likely follow-ups:**
+- *Two rules match a command. Which wins?* The **last** matching rule in the file order.
+- *Why use `sudoedit` instead of allowing `vi /etc/app.conf`?* sudoedit runs the editor as you on a temporary copy, so `:!sh` doesn't give root.

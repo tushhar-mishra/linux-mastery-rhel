@@ -167,6 +167,8 @@ bash -x disk-report.sh 50      # trace every command after expansion
 3. Write `disk-report.sh` and run it with thresholds 10 and 90.
 4. Introduce a typo (`fi` without `if`), run `bash -n`, then fix it and trace it with `bash -x`.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 040` for every step, or `sudo ./checks/check 040 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Automation:** backup, cleanup, user provisioning, health checks, run by cron or timers.
@@ -199,3 +201,19 @@ bash -x disk-report.sh 50      # trace every command after expansion
 1. *What does the shebang line do?* It tells the kernel which interpreter to run the file with. The kernel reads `#!` and runs that program with the script path as an argument.
 2. *`./script.sh` vs `source script.sh`?* `./script.sh` runs in a new child process, so its variables and `cd` vanish. `source` runs it in the current shell, so changes persist.
 3. *How do you debug a bash script?* `bash -n` for syntax, `bash -x` (or `set -x`) to trace each expanded command, and ShellCheck for static analysis.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A script that works on your RHEL laptop fails on an Ubuntu server with `Syntax error: "(" unexpected` or `[[: not found`. Why?"*
+
+**Model answer:**
+1. Look at the first line. It's probably `#!/bin/sh`.
+2. On RHEL, `/bin/sh` is bash (in POSIX mode), so bash features like `[[ ]]`, arrays and `function` happen to work.
+3. On Ubuntu, `/bin/sh` is **dash**, a strict POSIX shell without those features.
+4. Fix: if the script uses bash features, say so: `#!/bin/bash` (or `#!/usr/bin/env bash`). Or rewrite it in POSIX sh.
+5. Running it as `sh script.sh` also ignores the shebang, so call it as `./script.sh` or `bash script.sh`.
+6. ShellCheck warns about this ("In POSIX sh, [[ ]] is undefined").
+
+**Likely follow-ups:**
+- *Why does `./script.sh` give "Permission denied" but `bash script.sh` works?* The file lacks the execute bit (`chmod +x`), or it's on a `noexec` mount.
+- *Where should a script send error messages?* stderr (`>&2`), so they don't mix with the data on stdout.

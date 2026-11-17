@@ -222,6 +222,8 @@ cmd || { echo "cmd failed" >&2; exit 1; }
 3. Run `false && echo A || echo B` and `true && false || echo C`. Predict the output first.
 4. Make an alias `ports='ss -tlnp'`, use it, then open a new terminal and see that it's gone.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 011` for every step, or `sudo ./checks/check 011 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Every script:** `"$var"` everywhere. An unquoted variable with a space inside is a classic production bug (for example, deleting the wrong path).
@@ -254,3 +256,20 @@ cmd || { echo "cmd failed" >&2; exit 1; }
 1. *Single vs double quotes?* Single quotes make everything literal. Double quotes keep the text as one argument but still expand `$variables`, `$(commands)` and backslash escapes.
 2. *Is `a && b || c` the same as if/else?* No. `c` also runs if `b` fails. Use a real `if` statement.
 3. *`( )` vs `{ }`?* `( )` runs the commands in a subshell, so changes like `cd` or variables don't persist. `{ }` runs them in the current shell.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A cleanup script runs `rm -rf $DIR/*`. One night it wiped far more than intended. What are the likely causes, and how should the line be written?"*
+
+**Model answer:**
+1. If `DIR` was **empty or unset**, the line became `rm -rf /*`.
+2. If `DIR` contained a **space** (`/data/old logs`), the unquoted value split into two arguments, `/data/old` and `logs/*`, and both were deleted.
+3. Safe version: `rm -rf -- "${DIR:?DIR is not set}"/*`.
+   - Quotes stop word splitting.
+   - `${DIR:?}` makes the script stop with an error if DIR is empty.
+   - `--` stops a name starting with `-` being read as an option.
+4. Also `set -u` in the script, and an `echo` dry run of risky globs while testing.
+
+**Likely follow-ups:**
+- *Is `cd "$DIR" && rm -rf *` safer?* Better than the original, because `&&` skips the `rm` if `cd` fails. With `cd "$DIR"; rm -rf *` (a `;`), a failed `cd` deletes the current directory's contents instead.
+- *Why are aliases not used in scripts?* Non-interactive shells don't expand aliases by default. Use functions.

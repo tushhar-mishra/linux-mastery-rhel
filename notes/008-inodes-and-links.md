@@ -199,6 +199,8 @@ Never put a trailing slash when removing a symlink to a directory: `rm dirlink`.
 3. Run `ls -ld /etc ; ls -l /etc | grep -c '^d'` and check the "2 + subdirectories" rule.
 4. Run `ls -l /etc/localtime` to see your time zone link.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 008` for every step, or `sudo ./checks/check 008 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **"Disk full but I deleted the file"**: `lsof +L1`, then restart or reload the process. This is one of the most common production incidents.
@@ -232,3 +234,18 @@ Never put a trailing slash when removing a symlink to a directory: `rm dirlink`.
 1. *What's an inode?* The structure that holds a file's metadata and pointers to its data blocks: everything except the file name and the data itself.
 2. *Hard link vs soft link?* A hard link is another directory entry for the same inode; it can't cross filesystems or point to directories. A soft link is a separate file containing a path; it can go anywhere but breaks if the target is removed.
 3. *You deleted a huge log but `df` still shows the disk full. Why and how do you fix it?* A running process still has the file open, so the kernel hasn't freed the blocks. Find it with `lsof +L1` and restart or reload the process (or truncate it through `/proc/PID/fd/N`).
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"You deleted a 20 GB log file to free space, but `df` still shows the disk full. What happened, and how do you fix it without a reboot?"*
+
+**Model answer:**
+1. A running process still has the file open. The name is gone, but the inode and its blocks stay allocated until the last open file descriptor closes.
+2. Find it: `sudo lsof +L1` lists open files with a link count of 0 (look for `(deleted)`).
+3. Best fix: **restart or reload** that service so it reopens a new log file.
+4. If you can't restart it, truncate it through `/proc`: `: > /proc/PID/fd/N`, which frees the blocks immediately.
+5. Prevention: rotate logs with logrotate (with a reload, or `copytruncate`), and empty a live log with `truncate -s 0` or `: > file`, never `rm`.
+
+**Likely follow-ups:**
+- *Would a hard link have changed anything?* Yes. With another hard link the inode still has a name, so `rm` of one name frees nothing at all.
+- *Why can't hard links cross filesystems?* A directory entry stores an inode **number**, which only means something inside its own filesystem.

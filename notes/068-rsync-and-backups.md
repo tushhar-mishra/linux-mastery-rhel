@@ -135,6 +135,8 @@ rsync -avh backup01:/backups/web01/2026-11-15/ /restore/             # restore a
 3. Delete a file in the source and try `--delete` with `-n` first.
 4. Build the `--link-dest` script for two "days" and check with `ls -li` that unchanged files share inodes.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 068` for every step, or `sudo ./checks/check 068 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Server migrations:** a bulk rsync while the old server is live, then a short downtime and a final `rsync --delete` to catch the last changes.
@@ -167,3 +169,19 @@ rsync -avh backup01:/backups/web01/2026-11-15/ /restore/             # restore a
 1. *rsync vs scp?* rsync transfers only the differences, can resume, can mirror (`--delete`) and preserves all metadata. scp copies whole files every time.
 2. *What does the trailing slash on the source mean?* `src/` copies the directory's contents into the destination; `src` copies the directory itself, creating `dest/src`.
 3. *Why isn't an rsync `--delete` mirror a good backup on its own?* It faithfully copies deletions, corruption and ransomware damage to the backup on the next run. You need multiple dated versions and off-site copies.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"Design a simple, reliable nightly backup of `/srv/data` to another Linux server with rsync. What do you include?"*
+
+**Model answer:**
+1. A dedicated SSH key for the job, restricted on the backup server (`command=` / `rrsync` in `authorized_keys`, no shell).
+2. **Versioned** snapshots with hard links: `rsync -aAXH --delete --link-dest=../latest /srv/data/ backup:/backups/2026-11-17/`, then point `latest` at the new one. Unchanged files share inodes, so each day costs only the changes.
+3. Run it from a systemd timer (or cron) with `flock`, logging, and a non-zero exit (and an alert) on failure.
+4. Retention: delete snapshots older than N days, carefully, with a dry run first.
+5. 3-2-1: three copies, two kinds of media, one off-site or immutable copy.
+6. **Test restores** regularly, and alert if the newest snapshot is older than a day.
+
+**Likely follow-ups:**
+- *What's the difference between `src` and `src/`?* `src/` copies the contents; `src` creates `dest/src`.
+- *Why isn't a plain `--delete` mirror a backup?* It replicates deletions and corruption on the next run.

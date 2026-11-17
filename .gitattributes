@@ -1,0 +1,3 @@
+# Scripts must keep Unix line endings even when the repository is cloned on Windows
+*.sh text eol=lf
+checks/check text eol=lf

@@ -46,6 +46,20 @@ A program is a **recipe book on a shelf**. A process is **a cook actually cookin
 
 Extra flags you'll see next to the state: `<` high priority, `N` low priority, `s` session leader, `l` multi-threaded, `+` in the foreground of its terminal.
 
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> R: fork + exec
+    R --> S: waits for input, timer, network
+    S --> R: event arrives / signal
+    R --> D: waits for disk or NFS I/O
+    D --> R: I/O completes (signals wait until then)
+    R --> T: Ctrl+Z (SIGTSTP) or SIGSTOP
+    T --> R: fg, bg or SIGCONT
+    R --> Z: exit()
+    Z --> [*]: parent calls wait()
+```
+
 **Zombies and orphans:**
 - A **zombie** can't be killed (it's already dead). Fix or restart its **parent** so the exit status is collected.
 - An **orphan** is a child whose parent died first. PID 1 adopts it and collects it when it ends.
@@ -215,6 +229,8 @@ PPid:	2380
 3. `ps -ef --forest` and find your own shell's chain back to PID 1.
 4. Make a zombie: `bash -c 'sleep 1 & exec sleep 30' &`, then `ps -o pid,ppid,stat,cmd --ppid $!` after 2 seconds. The child shows `Z`, because its parent (now `sleep 30`) never collects it.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 033` for every step, or `sudo ./checks/check 033 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **"The server is slow"** → find the top CPU and memory processes (here, `top` in topic 034, `pidstat` in topic 036).
@@ -247,3 +263,18 @@ PPid:	2380
 1. *What is a zombie process and how do you get rid of it?* A process that has exited but whose parent hasn't collected its exit status. Signals don't affect it. Make the parent collect it, or kill or restart the parent so PID 1 adopts and reaps it.
 2. *SIGTERM vs SIGKILL?* SIGTERM can be caught, so the program can clean up and exit gracefully. SIGKILL can't be caught: the kernel ends the process immediately, with no cleanup.
 3. *Why doesn't `kill -9` kill a process in `D` state?* It's blocked in an uninterruptible kernel wait, usually for I/O, and the signal is only acted on when the wait ends. Fix the underlying storage or NFS problem.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"An application won't stop: `kill PID` does nothing, and even `kill -9` doesn't remove it from `ps`. What's happening?"*
+
+**Model answer:**
+1. Look at its state: `ps -o pid,stat,wchan:20,cmd -p PID`.
+2. **`Z` (zombie):** it's already dead; only its exit status is waiting for the parent to collect it. Find the parent (`ps -o ppid= -p PID`) and fix or restart it; PID 1 then adopts and reaps the zombie.
+3. **`D` (uninterruptible sleep):** it's stuck in the kernel waiting for I/O (often a dead NFS server or failing disk). The signal is delivered only when the wait ends. Fix the storage, or the wait never ends.
+4. If it's running (`R`/`S`) and ignores SIGTERM, it's catching or ignoring the signal; SIGKILL should work, unless it's PID 1 of a container (topic 092).
+5. For services, use `systemctl stop/kill`, so systemd doesn't restart it behind you.
+
+**Likely follow-ups:**
+- *What does SIGHUP usually do to a daemon?* Many daemons reload their configuration on it.
+- *What's an orphan?* A child whose parent died; PID 1 adopts it.

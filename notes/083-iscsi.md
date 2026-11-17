@@ -156,6 +156,8 @@ sudo iscsiadm -m node -T iqn.2026-11.lan.example:storage.t1 -p 192.168.56.11 -o 
 3. Change server1's initiator name without updating the ACL; see the authorisation failure; fix it.
 4. Log out and delete the node record.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 083` for every step, or `sudo ./checks/check 083 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Enterprise storage arrays** (NetApp, Pure, Dell) present LUNs over iSCSI or Fibre Channel to database and virtualisation hosts.
@@ -187,3 +189,18 @@ sudo iscsiadm -m node -T iqn.2026-11.lan.example:storage.t1 -p 192.168.56.11 -o 
 1. *Target vs initiator?* The target is the storage server that exports LUNs; the initiator is the client that logs in and uses them as local block devices.
 2. *iSCSI vs NFS?* NFS shares files (the server owns the filesystem, and many clients can share it). iSCSI shares raw block devices (the client puts its own filesystem on them, and normally only one client mounts it).
 3. *Why does an iSCSI filesystem need `_netdev` in fstab?* The disk only exists after the network is up and the iSCSI login has completed; `_netdev` tells systemd to mount it after the network.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"An iSCSI LUN mounted on a server works fine, but after every reboot the server hangs at boot or the mount is missing. What's wrong?"*
+
+**Model answer:**
+1. The fstab entry is probably missing **`_netdev`**. systemd tries to mount it as a local disk before the network and the iSCSI login exist, and the boot waits or drops into emergency mode.
+2. Fix the line: `UUID=…  /data  xfs  _netdev,nofail  0 0`, and mount by **UUID**, not `/dev/sdb` (iSCSI disk names change).
+3. Check the initiator's services are enabled: `iscsi` (logs in to saved nodes at boot) and `iscsid`.
+4. Check the node record is set to log in automatically: `iscsiadm -m node -T IQN -o show | grep startup` should show `automatic`.
+5. Test with `systemctl daemon-reload`, `mount -a` and a reboot.
+
+**Likely follow-ups:**
+- *What do the target's ACLs check?* The initiator's IQN (from `/etc/iscsi/initiatorname.iscsi`). Change it, and the login fails with an authorisation error.
+- *Can two servers mount the same iSCSI XFS filesystem?* Not safely. It needs a cluster filesystem (GFS2), or the filesystem gets corrupted.

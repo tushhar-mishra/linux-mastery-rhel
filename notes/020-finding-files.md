@@ -242,7 +242,7 @@ sudo lsof +D /mnt/data        # who is using anything under /mnt/data (why can't
 
 ```bash
 rpm -qf /etc/ssh/sshd_config        # RHEL
-dpkg -S /etc/ssh/sshd_config        # Ubuntu/Debian
+dpkg -S /usr/sbin/sshd              # Ubuntu/Debian (sshd_config itself is generated, owned by no package)
 rpm -ql openssh-server              # list every file a package installed
 ```
 
@@ -252,6 +252,8 @@ rpm -ql openssh-server              # list every file a package installed
 3. List all SUID files and compare the list with a colleague's machine.
 4. Create files `a b.txt` and `c.txt` in `/tmp/x`, then delete them using `find -print0 | xargs -0`.
 5. Install plocate, run `updatedb`, create a new file, and see that `locate` misses it until you run `updatedb` again.
+
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 020` for every step, or `sudo ./checks/check 020 STEP` for one (topic 002 shows how to get the notes there).
 
 ## Where you'll use it
 
@@ -287,3 +289,18 @@ rpm -ql openssh-server              # list every file a package installed
 1. *`find` vs `locate`?* `find` walks the filesystem live with rich criteria and actions. `locate` searches a pre-built index: much faster but possibly out of date.
 2. *`-exec {} \;` vs `-exec {} +`?* `\;` runs the command once per file; `+` passes many files to each run, which is far faster.
 3. *How do you find SUID files?* `find / -xdev -type f -perm -4000 2>/dev/null`.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A security team asks you to list every file changed under `/etc` in the last 24 hours and every SUID binary on the server. How?"*
+
+**Model answer:**
+1. Changed configs: `sudo find /etc -xdev -mtime -1 -type f -ls`. (Use `-mmin -60` for the last hour; `-newer reffile` for "since this time".)
+2. SUID/SGID binaries: `sudo find / -xdev -type f -perm /6000 -ls 2>/dev/null`.
+3. Compare the SUID list with a known-good baseline (or another server built the same way); anything new is suspicious.
+4. For package-owned files, `rpm -Va` (or `debsums`) shows which ones differ from what the package shipped.
+5. `-xdev` keeps `find` off `/proc` and other mounted filesystems, which keeps it fast and quiet.
+
+**Likely follow-ups:**
+- *`-perm -4000` vs `/6000`?* `-` means all the listed bits must be set; `/` means any of them.
+- *Why `-print0 | xargs -0`?* Names with spaces or newlines are passed safely, separated by NUL bytes.

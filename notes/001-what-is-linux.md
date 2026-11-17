@@ -77,6 +77,26 @@ The CPU has a hardware "privilege switch". Code runs in one of two modes:
 4. The kernel copies the data into the program's memory, switches back to user mode and returns a result.
 5. If anything fails, the kernel returns an error code (for example, "permission denied") instead of data.
 
+```mermaid
+sequenceDiagram
+    autonumber
+    participant P as Program (user space)
+    participant G as glibc
+    participant K as Kernel (kernel space)
+    participant D as Disk driver + disk
+    P->>G: read(fd, buffer, 4096)
+    G->>K: system call: CPU switches to kernel mode
+    K->>K: allowed? (permissions, SELinux)
+    alt data already in RAM (page cache)
+        K-->>K: copy from cache
+    else not cached
+        K->>D: fetch the blocks
+        D-->>K: data
+    end
+    K-->>G: bytes read (or an error code such as EACCES)
+    G-->>P: return value, CPU back in user mode
+```
+
 That's why, in production, a tool called `strace` (which shows every system call a program makes) is so powerful. It shows you exactly where a program is stuck talking to the kernel. You'll use it in topic 092.
 
 ### The kernel's main jobs
@@ -246,6 +266,8 @@ avx2
 2. Run `ldd /usr/bin/bash`. Find glibc in the list.
 3. If you also have an Ubuntu machine or container, compare its `/etc/os-release`.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 001` for every step, or `sudo ./checks/check 001 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **First command on any unknown server:** `cat /etc/os-release; uname -r`. It tells you which package tool, config paths and known bugs apply.
@@ -275,3 +297,18 @@ avx2
 1. *Is Linux an operating system?* Strictly it is a kernel. A usable OS is the kernel plus user-space tools (mostly GNU) and applications, packaged as a distribution.
 2. *What is a system call?* The controlled entry point from a user program into the kernel, like `open()`, `read()` or `fork()`. It is the only way a program can touch hardware or other protected resources.
 3. *Monolithic vs microkernel?* A monolithic kernel runs drivers inside the kernel (fast, but a driver bug can crash everything). A microkernel runs them as separate user-space programs (isolated, but slower). Linux is monolithic but loads drivers as modules.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"You're handed SSH access to a server nobody has documented. In the first two minutes, how do you find out what it is?"*
+
+**Model answer:**
+1. `cat /etc/os-release`: the distribution and version (RHEL 10.2, Ubuntu 24.04…). This decides `dnf` vs `apt`, `firewalld` vs `ufw`, SELinux vs AppArmor.
+2. `uname -r`: the running kernel. If it differs from the newest installed one (`rpm -q kernel`), a reboot is pending.
+3. `hostnamectl`: the hostname, whether it's a VM (and which hypervisor), the architecture and firmware.
+4. `uptime` and `who`: how long it has been up, its load, and who else is logged in.
+5. Only then start changing things, knowing which family's tools and paths apply.
+
+**Likely follow-ups:**
+- *Why does knowing the distribution matter so much?* Package tools, config file locations, the firewall and the security module all differ between families. The kernel and shell skills don't.
+- *What's in user space and what's in the kernel?* The kernel: scheduler, memory, filesystems, network stack, drivers. Everything else (shell, sshd, databases) is in user space and asks the kernel through system calls.

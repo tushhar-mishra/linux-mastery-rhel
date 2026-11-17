@@ -182,6 +182,8 @@ stress-ng --hdd 1 --timeout 60s               # watch wa, b, and iostat await
 ```
 Identify each bottleneck from the numbers alone, then check with `top`.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 036` for every step, or `sudo ./checks/check 036 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **"Server is slow" triage:** `uptime` → `vmstat 1` → `iostat -xz 1` → `mpstat -P ALL 1` → `pidstat 1`. This is the core of "the first 60 seconds" (topic 103).
@@ -214,3 +216,18 @@ Identify each bottleneck from the numbers alone, then check with `top`.
 1. *A server is slow. Where do you start?* `uptime` (load vs CPUs), `vmstat 1` (run queue, blocked tasks, swapping, I/O wait, steal), `iostat -xz 1` (disk latency), `mpstat -P ALL` (single hot CPU), then `pidstat`/`top` for the process, then the logs.
 2. *What does high `wa` mean?* CPUs are idle while waiting for I/O, so storage is the bottleneck. Check `iostat -x` for latency and find the process with `pidstat -d`.
 3. *How would you see what happened at 3 AM yesterday?* `sar -f /var/log/sa/saDD -s 03:00:00 -e 04:00:00` with `-u`, `-r`, `-d`, `-q`, then correlate with logs and scheduled jobs.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"Users say the server 'was slow around 3 AM' but it's fine now. How do you investigate something that's already over?"*
+
+**Model answer:**
+1. **sar** history (if sysstat was enabled): `sar -u`, `-q` (load, run queue), `-r` (memory), `-B` (paging), `-d` (disk), `-n DEV` for 02:30–03:30 from `/var/log/sa/saDD`.
+2. The **journal** for that window: `journalctl --since "03:00" --until "03:30"`, especially OOM kills, I/O errors, service restarts.
+3. **Scheduled jobs** at that time: `systemctl list-timers`, cron files, backups, `logrotate`, database maintenance.
+4. Correlate: high `%iowait` and disk await at the same minute as a backup start points at the cause.
+5. If there's no history, enable sysstat (and persistent journal) now, so the next occurrence is captured.
+
+**Likely follow-ups:**
+- *What is the USE method?* For every resource, check Utilization, Saturation and Errors.
+- *Why ignore the first line of `vmstat 1`?* It's the average since boot, not the current state.

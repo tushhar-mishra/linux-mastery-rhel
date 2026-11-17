@@ -272,6 +272,8 @@ sudo tail -f /var/log/nginx/error.log
 3. Proxy without the SELinux boolean first: see the 502, the `connect() … (13: Permission denied)` in the error log, and the AVC. Then fix it.
 4. Add a self-signed certificate (topic 064) and an HTTP→HTTPS redirect.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 078` for every step, or `sudo ./checks/check 078 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **In front of every web application:** TLS, routing by host/path, load balancing, static files, caching, rate limiting.
@@ -306,3 +308,22 @@ sudo tail -f /var/log/nginx/error.log
 1. *What is a reverse proxy, and why use one?* A server that receives client requests and forwards them to backend servers. It centralises TLS, routing, load balancing, caching and security, and hides and protects the backends.
 2. *nginx returns 502 for a proxied app that works when you curl it directly on the server. What do you check on RHEL?* Whether SELinux allows the proxy to connect (`httpd_can_network_connect`, check AVCs), whether the upstream address and port are right, and the nginx error log for the exact upstream error.
 3. *How does a server host several websites on one IP?* Name-based virtual hosting: it picks the site by the HTTP `Host` header (and by SNI for HTTPS certificates).
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"You need to put three app servers behind nginx with TLS, and take one out for maintenance without errors. Describe the setup."*
+
+**Model answer:**
+1. An `upstream app { server 10.0.0.11:8080; server 10.0.0.12:8080; server 10.0.0.13:8080; }` block (round-robin, or `least_conn`).
+2. A `server { listen 443 ssl; … }` with the certificate and key, plus a port-80 server that redirects to HTTPS.
+3. `location / { proxy_pass http://app; }` with `proxy_set_header Host $host` and the `X-Forwarded-For` and `X-Forwarded-Proto` headers.
+4. Passive health checks (`max_fails`, `fail_timeout`) so a dead backend is skipped.
+5. For maintenance, mark one server `down` (or remove it), `nginx -t`, then `systemctl reload nginx`. Reload is graceful: existing connections finish.
+6. On RHEL:
+   - `httpd_can_network_connect` on (for proxying);
+   - the firewall's `https` service open;
+   - the certificate files correctly labelled.
+
+**Likely follow-ups:**
+- *What does 403 usually mean on a static site?* File permissions or SELinux labels, or a missing index file with autoindex off.
+- *How do you serve two sites on one IP?* Name-based virtual hosts (`server_name`), and SNI for HTTPS.

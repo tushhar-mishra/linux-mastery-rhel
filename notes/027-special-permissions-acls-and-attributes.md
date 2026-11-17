@@ -59,7 +59,7 @@ An ACL is stored as an **extended attribute** (extra metadata) on the inode. Whe
 
 **Default ACLs** live on **directories** only. They are copied onto new files and subdirectories created inside, which is how you get inheritance.
 
-XFS and ext4 on RHEL and Ubuntu support ACLs out of the box. Nothing needs to be enabled.
+XFS and ext4 on RHEL and Ubuntu support ACLs out of the box: nothing needs enabling on the filesystem. The `setfacl`/`getfacl` tools come from the `acl` package, which a minimal install may lack (`sudo dnf install acl`, Ubuntu `sudo apt install acl`).
 
 ### File attributes
 
@@ -186,6 +186,8 @@ rm: cannot remove '/etc/resolv.conf': Operation not permitted
 3. Give a single extra user read access to a file with an ACL, then shrink the mask and watch `#effective` change.
 4. Make a file immutable and try to edit it as root.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 027` for every step, or `sudo ./checks/check 027 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Security audits:** the SUID/SGID inventory is part of every hardening baseline. Mount untrusted filesystems (USB sticks, `/tmp`, container volumes) with `nosuid`.
@@ -220,3 +222,19 @@ rm: cannot remove '/etc/resolv.conf': Operation not permitted
 1. *How does `passwd` let a normal user write `/etc/shadow`?* It's owned by root with the SUID bit, so it runs with an effective UID of 0.
 2. *What does SGID on a directory do?* New files and subdirectories inherit the directory's group (and subdirectories also get SGID), so team files stay owned by the team group.
 3. *What is the ACL mask?* The maximum effective permission for named users, named groups and the owning group. The group bits shown by `ls -l` on a file with an ACL are the mask.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"Three teams share `/srv/projects`. Files created by one member must be editable by the rest of their team, and nobody may delete another person's files. Design it."*
+
+**Model answer:**
+1. A group per team, and a directory per team owned by that group: `chgrp devteam /srv/projects/dev`.
+2. **SGID** on the directory (`chmod 2770`): new files inherit the group `devteam` instead of the creator's primary group.
+3. **Sticky bit** (`chmod +t`, so `3770`): only a file's owner (or the directory owner, or root) can delete or rename it.
+4. Group write on new files needs a suitable **umask** (`002`) or, more reliably, a **default ACL**: `setfacl -d -m g:devteam:rwX /srv/projects/dev`.
+5. Extra one-off access (an auditor who may read only) is a named ACL entry: `setfacl -m u:auditor:rX`.
+6. Test as two different users before telling the teams it's done.
+
+**Likely follow-ups:**
+- *Why does `ls -l` show `rwx` for the group, but a named ACL user still can't write?* The ACL **mask** limits named entries; `getfacl` shows `#effective:`.
+- *Why is a SUID shell script ignored?* The kernel ignores SUID on scripts because of race conditions; it only applies to binaries.

@@ -149,6 +149,8 @@ The wrong device or UUID here destroys data.
 3. Export a VG on server1, attach its virtual disk to server2, import and mount it there.
 4. Merge two small VGs and fix the fstab path.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 086` for every step, or `sudo ./checks/check 086 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Storage refreshes:** move every LV off old SAN LUNs or disks onto new ones during business hours.
@@ -184,3 +186,19 @@ The wrong device or UUID here destroys data.
 1. *How do you replace a disk under LVM with no downtime?* Add the new disk as a PV to the VG, `pvmove` the old PV's extents onto it (online), then `vgreduce` the old PV out of the VG and `pvremove` it.
 2. *A disk carrying a VG was attached to a new RHEL 9 server, but `pvs` shows nothing. Why?* RHEL 9/10's LVM devices file limits which devices LVM scans. Add the disk with `vgimportdevices VG` or `lvmdevices --adddev`.
 3. *What happens if `pvmove` is interrupted by a reboot?* Progress is recorded in the LVM metadata, so running `pvmove` again resumes it, or `pvmove --abort` rolls it back. The LV stays usable throughout.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A disk under an important LVM volume is reporting errors. Replace it without downtime."*
+
+**Model answer:**
+1. Attach a new disk at least as large; `pvcreate /dev/vdd`; `vgextend datavg /dev/vdd`.
+2. `pvmove /dev/vdb /dev/vdd`: moves every extent while the LVs stay mounted and in use (it takes a while; it can run in the background with `-b`).
+3. If it's interrupted (reboot), run `pvmove` again to resume, or `pvmove --abort` to roll back.
+4. When `pvs` shows `/dev/vdb` with no used extents: `vgreduce datavg /dev/vdb`, `pvremove /dev/vdb`, then detach the disk.
+5. Verify the data (checksums or the app), `lvs -o +devices`, and update monitoring.
+6. If the disk is failing fast, back up first; `pvmove` must read every block from it.
+
+**Likely follow-ups:**
+- *A VG from another server isn't visible after attaching its disk to a RHEL 9/10 host. Why?* The LVM devices file; add it with `vgimportdevices VG`.
+- *What does `vgexport` do?* Marks the VG as exported, so it isn't activated until it's imported on the new host.

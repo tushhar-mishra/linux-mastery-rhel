@@ -85,7 +85,7 @@ sudo zgrep -c sshd /var/log/messages-20261110
 37
 ```
 - `zgrep` searches compressed **and** plain files, so the same command works however a log was rotated.
-- On RHEL, rotated logs are **not compressed** by default (`#compress` is commented out in `/etc/logrotate.conf`), so you see `messages-20261110` rather than `.gz`. Many sites turn `compress` on; Ubuntu compresses by default (`syslog.2.gz`).
+- On RHEL, rotated logs are **not compressed** by default (`#compress` is commented out in `/etc/logrotate.conf`), so you see `messages-20261110` rather than `.gz`. Many sites turn `compress` on. Ubuntu's global file also has `#compress`, but its `/etc/logrotate.d/rsyslog` sets `compress` + `delaycompress`, so `syslog.1` stays plain and `syslog.2.gz` onwards are compressed.
 
 ### tar
 
@@ -216,6 +216,8 @@ zstd -19 -T0 big.dump               # max compression, all cores
 3. List one archive with `tar -tvf`, then extract a single file from it into `/tmp/restore`.
 4. Try `tar -cvfz x.tar.gz /tmp/proj` and read the error. Then fix the option order.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 021` for every step, or `sudo ./checks/check 021 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Config backups before changes:** `tar czf /root/etc-$(date +%F).tgz -C / etc`.
@@ -251,3 +253,17 @@ zstd -19 -T0 big.dump               # max compression, all cores
 1. *Archiving vs compression?* Archiving bundles many files and their metadata into one (tar). Compression shrinks a single stream of data (gzip, xz, zstd).
 2. *Why does tar remove the leading `/`?* So extraction is relative to the current directory and can't accidentally overwrite live system files.
 3. *How do you copy a directory to another server without a temp file?* `tar -czf - dir | ssh host 'tar -xzf - -C /dest'`.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"You must back up `/etc` and a web root before an upgrade, and be able to restore them exactly, SELinux labels included. What's your command, and how do you know the backup is good?"*
+
+**Model answer:**
+1. As root: `tar --selinux --acls --xattrs -czpf /backup/pre-upgrade-$(date +%F).tgz /etc /var/www`.
+2. Store a checksum: `sha256sum file > file.sha256`, and copy both off the server.
+3. Prove it: `tar -tzf` lists cleanly (no "unexpected end of file"), and a **test restore** into a scratch directory (`-C /tmp/restore`) has the files and labels (`ls -Z`).
+4. A backup you haven't restored from is only a hope.
+
+**Likely follow-ups:**
+- *gzip vs xz vs zstd?* gzip is fast and everywhere; xz is smallest but slow; zstd is fast with good ratios.
+- *How do you copy a directory to another host without a temp file?* `tar -czf - dir | ssh host 'tar -xzf - -C /dest'`.

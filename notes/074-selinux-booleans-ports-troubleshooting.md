@@ -216,6 +216,8 @@ sudo semanage permissive -d httpd_t
 3. Run `audit2why` on a denial and compare its advice with `sealert`'s.
 4. Export your customisations: `sudo semanage export > selinux-local.txt`.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 074` for every step, or `sudo ./checks/check 074 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Reverse proxies** (nginx/Apache → app servers): `httpd_can_network_connect` is the #1 boolean in production.
@@ -247,3 +249,19 @@ sudo semanage permissive -d httpd_t
 1. *What is an SELinux boolean?* A switch in the policy that turns an optional behaviour on or off (for example `httpd_can_network_connect`) without writing policy. `setsebool -P` makes the change permanent.
 2. *What's needed to run Apache on port 8888 on RHEL?* The `Listen 8888` directive, `semanage port -a -t http_port_t -p tcp 8888`, a firewall rule for 8888/tcp, and a restart.
 3. *When is `audit2allow` appropriate?* Rarely: for custom applications, once labels, booleans and ports have been ruled out, and only after reviewing the generated rules. Never for mislabelled files.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"After you configured nginx as a reverse proxy to an app on port 3000, users get 502. The app answers on `curl localhost:3000`. SELinux is enforcing. Walk through it."*
+
+**Model answer:**
+1. nginx's error log: `connect() to 127.0.0.1:3000 failed (13: Permission denied)`. Error 13 when connecting from a web server on RHEL points at SELinux.
+2. Confirm: `ausearch -m AVC -ts recent` shows `denied { name_connect } … scontext=…httpd_t … tcontext=…port_t`.
+3. `audit2why` explains it: the boolean `httpd_can_network_connect` is off.
+4. Fix: `setsebool -P httpd_can_network_connect on` (`-P` makes it permanent).
+   - Narrower alternative: label the port as a web port, `semanage port -a -t http_port_t -p tcp 3000`. The policy already lets `httpd_t` connect to `http_port_t` (through the `httpd_graceful_shutdown` boolean, on by default; check with `sesearch -A -s httpd_t -t http_port_t -c tcp_socket -p name_connect`), so no broad boolean is needed.
+5. Retest, and check there are no new AVCs.
+
+**Likely follow-ups:**
+- *What else does running a web server on port 8888 need?* `semanage port -a -t http_port_t -p tcp 8888`, a firewall rule, and the `Listen`/`listen` directive.
+- *When is `audit2allow` acceptable?* For custom software, after labels, booleans and ports are ruled out, and after reviewing what it generates.

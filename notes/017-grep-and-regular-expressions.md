@@ -270,8 +270,10 @@ first octet: 10
 1. Print only the lines of `app.log` whose level is exactly uppercase `ERROR`.
 2. Count the 2xx responses. (Answer: 3. Hint: `' 2[0-9]{2} '`.)
 3. List the unique host names (`web01`, `db01`, …) sorted. (Hint: `grep -oE '\b(web|db)[0-9]+\b' | sort -u`.)
-4. Show `/etc/ssh/sshd_config` without comments or blank lines.
+4. Show `/etc/ssh/sshd_config` without comments or blank lines. Use `sudo`: on RHEL the file is readable only by root (mode `600`).
 5. Find every file under `/etc` that mentions your hostname.
+
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 017` for every step, or `sudo ./checks/check 017 STEP` for one (topic 002 shows how to get the notes there).
 
 ## Where you'll use it
 
@@ -307,3 +309,18 @@ first octet: 10
 1. *BRE vs ERE?* ERE gives `+ ? | ( ) { }` special meaning without backslashes. In GNU BRE the same operators exist but must be escaped (`\+`, `\|`, `\(`).
 2. *What does `grep -c` count?* Matching lines, not individual matches. For occurrences use `grep -o pattern | wc -l`.
 3. *How do you find which files under /etc contain a string?* `grep -rl 'string' /etc 2>/dev/null`.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"During an incident you have a 2 GB access log. How do you find which client IPs caused the most 5xx errors in the last hour?"*
+
+**Model answer:**
+1. Narrow by time first: `grep '17/Nov/2026:14:' access.log` (or `awk` on the timestamp field).
+2. Keep only 5xx: `grep -E '" 5[0-9]{2} '` (the status code follows the quoted request in the common log format).
+3. Extract the IP (first field) and count: `awk '{print $1}' | sort | uniq -c | sort -rn | head`.
+4. As one line: `grep '17/Nov/2026:14:' access.log | grep -E '" 5[0-9]{2} ' | awk '{print $1}' | sort | uniq -c | sort -rn | head`.
+5. Use `LC_ALL=C grep` on huge files: it's much faster.
+
+**Likely follow-ups:**
+- *Why single-quote the regex?* So the shell doesn't expand `$`, `*`, `{}` or `!` before grep sees them.
+- *How do you show context around a match?* `-A N`, `-B N`, `-C N` lines after, before or around it.

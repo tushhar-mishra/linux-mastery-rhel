@@ -185,6 +185,8 @@ Found a swap file by the name ".app.conf.swp"
 4. Quit **without** saving (`:q!`) and confirm the file is unchanged.
 5. Run `vimtutor` once all the way through.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 010` for every step, or `sudo ./checks/check 010 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Emergency edits** on broken servers: a bad line in `/etc/fstab`, `/etc/hosts` or a service config.
@@ -217,3 +219,18 @@ Found a swap file by the name ".app.conf.swp"
 1. *How do you replace every occurrence of a word in vi?* `:%s/old/new/g`. `%` means all lines, `g` means every match on each line; add `c` to confirm each one.
 2. *What's the difference between `:wq` and `:x`?* Both save and quit, but `:x` writes only if the file changed, so the timestamp is untouched when nothing changed.
 3. *You open a file and see E325 ATTENTION. What does it mean?* A swap file exists: either an earlier vim session crashed (recover with `R`), or someone else is editing the file right now (quit and coordinate).
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"You're editing `/etc/ssh/sshd_config` in vim over SSH and the connection drops. When you reconnect and open the file again, you see E325 ATTENTION. What do you do?"*
+
+**Model answer:**
+1. The swap file (`.sshd_config.swp`) survived because vim didn't exit cleanly. First check that nobody else is editing the file: the warning shows the process ID and whether it's still running.
+2. If the old vim is gone, choose **(R)ecover** to get your unsaved edits back, review them, then `:w`.
+3. Delete the swap file afterwards (choose **(D)elete** next time, or `rm` it), or the warning comes back every time.
+4. Before restarting the service, test the config: `sudo sshd -t`.
+5. For remote work, run long edits inside `tmux` so a dropped connection doesn't kill the editor.
+
+**Likely follow-ups:**
+- *How do you replace a word only on lines 10–20?* `:10,20s/old/new/g`.
+- *How do you quit without saving?* `Esc`, then `:q!`.

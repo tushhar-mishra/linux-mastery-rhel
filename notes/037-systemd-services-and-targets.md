@@ -44,7 +44,7 @@ systemd is the **building manager**. Each unit file is a **job card** ("run the 
 |---|---|
 | `/etc/systemd/system/` | **You**, the admin. Your units and overrides win |
 | `/run/systemd/system/` | Generated at runtime; gone after a reboot |
-| `/usr/lib/systemd/system/` | **Packages**. Never edit these; updates overwrite them (Ubuntu also uses `/lib/systemd/system/`) |
+| `/usr/lib/systemd/system/` | **Packages**. Never edit these; updates overwrite them (on Ubuntu you'll also see `/lib/systemd/system/`: the same directory, through the `/lib → /usr/lib` link) |
 
 systemd reads unit files into memory. **After you edit files by hand, run `systemctl daemon-reload`**, or systemd keeps using the old version.
 
@@ -68,6 +68,17 @@ systemd reads unit files into memory. **After you edit files by hand, run `syste
 | `default.target` | A symlink to whichever target is used at boot | — |
 
 At boot, systemd starts `default.target` and pulls in everything it "wants", recursively, ordering them by their `After=`/`Before=` rules.
+
+```mermaid
+flowchart BT
+    SYS["sysinit.target<br/>(mount /, swap, udev, journald)"] --> BAS["basic.target<br/>(sockets, timers, paths)"]
+    BAS --> MU["multi-user.target<br/>(sshd, crond, chronyd, nginx…)"]
+    MU --> GR["graphical.target<br/>(gdm login screen)"]
+    DEF["default.target<br/>symlink"] -. "points to" .-> MU
+    W["/etc/systemd/system/multi-user.target.wants/sshd.service<br/>(the symlink that 'enable' created)"] -. "pulls in sshd" .-> MU
+```
+
+Read the arrows as "is reached before": a target is only reached once the targets below it are.
 
 `isolate` switches to a target **now**, stopping everything that target doesn't need. `set-default` changes which target is used **at boot**.
 
@@ -121,7 +132,7 @@ Nov 16 13:02:11 server1 sshd-session[4120]: Accepted publickey for alice from 19
 | `systemctl enable --now SVC` | Enable **and** start |
 | `systemctl disable --now SVC` | Disable **and** stop |
 | `systemctl is-active` / `is-enabled` / `is-failed SVC` | One-word answers (good for scripts) |
-| `systemctl mask SVC` / `unmask SVC` | Make it **impossible** to start (links the unit to `/dev/null`) |
+| `systemctl mask SVC` / `unmask SVC` | Make it **impossible** to start: creates `/etc/systemd/system/SVC.service → /dev/null`. Works only for units whose file is **not** already in `/etc/systemd/system` (packaged units in `/usr/lib`) |
 | `systemctl --failed` | Every failed unit |
 | `systemctl list-units --type=service` | Loaded services and their state |
 | `systemctl list-unit-files --type=service` | Every service and whether it's enabled |
@@ -250,7 +261,9 @@ systemd-cgtop
 1. `systemctl list-unit-files --type=service --state=enabled`: what starts at boot on your machine?
 2. Install `nginx` (or `httpd`), `enable --now` it, reboot, and confirm it came back.
 3. Build the heartbeat service, kill it with `-9`, and watch it restart.
-4. `mask` it, try to `start` it (refused), then `unmask` it.
+4. Try `systemctl mask heartbeat` and read the error: the mask is a symlink in `/etc/systemd/system`, where your own unit file already is. Mask a packaged unit instead (`sudo systemctl mask nginx`), try to `start` it (refused), then `unmask` it.
+
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 037` for every step, or `sudo ./checks/check 037 STEP` for one (topic 002 shows how to get the notes there).
 
 ## Where you'll use it
 
@@ -266,6 +279,7 @@ systemd-cgtop
 |---|---|---|
 | Service missing after a reboot | Started but never enabled | `systemctl enable --now SVC` |
 | `Failed to start …: Unit … is masked` | It was masked | `systemctl unmask SVC` |
+| `Failed to mask unit: File /etc/systemd/system/SVC.service already exists` | The unit is your own file in `/etc/systemd/system`; the mask symlink would have to replace it | Use `systemctl disable` (and stop it), or move the unit file to `/usr/local/lib/systemd/system/` if you really need to mask it |
 | Your edits to a unit are ignored | systemd still has the old file in memory | `systemctl daemon-reload` |
 | `Active: failed` | The program exited with an error | `systemctl status SVC`, `journalctl -u SVC -b -e` (topic 038); deep dive in topic 098 |
 | `status=203/EXEC` | `ExecStart` path wrong, file not executable, or blocked by SELinux | Check the path, `chmod +x`, `ls -Z` (topic 073) |
@@ -285,3 +299,19 @@ systemd-cgtop
 1. *`systemctl enable` vs `start`?* `start` runs the service now; `enable` makes it start at boot by creating a symlink in the target's `.wants` directory. `enable --now` does both.
 2. *What does `mask` do?* It links the unit to `/dev/null`, so it can't be started at all, even as a dependency of another unit.
 3. *Rescue vs emergency target?* Rescue mounts all local filesystems and starts a minimal set of services. Emergency mounts only the root filesystem, read-only, and starts almost nothing.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"After a reboot for patching, the application didn't come back, though it was running fine before. What happened, and how do you prevent it?"*
+
+**Model answer:**
+1. `systemctl is-enabled app`: most often it was **started but never enabled**, so nothing started it at boot.
+2. If it is enabled: `systemctl status app` and `journalctl -b -u app` show why it failed at boot. Common reasons:
+   - it started before something it needs: network, a mount, the database (missing `After=`/`Wants=`);
+   - a config change made before the reboot was never tested.
+3. Fix the cause; for ordering, add `After=network-online.target` + `Wants=`, or `RequiresMountsFor=/data`.
+4. `systemctl enable --now app`, and include a reboot test in changes like this.
+
+**Likely follow-ups:**
+- *What's the difference between `mask` and `disable`?* `disable` removes the boot-time symlink; `mask` prevents the unit being started at all.
+- *Why `daemon-reload`?* systemd caches unit files; it must re-read them after you edit them.

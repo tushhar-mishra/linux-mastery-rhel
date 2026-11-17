@@ -171,6 +171,8 @@ sudo nmcli con up path2 ; sleep 10 ; sudo multipath -ll | grep -E 'sd[bc]'
 3. Run a `dd` loop while you take a path down and bring it back. No errors should appear.
 4. Give the LUN a friendly alias.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 084` for every step, or `sudo ./checks/check 084 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Every SAN-attached server** (Fibre Channel or iSCSI) in enterprise data centres: databases, hypervisors, SAP.
@@ -200,3 +202,22 @@ sudo nmcli con up path2 ; sleep 10 ; sudo multipath -ll | grep -E 'sd[bc]'
 1. *What problem does multipath solve?* Redundant (and optionally load-balanced) access to one storage LUN over several physical paths, with transparent failover when a path fails.
 2. *How does multipath know two disks are the same LUN?* They report the same SCSI WWID.
 3. *Why must you not use `/dev/sdb` directly on a multipathed system?* It's a single path; if that path fails, I/O fails. The `/dev/mapper/mpathX` device survives path failures.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A SAN-attached server shows the same 1 TB LUN as `/dev/sdb`, `/dev/sdc`, `/dev/sdd` and `/dev/sde`. Someone created LVM on `/dev/sdb`. What's the risk, and how do you fix it?"*
+
+**Model answer:**
+1. Four disks with the same WWID are **four paths** to one LUN. Using `/dev/sdb` directly means:
+   - all I/O depends on one path, and if it fails, the filesystem fails;
+   - LVM may see "duplicate PVs" on the other paths and pick inconsistently.
+2. Fix:
+   - install and enable multipath (`mpathconf --enable --with_multipathd y`);
+   - check `multipath -ll` shows one `mpathX` device with 4 paths;
+   - make LVM use only the mpath device: on RHEL 9/10, `lvmdevices` should list `/dev/mapper/mpathX`, not the `sdX` paths.
+3. Plan this in a maintenance window: deactivate the VG, enable multipath, reactivate on the mpath device, and update fstab (`_netdev`).
+4. Test by taking one path down during I/O: no errors should reach the application.
+
+**Likely follow-ups:**
+- *How does multipath know paths belong together?* They report the same WWID.
+- *What's `find_multipaths` for?* It stops multipath grabbing ordinary single-path local disks.

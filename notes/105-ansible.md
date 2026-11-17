@@ -213,6 +213,8 @@ ansible-playbook -i inventory.ini site.yml --ask-vault-pass
 3. Template an nginx config with `ansible.builtin.template` and a `validate: nginx -t -c %s`, plus a handler that reloads nginx.
 4. Change something by hand, then catch it with `--check --diff`.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 105` for every step, or `sudo ./checks/check 105 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Server fleets:** baselines, patching, user management, compliance (CIS hardening roles).
@@ -244,3 +246,18 @@ ansible-playbook -i inventory.ini site.yml --ask-vault-pass
 1. *What makes Ansible idempotent?* Its modules check the current state and change only what differs from the desired state, so re-running a playbook on a correct system reports `changed=0`.
 2. *Agent-based vs agentless?* Ansible is agentless: it connects over SSH and runs short-lived Python modules, so nothing needs to run permanently on managed hosts (unlike Puppet or Chef agents).
 3. *How do you safely change a service's config file with Ansible?* Template or copy it with `validate:` (e.g. `nginx -t -c %s`) so an invalid file is never installed, and notify a handler that reloads the service only if the file changed. Preview first with `--check --diff`.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"Someone changed an nginx setting by hand on 3 of your 40 Ansible-managed servers. How do you find them and put them back, safely?"*
+
+**Model answer:**
+1. Run the playbook in **check mode with diff**: `ansible-playbook site.yml --check --diff --limit webservers`. The drifted servers show `changed` with the exact diff; the rest show `ok`.
+2. Review the diffs. Maybe the hand change was a real fix that belongs in the playbook instead.
+3. Apply for real. The template task uses `validate: nginx -t -c %s` so a bad file is never installed, and notifies a handler that **reloads** nginx only on the changed hosts.
+4. Roll out with `serial:` batches, so a mistake doesn't hit all 40 at once.
+5. Prevent: run the playbook on a schedule (or check mode with alerts), and reduce manual access.
+
+**Likely follow-ups:**
+- *What makes a task idempotent?* The module checks the current state and only changes what differs; the second run reports `changed=0`.
+- *Why avoid `shell:` tasks?* They usually aren't idempotent and report `changed` every run, unless you add `creates:` or `changed_when:`.

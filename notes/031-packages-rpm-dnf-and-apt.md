@@ -273,6 +273,8 @@ S.5....T.  c /etc/ssh/sshd_config
 3. Install a package, then undo it with `dnf history undo`.
 4. Build the offline DVD repo, disable the network repos with `--disablerepo='*' --enablerepo='dvd-*'`, and install `zsh`.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 031` for every step, or `sudo ./checks/check 031 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Patching:** `dnf upgrade --security` on a schedule, tested in staging first. In large fleets this is driven by Ansible (topic 105) or Red Hat Satellite.
@@ -308,3 +310,22 @@ S.5....T.  c /etc/ssh/sshd_config
 1. *rpm vs dnf?* rpm installs, queries and verifies single package files but doesn't resolve dependencies. dnf works with repositories, resolves dependencies, verifies signatures and keeps a transaction history.
 2. *How do you find which package provides a command?* `dnf provides cmd` (or the full path, e.g. `dnf provides /usr/sbin/semanage`) (or `rpm -qf $(command -v cmd)` if it's already installed; `dpkg -S` on Ubuntu).
 3. *How do you undo a bad update?* `dnf history` to find the transaction, then `dnf history undo <id>`. For big changes, prefer a VM or LVM snapshot taken beforehand.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"`dnf update` on a production server fails with a dependency conflict halfway through your maintenance window. What do you do?"*
+
+**Model answer:**
+1. Read the message: which package needs what, and from which repo. Often a third-party repo (EPEL, a vendor repo) has a newer or conflicting package.
+2. `dnf repolist` and `dnf list --showduplicates pkg` show where versions come from.
+3. Options, safest first:
+   - update everything else and exclude the problem package (`--exclude=pkg`);
+   - temporarily disable the offending repo (`--disablerepo=epel`);
+   - wait for the vendor's fix.
+4. **Never** force it with `rpm -Uvh --nodeps`; that leaves an inconsistent system.
+5. If something already broke, `dnf history` shows the transaction and `dnf history undo N` reverses it (or roll back to the snapshot you took first).
+6. Afterwards: check services, `needs-restarting -r` for a reboot, and note the issue for the next window.
+
+**Likely follow-ups:**
+- *How do you find which package owns a file?* `rpm -qf /path` (Ubuntu: `dpkg -S`).
+- *How do you check whether someone changed packaged files?* `rpm -V pkg` (or `rpm -Va`): codes like `S.5....T. c` show size, checksum and time changes on config files.

@@ -167,6 +167,8 @@ sudo tune2fs -U random /dev/vdc2         # ext4
 3. Run `tune2fs -l` on the ext4 one and find the reserved block count.
 4. Change the ext4 label with `e2label`, and the XFS label with `xfs_admin` (it must be unmounted).
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 047` for every step, or `sudo ./checks/check 047 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Every new disk or volume:** `mkfs`, then mount (next topic).
@@ -200,3 +202,17 @@ sudo tune2fs -U random /dev/vdc2         # ext4
 1. *What is journaling?* The filesystem writes a description of each metadata change to a log before applying it, so after a crash it can replay or discard incomplete changes in seconds instead of checking the whole disk.
 2. *Can you shrink XFS?* No. Back up, recreate the filesystem smaller, and restore. ext4 can be shrunk, but only while unmounted.
 3. *Why does ext4 show less free space than size minus used?* 5% of blocks are reserved for root by default, so system services and the admin can still work when users fill the disk.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"You need a filesystem for a new volume that will hold logs now but may need to shrink later. XFS or ext4? Defend the choice."*
+
+**Model answer:**
+1. **XFS** (RHEL's default) is excellent for large files and parallel I/O, and it grows online, but it **can never shrink**.
+2. **ext4** grows online and **can shrink** (offline, with `resize2fs` or `lvreduce -r`).
+3. If shrinking is a real requirement, choose ext4. Otherwise XFS on LVM, sized modestly and grown when needed, avoids the problem: it's easier to grow later than to shrink.
+4. Either way, put it on LVM so growing is one command, and label it (`-L`) so it's easy to identify.
+
+**Likely follow-ups:**
+- *ext4 shows less free space than expected. Why?* 5% of blocks are reserved for root (`tune2fs -m` changes it).
+- *What does `mkfs` do to the old data?* It writes new structures over the old ones; the old data is mostly still there but unreachable, so it's not a secure erase.

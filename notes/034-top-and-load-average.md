@@ -164,6 +164,8 @@ Swap:          2.0Gi          0B       2.0Gi
 3. Run `dd if=/dev/zero of=/tmp/big bs=1M count=3000 oflag=direct` in one window and watch `wa` rise in top. Delete `/tmp/big` afterwards.
 4. Save a snapshot with `top -b -n 1 > /tmp/top-$(date +%F_%H%M).txt`.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 034` for every step, or `sudo ./checks/check 034 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **First 60 seconds on a slow server** (topic 103): `uptime` → `top` → which CPU state is high → which process.
@@ -197,3 +199,18 @@ Swap:          2.0Gi          0B       2.0Gi
 1. *What does load average measure on Linux?* Smoothed 1/5/15-minute averages of tasks that are runnable or in uninterruptible sleep. Because it includes `D` state, I/O stalls raise the load even when CPUs are idle.
 2. *Load is 8 on a server. Is that bad?* It depends on the CPU count and the cause. On 16 CPUs it's fine; on 2 it's overloaded. If `wa` is high, the problem is storage, not CPU.
 3. *Why is "free" memory always low on Linux?* The kernel uses spare RAM as page cache. That memory is reclaimed when needed, so "available" is the real headroom.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A 4-CPU server shows a load average of 12, but top shows the CPUs 70% idle. Explain."*
+
+**Model answer:**
+1. Linux load counts tasks that are runnable **and** tasks in uninterruptible sleep (**D**), usually waiting for disk or NFS.
+2. With idle CPUs, the load is coming from **D-state tasks**: check `wa` in top and the `b` column in `vmstat 1`.
+3. List them: `ps -eo state,pid,wchan:20,cmd | awk '$1=="D"'`. The wait channel often names the subsystem (NFS, the block layer, XFS).
+4. Then look at storage: `iostat -xz 1` (await, aqu-sz), `dmesg` for disk or NFS errors, `nfsstat`/mount state.
+5. If `st` (steal) were high instead, the hypervisor is short of CPU.
+
+**Likely follow-ups:**
+- *What's the difference between `RES` and `VIRT`?* RES is memory really in RAM; VIRT is all mapped address space, much of it never used.
+- *How do you capture top for a ticket?* `top -b -n 1 > file`.

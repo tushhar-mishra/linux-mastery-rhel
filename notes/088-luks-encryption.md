@@ -151,6 +151,8 @@ sudo wipefs -a /dev/vdb
 3. Change the passphrase with `luksChangeKey`; confirm the files are untouched.
 4. Corrupt the header in a **throwaway** lab (`dd if=/dev/zero of=/dev/vdb bs=1M count=16`), see that it won't open, then restore it from the header backup.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 088` for every step, or `sudo ./checks/check 088 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Laptops and workstations:** full-disk encryption at install time.
@@ -184,3 +186,18 @@ sudo wipefs -a /dev/vdb
 1. *Where is the LUKS encryption key stored?* The random master key is stored in the on-disk LUKS header, encrypted separately in each keyslot by a passphrase- or key-file-derived key.
 2. *How do you change a LUKS passphrase without re-encrypting the disk?* `cryptsetup luksChangeKey` (or add a new key and remove the old one). Only the keyslot changes; the master key and data stay the same.
 3. *How can an encrypted server reboot without someone typing a passphrase?* Network-Bound Disk Encryption (Clevis + Tang), which unlocks only while the trusted Tang server is reachable, or binding the key to the machine's TPM2 chip.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A colleague accidentally ran `mkfs` on the first few megabytes of a LUKS-encrypted data disk. Is the data lost?"*
+
+**Model answer:**
+1. The **LUKS header** (first 16 MiB for LUKS2) holds the keyslots that wrap the master key. If it's overwritten, the passphrase alone can't unlock the disk, and the data is effectively gone.
+2. **Unless you have a header backup:** `cryptsetup luksHeaderRestore /dev/vdb --header-backup-file hdr.img` puts it back, and the old passphrases work again.
+3. Then `cryptsetup open` and check the filesystem inside (it may have been hit too: `xfs_repair -n`).
+4. Without a backup, restore the data from backups.
+5. Lesson: `cryptsetup luksHeaderBackup` right after `luksFormat` (and after every keyslot change), stored **off** the disk.
+
+**Likely follow-ups:**
+- *How do you change the passphrase without re-encrypting?* `cryptsetup luksChangeKey` (only the keyslot changes).
+- *What does LUKS protect against?* Data at rest: a stolen disk or a decommissioned drive. Not a running, unlocked server.

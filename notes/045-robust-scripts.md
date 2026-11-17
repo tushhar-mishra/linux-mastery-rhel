@@ -214,6 +214,8 @@ Move to Python (or Go, or Ansible) when you need real data structures, JSON/YAML
 3. Run ShellCheck on three scripts you wrote earlier and fix every finding.
 4. Turn the script into a systemd service + timer with `Persistent=true` (topic 039).
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 045` for every step, or `sudo ./checks/check 045 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Backup, cleanup and maintenance jobs** that run from timers.
@@ -245,3 +247,22 @@ Move to Python (or Go, or Ansible) when you need real data structures, JSON/YAML
 1. *Is `set -e` enough to make a script safe?* No. It's ignored in conditions and `&&`/`||` lists, `local var=$(cmd)` hides failures, and without `pipefail` only the last pipeline stage counts. Check important commands explicitly.
 2. *How do you make sure a script cleans up its temp files even when interrupted?* Create them with `mktemp`, delete them in `trap '…' EXIT`, and add `trap 'exit 130' INT TERM` so signals also go through the EXIT trap.
 3. *How do you stop a cron job from overlapping with itself?* Take a lock with `flock -n` on a lock file at the start (or run it as a systemd timer, which won't start a second instance of a running service).
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"Review this production cron job for me: it backs up a database to `/backup/db.sql`, then deletes backups older than 7 days. What would you check before trusting it?"*
+
+**Model answer:**
+1. **Failure handling:**
+   - `set -Eeuo pipefail`, so `mysqldump | gzip` fails if the dump fails;
+   - an explicit check before the "delete old backups" step, so a failed backup never deletes the good ones.
+2. **Atomic writes:** dump to a temp file (`mktemp` in the same directory), then `mv` it into place. A half-written file is never mistaken for a backup.
+3. **No overlap:** `flock -n /run/lock/dbbackup.lock` so a slow run and the next run don't collide.
+4. **Cleanup:** `trap 'rm -f "$tmp"' EXIT`.
+5. **Safe deletion:** `find /backup -name 'db-*.sql.gz' -mtime +7 -delete` with a quoted pattern and a fixed directory, never a variable that could be empty.
+6. **Visibility:** log to the journal or a file, exit non-zero on failure, and alert on a **missing** recent backup.
+7. **Restore test:** it isn't a backup until a restore has worked.
+
+**Likely follow-ups:**
+- *Why is `local out=$(cmd)` a trap?* `local` succeeds, hiding `cmd`'s failure from `set -e`. Declare first, assign separately.
+- *What does ShellCheck add?* It catches quoting bugs, unused variables, wrong tests and portability problems before they run.

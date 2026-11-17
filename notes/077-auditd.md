@@ -162,6 +162,8 @@ Security profiles (CIS, STIG) from the `scap-security-guide` package include com
 3. Run `aureport --summary` and `aureport -au --failed`.
 4. Check `auditctl -s` for `lost` events.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 077` for every step, or `sudo ./checks/check 077 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Compliance:** CIS/STIG/PCI rule sets on regulated servers; audit logs shipped off-host to a SIEM (Security Information and Event Management system, such as Splunk or Elastic) where they can't be tampered with.
@@ -195,3 +197,20 @@ Security profiles (CIS, STIG) from the `scap-security-guide` package include com
 1. *Why use auditd rather than shell history or syslog?* It records events in the kernel, so a user's shell can't skip or edit them; it keeps the original login identity (auid); and it can be locked with immutable mode.
 2. *What is the auid?* The login UID set by PAM at login. It's inherited by every process in the session and isn't changed by su or sudo, so actions done as root are still attributed to the real person.
 3. *How would you track changes to `/etc/sudoers`?* Add `-w /etc/sudoers -p wa -k privileged` (and the same for `/etc/sudoers.d/`) in `/etc/audit/rules.d/`, load with `augenrules --load`, then search with `ausearch -k privileged -i`.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"Someone changed `/etc/sudoers` last night and nobody admits it. How would auditd have caught it, and how do you set that up for next time?"*
+
+**Model answer:**
+1. If a watch existed: `ausearch -k privileged -i -ts yesterday` would show the time, the program (e.g. `vi`), the UID (root) **and the auid**: the person who originally logged in before using sudo.
+2. Without a rule, check other sources: `/var/log/secure` for sudo usage around that time, `journalctl`, file timestamps (`stat`), and session recordings if any.
+3. Set it up:
+   - put `-w /etc/sudoers -p wa -k privileged` and `-w /etc/sudoers.d/ -p wa -k privileged` in `/etc/audit/rules.d/privileged.rules`;
+   - load with `augenrules --load`;
+   - check with `auditctl -l`.
+4. Forward audit logs to a central server, so someone with root on the box can't delete the evidence; consider `-e 2` (immutable rules).
+
+**Likely follow-ups:**
+- *What is the auid?* The login UID, set at login and unchanged by su/sudo.
+- *How do you check auditd isn't dropping events?* `auditctl -s`: watch `lost` and the backlog.

@@ -44,6 +44,21 @@ firewall-cmd / Cockpit ──(D-Bus)──► firewalld daemon ──► nftable
 - **Defaults on RHEL:** firewalld enabled; zone `public` allows `ssh`, `dhcpv6-client` and `cockpit` incoming; everything else incoming is rejected; all outgoing traffic is allowed.
 - **Reject vs drop:** `reject` replies "port unreachable", so the client fails instantly with "Connection refused". `drop` stays silent, so the client waits and gets "Connection timed out". That difference tells you, from the client side, what kind of filtering you're hitting.
 
+The path of an incoming packet:
+
+```mermaid
+flowchart TD
+    IN["packet arrives on eth0"] --> PR["prerouting hook<br/>(DNAT / port forwards)"]
+    PR --> RD{"routing decision:<br/>for this machine?"}
+    RD -- "yes" --> CT{"conntrack: part of a<br/>connection we already allowed?"}
+    CT -- "yes (ESTABLISHED, RELATED)" --> ACC(["accept → the socket"])
+    CT -- "no (NEW)" --> Z{"zone: source-bound zone?<br/>else the interface's zone?<br/>else the default zone"}
+    Z --> RULES{"service, port or<br/>rich rule allows it?"}
+    RULES -- "yes" --> ACC
+    RULES -- "no" --> REJ(["reject (public) or<br/>drop (drop zone)"])
+    RD -- "no, ip_forward=1" --> FW["forward hook<br/>(policies between zones)"] --> POST["postrouting<br/>(masquerade / SNAT)"] --> OUT["out another interface"]
+```
+
 ### Zones
 
 | Zone | Incoming traffic |
@@ -222,6 +237,8 @@ sudo ufw status verbose
 3. Turn on `--set-log-denied=all` and watch the kernel log while a blocked connection is attempted.
 4. Look at `nft list ruleset` and find your rich rule.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 071` for every step, or `sudo ./checks/check 071 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Every server:** open exactly what's served (80/443 on web servers, 5432 to app servers only on databases), restrict admin ports by source.
@@ -256,3 +273,18 @@ sudo ufw status verbose
 1. *Runtime vs permanent in firewalld?* Runtime rules take effect immediately but are lost on reload or reboot. Permanent rules are saved to disk and take effect after `firewall-cmd --reload`.
 2. *How would you allow HTTP only from 10.0.0.0/8?* Don't add the http service to the zone; instead add a rich rule: `rule family="ipv4" source address="10.0.0.0/8" service name="http" accept` (or bind that source to a zone that allows http).
 3. *A client gets "Connection timed out" vs "Connection refused". What does each suggest?* Timed out = packets are being silently dropped (a firewall `drop` rule or no route). Refused = a reply came back, so either nothing is listening on the port or a firewall is rejecting it.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"You opened port 8080 with `firewall-cmd --add-port=8080/tcp` yesterday. Today, after a reboot, it's closed again, and a second port you opened permanently doesn't work either. Explain both."*
+
+**Model answer:**
+1. Without `--permanent`, the rule was **runtime only**; a reboot (or `--reload`) loads the saved configuration, which never had it.
+2. A `--permanent` rule is saved, but **isn't active until `--reload`** (or a reboot). So "added permanently, doesn't work yet" usually means no reload.
+3. The usual pattern: `firewall-cmd --permanent --add-port=8080/tcp && firewall-cmd --reload`, or apply runtime first, test, then `--runtime-to-permanent`.
+4. Also check the **zone**: `--get-active-zones`. If the interface or source is in another zone, the rule must go there (`--zone=…`).
+5. Verify with `firewall-cmd --list-all --zone=…`, and from **another host** (local tests don't pass the input chain the same way).
+
+**Likely follow-ups:**
+- *Refused vs timed out from the client?* Refused = a reply came (reject or nothing listening). Timed out = silently dropped.
+- *How do you allow a service only from one subnet?* A rich rule with `source address=…`, or bind that source to a zone that allows the service.

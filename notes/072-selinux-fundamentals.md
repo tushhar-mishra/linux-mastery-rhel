@@ -36,6 +36,20 @@ DAC is **door locks** that each office owner controls; the building manager (roo
 1. **DAC first:** rwx bits, owner, ACLs. If DAC denies → "Permission denied", and SELinux isn't even asked.
 2. **Then SELinux:** the kernel looks up (process domain, object type, object class, permission) in the policy. No allow rule → **denied**, and an AVC denial is logged. Allowed decisions are cached in the AVC.
 
+```mermaid
+flowchart TD
+    REQ["httpd (httpd_t) wants to read<br/>/var/www/html/index.html"] --> DAC{"DAC: rwx bits,<br/>owner, ACLs allow it?"}
+    DAC -- "no" --> D1(["Permission denied<br/>(no AVC logged)"])
+    DAC -- "yes" --> MODE{"SELinux enforcing?"}
+    MODE -- "disabled" --> OK(["allowed"])
+    MODE -- "enforcing or permissive" --> POL{"policy: allow httpd_t<br/>file type : file { read }?"}
+    POL -- "yes" --> OK
+    POL -- "no" --> AVC["AVC denial written to<br/>/var/log/audit/audit.log"]
+    AVC --> PM{"permissive?"}
+    PM -- "yes" --> OK2(["allowed anyway<br/>(only logged)"])
+    PM -- "no" --> D2(["Permission denied<br/>(403 for a web page)"])
+```
+
 So when "permissions look correct" but you still get "Permission denied", think SELinux.
 
 ### The context (label): `user:role:type:level`
@@ -206,6 +220,8 @@ Profiles live in `/etc/apparmor.d/`. Docker and snap packages use AppArmor profi
 3. Watch the `passwd` domain transition with `ps -eZ`.
 4. Create `~/index.html`, **`mv`** it to `/var/www/html/`, request it with `curl localhost` (403 Forbidden), then find the AVC denial with `ausearch`. (The fix is in topic 073.)
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 072` for every step, or `sudo ./checks/check 072 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Every RHEL production server runs enforcing.** Teams that disable it to "make things work" lose a major defence, and security audits (CIS, STIG, PCI) flag it.
@@ -237,3 +253,23 @@ Profiles live in `/etc/apparmor.d/`. Docker and snap packages use AppArmor profi
 1. *DAC vs MAC?* DAC lets the owner decide permissions, and root bypasses them. MAC applies a system-wide policy that users and even root-owned processes can't override.
 2. *Which part of the SELinux context matters most in the targeted policy?* The type: the domain for processes and the type for files. Type enforcement rules decide which domain may access which type.
 3. *An app works with `setenforce 0` but not enforcing. What next?* Read the AVC denial (`ausearch -m avc`, `sealert`), then fix the cause properly: restore or define the correct file label, enable the right boolean, or label the port. Then return to enforcing.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A vendor's install guide says 'Step 1: disable SELinux'. Your security policy says SELinux stays enforcing. How do you handle it?"*
+
+**Model answer:**
+1. Don't disable it. Install in a test VM with SELinux **enforcing**, and see what actually breaks.
+2. If it fails, find the denials: `ausearch -m AVC -ts recent` (or `sealert -a /var/log/audit/audit.log`).
+3. Fix each one with the normal tools, in this order:
+   - correct file labels (`semanage fcontext` + `restorecon`);
+   - booleans (`setsebool -P`);
+   - port labels (`semanage port`);
+   - only if all of those fail, a small reviewed custom module.
+4. For diagnosis, make just that one domain permissive (`semanage permissive -a vendor_t`) rather than the whole system.
+5. Document the changes so they're reproducible (Ansible), and give the vendor the list.
+6. Disabling it would remove a layer that contains break-ins, and turning it back on later needs a full relabel.
+
+**Likely follow-ups:**
+- *Which part of the context matters most?* The type (the domain for processes).
+- *Is permissive mode safe in production?* No. Nothing is enforced; it's for short diagnosis only.

@@ -146,6 +146,8 @@ system_u:system_r:svirt_t:s0:c12,c540  7812 ?   00:01:22 qemu-kvm
 3. Attach a second disk and partition it inside the guest (topics 046–049).
 4. Compare the qemu process's SELinux label and its disk file's label (`ls -Z /var/lib/libvirt/images`).
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 100` for every step, or `sudo ./checks/check 100 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Home and work labs:** multi-VM setups (client/server, clusters) on one machine.
@@ -177,3 +179,20 @@ system_u:system_r:svirt_t:s0:c12,c540  7812 ?   00:01:22 qemu-kvm
 1. *What are KVM, QEMU and libvirt?* KVM is the kernel hypervisor module using CPU virtualisation extensions; QEMU is the per-VM user-space process emulating devices; libvirt is the management API and tools (`virsh`, `virt-install`, Cockpit).
 2. *How does a KVM VM appear on the host?* As one `qemu-kvm` process, with each vCPU as a thread and guest RAM as process memory, scheduled and limited like any process.
 3. *What is sVirt?* SELinux protection for VMs: each VM's process and disk images get a unique MCS category pair, so one compromised VM can't access another's disks.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A KVM host has 20 VMs, and one of them is starving the others of CPU and disk. How do you find it and contain it?"*
+
+**Model answer:**
+1. Each VM is a `qemu-kvm` process (each vCPU a thread). `top` or `pidstat -u 1` on the host shows which process; `virsh list` plus `ps -o pid,cmd` maps the PID to the VM name (`-name guest=…`).
+2. Per-VM statistics: `virsh domstats --cpu-total --block VM`, and `virt-top` if installed.
+3. Disk: `iotop` or `pidstat -d` on the host for the qemu process; `virsh domblkstat VM vda`.
+4. Contain it through libvirt, which applies **cgroup** limits:
+   - CPU: `virsh schedinfo VM --set vcpu_quota=50000 --live --config`, or fewer vCPUs;
+   - disk: `virsh blkdeviotune VM vda --total-iops-sec 500 --live --config`.
+5. Find out why inside the guest (a runaway job), and consider pinning or placement for noisy workloads.
+
+**Likely follow-ups:**
+- *What are KVM, QEMU and libvirt?* The kernel hypervisor, the per-VM device-emulating process, and the management layer.
+- *What is sVirt?* SELinux MCS labels per VM, so one VM's process can't open another's disk images.

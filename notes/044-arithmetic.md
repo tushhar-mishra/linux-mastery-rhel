@@ -156,6 +156,8 @@ expr 5 \* 3      # * must be escaped
 3. Try `m=08; echo $((m+1))`, read the error, and fix it with `10#`.
 4. Convert bytes to GiB with 2 decimals using `bc`.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 044` for every step, or `sudo ./checks/check 044 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Thresholds in monitoring scripts:** usage percentages, free-space checks, error rates.
@@ -187,3 +189,17 @@ expr 5 \* 3      # * must be escaped
 1. *How do you do arithmetic in bash?* `$(( expression ))` to get a value, `(( expression ))` for tests and in-place changes like `((i++))`.
 2. *Can bash do decimal maths?* No, bash arithmetic is integer-only. Use `bc`, `awk` or another language.
 3. *Why does `$((08 + 1))` fail?* A leading zero makes bash read the number as octal, where 8 is invalid. Use `$((10#08 + 1))`.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A disk-usage alert script works all month, then on the 8th and 9th it fails with 'value too great for base'. What's wrong?"*
+
+**Model answer:**
+1. The script does arithmetic on a date part (`day=$(date +%d)` → `08`).
+2. In `$(( ))`, a leading zero means **octal**, and 8 and 9 aren't octal digits.
+3. Fix: force base 10, `$((10#$day))`, or ask `date` for no padding (`date +%-d`).
+4. Also remember that bash arithmetic is **integer only**: percentages like `used*100/total` must multiply before dividing, or use `awk`/`bc` for decimals.
+
+**Likely follow-ups:**
+- *How do you print 2 decimal places?* `awk 'BEGIN{printf "%.2f\n", 7/3}'` or `echo "scale=2; 7/3" | bc`.
+- *What does `(( count > 5 ))` return?* Exit status 0 (true) or 1 (false), so it can go straight into an `if`.

@@ -174,6 +174,8 @@ exit 0
 3. Write a `case` menu that runs `date`, `uptime` or `df -h` for inputs 1, 2, 3, and handles anything else.
 4. Check whether a user exists, and create it only if not.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 042` for every step, or `sudo ./checks/check 042 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Validating input** at the top of every script (argument count, file exists, value is a number).
@@ -206,3 +208,17 @@ exit 0
 1. *`[ ]` vs `[[ ]]`?* `[` is a POSIX command whose arguments undergo word splitting, so variables must be quoted and `<`/`>` escaped. `[[ ]]` is a bash keyword: no splitting, `&&`/`||` inside, glob matching with `==` and regex with `=~`.
 2. *How does `if` decide true or false?* It runs a command and checks the exit status: 0 is true, anything else is false.
 3. *Why must you quote variables inside `[ ]`?* An empty or space-containing variable changes the number of arguments: `[ -e $f ]` with an empty `f` becomes `[ -e ]`, which is true, and `[ $a = b ]` with spaces gives "too many arguments".
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"This check reports 'file exists' even when the variable is empty: `if [ -e $CONFIG ]; then …`. Explain, and fix it."*
+
+**Model answer:**
+1. With `CONFIG` empty, the unquoted variable disappears and the test becomes `[ -e ]`.
+2. A test with a single argument is true whenever that argument is non-empty, and `-e` is a non-empty string, so it's **true**.
+3. Fix: quote it, `[ -e "$CONFIG" ]` (now `[ -e "" ]`, which is false), or use `[[ -e $CONFIG ]]`, which doesn't split words.
+4. Better still, check for empty explicitly: `[ -n "$CONFIG" ] && [ -e "$CONFIG" ]`, or `: "${CONFIG:?CONFIG must be set}"`.
+
+**Likely follow-ups:**
+- *How do you compare numbers vs strings?* `-eq -lt -gt` (or `(( a < b ))`) for numbers; `=` and `!=` for strings. `[ 10 \< 9 ]` compares as text.
+- *How do you match a pattern in a condition?* `[[ $file == *.log ]]`, or a regex: `[[ $ip =~ ^[0-9.]+$ ]]`.

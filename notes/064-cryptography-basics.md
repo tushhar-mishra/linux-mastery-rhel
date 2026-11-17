@@ -167,6 +167,8 @@ sudo update-ca-trust
 3. Create a self-signed certificate and look at it with `openssl x509 -text -noout`.
 4. Encrypt and decrypt a file with `gpg -c`.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 064` for every step, or `sudo ./checks/check 064 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **SSH keys** (topic 065): Ed25519 key pairs, host-key verification.
@@ -199,3 +201,21 @@ sudo update-ca-trust
 1. *Symmetric vs asymmetric encryption?* Symmetric uses one shared key and is fast; asymmetric uses a public/private pair, which solves key distribution but is slow. Protocols use asymmetric crypto to authenticate and agree a session key, then symmetric crypto for the data.
 2. *Hashing vs encryption?* Hashing is one-way and fixed-size, used for integrity and password storage. Encryption is reversible with the right key, used for confidentiality.
 3. *What does a client check when validating a TLS certificate?* That the signature chain leads to a trusted root CA, that the certificate is within its validity dates, and that the requested hostname matches the certificate's SAN.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A TLS service's clients started failing this morning with certificate errors. How do you diagnose it from a Linux box?"*
+
+**Model answer:**
+1. `openssl s_client -connect host:443 -servername host -showcerts </dev/null` shows the chain the server sends and the verify result.
+2. Check the leaf certificate: `openssl x509 -noout -dates -subject -issuer -ext subjectAltName`.
+   - **Expired?** `notAfter` passed.
+   - **Name mismatch?** The hostname isn't in the SAN.
+3. **Incomplete chain:** the server sends the leaf but not the intermediate. Browsers may cope; `curl` and other tools fail with "unable to get local issuer certificate".
+4. **Client trust:** a new private CA must be in the client's store (`/etc/pki/ca-trust/source/anchors/` + `update-ca-trust`).
+5. **Policy:** `update-crypto-policies --show`. Older SHA-1 or small RSA keys are refused by the DEFAULT policy on RHEL.
+6. **Clock** on the client: a wrong date makes valid certificates look expired or not yet valid.
+
+**Likely follow-ups:**
+- *What's a hash used for in a signature?* The hash of the data is signed with the private key; anyone verifies it with the public key.
+- *Why do protocols use both asymmetric and symmetric crypto?* Asymmetric to authenticate and agree a key; symmetric because it's fast for bulk data.

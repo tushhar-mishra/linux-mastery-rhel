@@ -192,6 +192,8 @@ deploying 2.4.1 to prod (verbose=1)
 3. Add `-n` (dry-run) and `-d DIR` options with getopts.
 4. Write a script that takes a username as `$1`, or asks for one with `read` if it's missing.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 041` for every step, or `sudo ./checks/check 041 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Every reusable script:** pass targets and options as arguments, never hard-code them.
@@ -222,3 +224,18 @@ deploying 2.4.1 to prod (verbose=1)
 1. *`"$@"` vs `"$*"`?* `"$@"` expands to each argument as a separate word, preserving spaces inside arguments. `"$*"` joins all arguments into a single string.
 2. *How do you check the number of arguments?* With `$#`, for example `[ "$#" -eq 2 ] || { echo "usage…" >&2; exit 1; }`.
 3. *How do you read a password without showing it?* `read -rsp "Password: " pw; echo`.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"Your backup script takes a list of directories as arguments. It works until someone passes `/srv/My Files`. Then it backs up `/srv/My` and fails on `Files`. Fix it."*
+
+**Model answer:**
+1. Somewhere the arguments are expanded unquoted: `for d in $@` or `$*`, or `tar … $dirs`.
+2. Always use **`"$@"`** (with the quotes): it expands to each original argument as one word, spaces included.
+3. If you build a list, use a **bash array**: `dirs=("$@")`, then `tar -czf out.tgz "${dirs[@]}"`.
+4. Validate at the start: `[ "$#" -ge 1 ] || { echo "usage: $0 DIR..." >&2; exit 2; }`, and check each one exists with `[ -d "$d" ]`.
+5. Test with names that contain spaces, a leading `-` and glob characters.
+
+**Likely follow-ups:**
+- *How do you parse `-v -o FILE` style options?* `getopts ":vo:"` in a `while` loop with `case`, then `shift $((OPTIND-1))`.
+- *How do you prompt for input without breaking automation?* Only prompt when the value is missing **and** stdin is a terminal (`[ -t 0 ]`); otherwise fail with a usage message.

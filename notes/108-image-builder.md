@@ -153,6 +153,8 @@ Open `https://HOST:9090` → **Image Builder** → create a blueprint (packages,
 2. Add a package, bump `version` to 0.0.2, push, rebuild, and confirm the change.
 3. Build the same blueprint as a `vhd` or `ami` to see that one recipe serves many platforms.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 108` for every step, or `sudo ./checks/check 108 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Golden image pipelines:** blueprints in Git → a CI job builds images → images are uploaded to the cloud or a VM platform → **Terraform** launches instances → cloud-init personalises → Ansible configures.
@@ -183,3 +185,19 @@ Open `https://HOST:9090` → **Image Builder** → create a blueprint (packages,
 1. *What is a golden image, and why use one?* A tested, pre-built base OS image that all servers start from. It gives consistency, fast provisioning, auditability and a regular way to roll in security updates.
 2. *What is a blueprint in RHEL Image Builder?* A versioned TOML definition of an image's packages and customisations (users, services, timezone, firewall), from which composer builds images in any supported format.
 3. *How do golden images, cloud-init and Ansible fit together?* The golden image provides the common base; cloud-init applies per-instance settings at first boot (hostname, keys); Ansible manages ongoing configuration and drift.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"Every new server in your company is installed by hand and they all end up slightly different. Propose a better process."*
+
+**Model answer:**
+1. **Golden image:** an Image Builder blueprint (TOML, in Git) with the base packages, users with SSH keys, services, firewall and timezone. Build it for each platform you use (qcow2 for KVM, VMDK, AMI…).
+2. **Rebuild regularly** (for example monthly) so new servers start patched, and version the blueprint.
+3. **Per-instance settings at first boot** with cloud-init: hostname, keys, network, registration.
+4. **Ongoing configuration** with Ansible, so drift is detected and corrected.
+5. Test each new image (boot it, run checks) before releasing it.
+6. Result: identical, auditable servers in minutes instead of hours.
+
+**Likely follow-ups:**
+- *Why not put passwords in the blueprint?* It's stored in Git and the image; use SSH keys, and inject secrets at deploy time.
+- *What's `composer-cli blueprints depsolve` for?* Checking the package set resolves before a long compose.

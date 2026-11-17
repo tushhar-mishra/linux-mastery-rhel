@@ -181,6 +181,8 @@ sudo mdadm --zero-superblock /dev/vdb /dev/vdc # ⚠️ wipe the md metadata to 
 3. Create a RAID 5 with a hot spare, fail a disk, and watch the spare take over automatically.
 4. Reboot without the `ARRAY` line in `/etc/mdadm.conf` and see the `md127` name; then add the line.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 087` for every step, or `sudo ./checks/check 087 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Bare-metal servers:** RAID 1 for the OS disks, RAID 10 for databases, RAID 6 for big storage.
@@ -211,3 +213,19 @@ sudo mdadm --zero-superblock /dev/vdb /dev/vdc # ⚠️ wipe the md metadata to 
 1. *RAID 5 vs RAID 6?* RAID 5 stores one parity block per stripe and survives one disk failure. RAID 6 stores two independent parities and survives two, which matters on large disks where rebuilds take hours.
 2. *How does parity let RAID 5 rebuild a lost disk?* Parity is the XOR of the data blocks in a stripe; XOR-ing the surviving blocks with the parity recreates the missing block.
 3. *Is RAID a backup?* No. It only protects against disk hardware failure; deletions, corruption, ransomware and site loss are copied to every member instantly.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"`/proc/mdstat` shows `[U_]` on your RAID 1. Walk me through replacing the failed disk."*
+
+**Model answer:**
+1. `mdadm --detail /dev/md0`: which member failed (state `faulty` or `removed`)? Check `dmesg` and `smartctl` to be sure which physical disk it is (match serial numbers).
+2. If it's not already marked: `mdadm /dev/md0 --fail /dev/vdc`, then `--remove /dev/vdc`.
+3. Swap the disk and, if it uses partitions, copy the layout (`sfdisk -d /dev/vdb | sfdisk /dev/vdd`).
+4. `mdadm /dev/md0 --add /dev/vdd` and watch the rebuild in `cat /proc/mdstat`.
+5. If md0 holds `/boot` or the bootloader, install the bootloader on the new disk too.
+6. Make sure `mdmonitor` is running with `MAILADDR` set, so the next failure alerts someone. A degraded array has **no** redundancy until the rebuild finishes.
+
+**Likely follow-ups:**
+- *Why does the array come up as `md127` after a reboot?* It's not listed in `/etc/mdadm.conf`; add `mdadm --detail --scan` output and rebuild the initramfs.
+- *Is RAID a backup?* No. It copies deletions and corruption instantly.

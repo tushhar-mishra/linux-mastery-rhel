@@ -93,6 +93,8 @@ alice      51234   51220  0 13:05 ?        00:00:00 sleep 300
 2. Compare `uname -r` on the host, inside a container, and inside a nested VM if you have one.
 3. Start a container and find its process with `ps`, then compare `/proc/PID/ns/net` with your shell's (topic 097).
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 099` for every step, or `sudo ./checks/check 099 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Cloud:** EC2/Azure/GCE instances are VMs (AWS Nitro and Google Cloud are KVM-based). Your containers or Kubernetes nodes run inside them.
@@ -120,4 +122,19 @@ alice      51234   51220  0 13:05 ?        00:00:00 sleep 300
 
 1. *What is the main difference between a VM and a container?* A VM virtualises hardware and runs its own kernel; a container is an isolated process (namespaces, cgroups) that shares the host's kernel.
 2. *Can you run a Windows container on a Linux host?* No. Containers make syscalls to the host kernel, so a Windows container needs a Windows kernel, which means a VM.
-3. *Is Kubernetes a container engine?* No. It's an orchestrator that schedules containers across nodes; a runtime such as CRI-O or containerd actually runs them.
+3. *Why do most production containers run inside VMs?* The VM gives a strong, hardware-backed boundary between tenants or environments (its own kernel), and the containers inside give fast, dense packaging of applications. You get both isolation and efficiency.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A team wants to run a customer's untrusted code. Would you isolate it with containers or with VMs, and why?"*
+
+**Model answer:**
+1. Containers share the **host kernel**: a kernel exploit from inside a container compromises the host and every other container on it.
+2. VMs run their **own kernel** behind a hypervisor: a much smaller attack surface between tenants.
+3. For untrusted or multi-tenant code: VMs, or containers **inside** per-tenant VMs, or sandboxed runtimes (lightweight VMs like Kata or Firecracker; gVisor).
+4. If plain containers must be used: rootless, SELinux enforcing (unique MCS labels), seccomp, no added capabilities, read-only root, resource limits, and patched kernels.
+5. For trusted internal services, containers are fine and much lighter.
+
+**Likely follow-ups:**
+- *Can a Linux host run Windows containers?* No. Containers use the host's kernel.
+- *How do you tell if you're in a VM or a container?* `systemd-detect-virt` (`kvm`, `oracle`, `podman`, `none`…).

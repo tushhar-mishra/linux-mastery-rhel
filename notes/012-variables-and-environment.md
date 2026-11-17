@@ -252,6 +252,8 @@ Topic 025 explains exactly which file runs when.
 3. `file=/etc/ssh/sshd_config` — print just `sshd_config` and just `/etc/ssh` using parameter expansion.
 4. Break your PATH on purpose (`PATH=/nope`), try `ls`, then fix it with `PATH=/usr/local/bin:/usr/bin:/usr/sbin`.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 012` for every step, or `sudo ./checks/check 012 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Containers and Kubernetes:** apps get config through environment variables (`env:` in a pod spec, `-e` in `docker run`, `.env` files). "It works locally but not in the container" is often a missing variable. `kubectl exec pod -- env` or `cat /proc/1/environ | tr '\0' '\n'` shows what it really got.
@@ -285,3 +287,20 @@ Topic 025 explains exactly which file runs when.
 1. *Shell variable vs environment variable?* An environment variable is a shell variable that has been exported; it is copied into the environment of every child process. A plain shell variable stays inside the current shell.
 2. *Can a script change the parent shell's variables?* No. It runs as a child with a copy of the environment. Use `source script.sh` to run it in the current shell.
 3. *Why shouldn't `.` be in PATH?* Command hijacking: a malicious program named like a common command in the current directory (e.g. `/tmp/ls`) would run instead of the real one.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A script works when you run it by hand but fails under cron with `command not found`. Why, and how do you fix it properly?"*
+
+**Model answer:**
+1. Cron runs jobs with a **minimal environment**: a short PATH (`/usr/bin:/bin`), no `~/.bashrc`, no exported variables from your login.
+2. The command lives somewhere else (`/usr/local/bin`, `/usr/sbin`, `~/bin`), or relies on a variable you set in your profile.
+3. Fixes, best first:
+   - set `PATH=…` at the top of the script (or in the crontab);
+   - or use full paths;
+   - define every other variable the script needs inside the script.
+4. Reproduce cron's view with `env -i HOME=$HOME PATH=/usr/bin:/bin bash script.sh`.
+
+**Likely follow-ups:**
+- *Can a script change the caller's directory or variables?* No: it runs in a child process. Only `source script` runs in the current shell.
+- *How do you make a variable reach a program you start?* `export VAR`, or set it for one command only: `VAR=value cmd`.

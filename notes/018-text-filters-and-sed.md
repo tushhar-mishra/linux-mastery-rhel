@@ -263,8 +263,10 @@ awk '{print $1}' access.log | sort | uniq -c | sort -rn | head
 ### Try it
 1. List each login shell in `/etc/passwd` with a count, most common first.
 2. Turn `/etc/hostname` into uppercase with `tr`.
-3. Copy `/etc/ssh/sshd_config` to `/tmp/s`. With `sed -i`, change `#Port 22` to `Port 2222` in the copy, then check with `diff -u`.
+3. Copy `/etc/ssh/sshd_config` to `/tmp/s` and make the copy yours: `sudo cp /etc/ssh/sshd_config /tmp/s && sudo chown $USER /tmp/s` (on RHEL the original is readable only by root). With `sed -i`, change `#Port 22` to `Port 2222` in the copy, then check with `sudo diff -u /etc/ssh/sshd_config /tmp/s`.
 4. Print lines 5–8 of `/etc/passwd` using `sed`, then using `head` and `tail` together.
+
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 018` for every step, or `sudo ./checks/check 018 STEP` for one (topic 002 shows how to get the notes there).
 
 ## Where you'll use it
 
@@ -299,3 +301,18 @@ awk '{print $1}' access.log | sort | uniq -c | sort -rn | head
 1. *Why must you sort before `uniq`?* `uniq` only compares each line with the one before it; duplicates must be adjacent.
 2. *When would you use `awk` instead of `cut`?* When fields are separated by runs of spaces, or when you need conditions or calculations. `cut` only handles a single-character delimiter.
 3. *What does `sed -n '5p' file` do?* `-n` turns off automatic printing, then `5p` prints only line 5.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"You need to change `MaxAuthTries 6` to `MaxAuthTries 3` in a config file on 50 servers with `sed -i`. How do you do it safely?"*
+
+**Model answer:**
+1. Test the expression without `-i` first and look at the result: `sed 's/^#\?MaxAuthTries.*/MaxAuthTries 3/' file | diff -u file -`.
+2. Anchor the pattern (`^`) so it can't match inside comments or other lines by accident.
+3. Use `sed -i.bak` so each server keeps a backup.
+4. **Validate** the result before applying it: `sshd -t` for sshd, `nginx -t`, `visudo -c`, and so on.
+5. Better still, for 50 servers, use a drop-in file (`/etc/ssh/sshd_config.d/`) deployed by configuration management rather than editing the main file in place.
+
+**Likely follow-ups:**
+- *Why `sort | uniq -c` and not just `uniq -c`?* `uniq` only merges adjacent duplicates.
+- *How do you print lines 100–120 of a big file?* `sed -n '100,120p' file`.

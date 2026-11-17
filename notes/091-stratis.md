@@ -22,7 +22,7 @@ block devices (/dev/vdb, /dev/vdc)  →  pool  (data tier [+ optional cache tier
 | **Filesystem** | Thin XFS inside a pool; grows within the pool |
 | **Cache tier** | Optional SSD/NVMe that speeds up a pool of slower disks |
 
-Ubuntu/Debian: Stratis packages exist but are rarely used; it's mainly a Fedora/RHEL tool.
+Ubuntu/Debian: Ubuntu 24.04 has no Stratis packages at all (`apt-cache search stratis` finds nothing); it's a Fedora/RHEL tool.
 
 ## Why it exists
 
@@ -130,6 +130,8 @@ sudo stratis pool destroy pool1                    # the pool must have no files
 3. Snapshot, delete a file, restore it from the snapshot.
 4. Add a second disk with `add-data` and watch the pool's Total grow.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 091` for every step, or `sudo ./checks/check 091 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Single-server workstations and small servers** where you want snapshots and simple management without learning LVM thin pools.
@@ -159,3 +161,17 @@ sudo stratis pool destroy pool1                    # the pool must have no files
 1. *What is Stratis built on?* device-mapper thin provisioning and XFS, managed by the `stratisd` daemon.
 2. *Why does `df` show 1 TiB on a 20 GiB Stratis pool?* Stratis filesystems are thinly provisioned with a large virtual size; real capacity is the pool's.
 3. *What fstab options does a Stratis filesystem need, and why?* `x-systemd.requires=` and `x-systemd.after=stratis-fstab-setup@POOL-UUID.service`, so systemd sets up that pool before mounting. (Older guides say `x-systemd.requires=stratisd.service`; on current Stratis that creates an ordering cycle.)
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A RHEL 10 server with a Stratis filesystem in fstab boots into emergency mode, or boots with random services missing. What happened?"*
+
+**Model answer:**
+1. The fstab entry probably uses the old option `x-systemd.requires=stratisd.service`. On current Stratis that creates an **ordering cycle**: systemd breaks it by dropping some units at boot, which can include unrelated services.
+2. From the console, `journalctl -b | grep -i "ordering cycle"` shows which units were deleted from the boot transaction.
+3. Fix the line so it waits for that pool's setup unit: `x-systemd.requires=stratis-fstab-setup@POOL-UUID.service,x-systemd.after=stratis-fstab-setup@POOL-UUID.service` (the pool UUID from `stratis pool list`). Add `nofail` for data volumes.
+4. If `/` is read-only in emergency mode: `mount -o remount,rw /`, then edit, `systemctl daemon-reload`, `mount -a`, reboot.
+
+**Likely follow-ups:**
+- *Why does `df` show 1 TiB on a small pool?* Stratis filesystems are thin with a large virtual size; check `stratis pool list` for real capacity.
+- *What's Stratis built on?* device-mapper thin provisioning + XFS, managed by `stratisd`.

@@ -151,6 +151,8 @@ sudo cloud-init clean --logs --seed --machine-id   # before turning a configured
 3. Put a YAML error in user-data, validate it with `cloud-init schema`, then boot anyway and find the error in the logs.
 4. Reboot and confirm `runcmd` did **not** run again; then `cloud-init clean --logs`, reboot, and watch it run again.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 104` for every step, or `sudo ./checks/check 104 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Every cloud VM**: EC2/Azure/GCP instance bootstrapping, often templated by **Terraform** (`user_data = file("cloud-init.yaml")`).
@@ -184,3 +186,21 @@ sudo cloud-init clean --logs --seed --machine-id   # before turning a configured
 1. *What is cloud-init and where does it get its configuration?* The first-boot configuration agent in cloud images. It reads platform metadata and user data from a datasource: the cloud's metadata service (169.254.169.254) or, in labs, a NoCloud seed disk labelled `cidata`.
 2. *Why didn't my `runcmd` run after a reboot?* `runcmd` runs once per instance; cloud-init records that it ran in `/var/lib/cloud`. Use `bootcmd` or a systemd unit for every-boot tasks.
 3. *What must you do before turning a configured VM into a reusable image?* Run `cloud-init clean` (with `--logs`, and `--machine-id`/`--seed` as appropriate), so clones get fresh instance state, SSH host keys and machine IDs.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"New VMs from your template come up without the SSH key and with the wrong hostname, and some have the same SSH host key as each other. What's wrong with the template?"*
+
+**Model answer:**
+1. Identical host keys and missing per-VM settings mean the template was made from a VM that **already ran cloud-init**, and wasn't cleaned.
+2. cloud-init remembers the instance it configured (in `/var/lib/cloud`). The clones look like the same instance, so the per-instance modules (users, keys, hostname, host-key regeneration) don't run again.
+3. Fix the template:
+   - run `cloud-init clean --logs --seed --machine-id`;
+   - remove the SSH host keys;
+   - then shut down and capture the image.
+4. On the broken clones: fix the hostname and keys by hand, regenerate the host keys (`rm /etc/ssh/ssh_host_*`, `ssh-keygen -A`, restart sshd), or `cloud-init clean` and reboot.
+5. Check what each instance received: `cloud-init query -a`, `cloud-init status --long`, `/var/log/cloud-init.log`.
+
+**Likely follow-ups:**
+- *`runcmd` vs `bootcmd`?* `runcmd` runs once per instance late in boot; `bootcmd` runs early on every boot.
+- *Where does cloud-init get its data in a lab?* A NoCloud seed (an ISO labelled `cidata` with `user-data` and `meta-data`).

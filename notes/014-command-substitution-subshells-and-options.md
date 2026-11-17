@@ -247,6 +247,8 @@ nullglob       	off
 3. Write a 3-line script with a bug (an `if` without `fi`). Run `bash -n` on it, then fix it and run it with `bash -x`.
 4. In a **child** bash: `bash`, then `set -e`, then `false`. Notice you're back in your original shell.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 014` for every step, or `sudo ./checks/check 014 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Dated backups and file names:** `tar czf backup-$(date +%F).tgz /etc`.
@@ -280,3 +282,22 @@ nullglob       	off
 1. *What is command substitution?* `$(cmd)` runs `cmd` in a subshell and replaces itself with the command's output, minus trailing newlines.
 2. *Does a subshell see unexported variables?* Yes. `( )` and `$( )` are forks of the current shell, so they have a full copy. A new program like `bash -c` only gets exported (environment) variables.
 3. *Why isn't `set -e` enough to make a script safe?* It's ignored in `if`/`while` conditions, in all but the last command of `&&`/`||` lists, for negated commands, and (without `pipefail`) for all but the last command in a pipeline.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A colleague's script has `set -e` at the top, yet it carried on after a command failed and corrupted data. How is that possible?"*
+
+**Model answer:**
+1. `set -e` is ignored in several places:
+   - commands in an `if`, `while` or `until` condition;
+   - all but the last command of an `&&`/`||` list;
+   - negated commands (`! cmd`);
+   - failures inside a function called from such a context.
+2. In a **pipeline**, only the last command's status counts unless `set -o pipefail` is set: `bad_cmd | tee log` "succeeds".
+3. Failures inside `$( )` used in an assignment with `local` or `export` are hidden by those commands' own exit status.
+4. So use `set -euo pipefail`, but **also** check critical steps explicitly: `cmd || { echo "cmd failed" >&2; exit 1; }`.
+5. Debug with `bash -x` to see exactly which line ran last.
+
+**Likely follow-ups:**
+- *What does `bash -n` catch?* Syntax errors only (a missing `fi`, `done`, quote). Not runtime errors.
+- *Why prefer `$( )` over backticks?* It nests without escaping and is easier to read.

@@ -214,6 +214,8 @@ gpgkey=http://repo.example.com/RPM-GPG-KEY-internal
 2. Add a `%config(noreplace)` file. Install, edit the config, bump `Release` to 2, rebuild and upgrade. Find the `.rpmnew` file.
 3. Publish a signed local repo with `createrepo_c`, add the `.repo` file, and install from it.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 106` for every step, or `sudo ./checks/check 106 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Shipping internal tools, agents and configs** to RHEL fleets through a repo (often Pulp, Satellite, Artifactory or Nexus).
@@ -245,3 +247,27 @@ gpgkey=http://repo.example.com/RPM-GPG-KEY-internal
 1. *What is `%{buildroot}`?* A temporary fake root directory where the `%install` section places files, so building a package never writes into the real system.
 2. *Binary RPM vs source RPM?* A binary RPM contains the installable files for an architecture; an SRPM contains the spec and sources needed to rebuild it.
 3. *What does `%config(noreplace)` do?* On upgrade, if the admin changed that config file, RPM keeps their version and writes the packaged one as `.rpmnew` instead of overwriting it.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"Your team deploys an internal tool by copying files with scp to 200 servers. Why and how would you package it as an RPM instead?"*
+
+**Model answer:**
+1. **Why:** an RPM gives:
+   - versioning and upgrades (`dnf upgrade`);
+   - clean removal;
+   - `rpm -qf` to find what owns a file, and `rpm -V` to detect changed files;
+   - dependency handling;
+   - signatures;
+   - config files that survive upgrades (`%config(noreplace)`).
+2. **How:**
+   - `rpmdev-setuptree`; put a source tarball in `SOURCES/`;
+   - write a spec: `Name`, `Version`, `Release: 1%{?dist}`, `Requires`, `%install` into `%{buildroot}`, `%files`, `%changelog`;
+   - `rpmbuild -ba`, then `rpmlint`;
+   - build as a normal user, ideally in a clean `mock` chroot.
+3. **Distribute:** sign with `rpm --addsign`, publish with `createrepo_c` on an internal web server, add a `.repo` file with `gpgcheck=1` to all servers (Ansible), then `dnf install tool`.
+4. Updates become: bump the version, rebuild, publish, `dnf upgrade`.
+
+**Likely follow-ups:**
+- *What is `%{buildroot}`?* A staging directory for `%install`, so building never touches the real system.
+- *What happens to an edited `%config(noreplace)` file on upgrade?* It's kept; the new one lands as `.rpmnew`.

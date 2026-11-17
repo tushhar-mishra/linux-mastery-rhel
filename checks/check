@@ -1,0 +1,30 @@
+#!/bin/bash
+# Check your work on a topic's "Try it" lab.
+#
+#   sudo ./checks/check 049        # every step of topic 049 that can be checked
+#   sudo ./checks/check 049 2      # only step 2
+#
+# Run it on the lab machine where you did the lab. Checks only look: they never change your system.
+# Quiz questions read your answer from the keyboard; press Enter on an empty line to skip one.
+set -u
+dir=$(cd "$(dirname "$0")" && pwd)
+
+usage() { sed -n '2,8p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
+[ $# -ge 1 ] && [[ $1 =~ ^[0-9]{1,3}$ ]] || usage
+TOPIC=$(printf '%03d' "$((10#$1))")
+STEP=${2:-}
+[ -z "$STEP" ] || [[ $STEP =~ ^[0-9]+$ ]] || usage
+
+file="$dir/$TOPIC.sh"
+if [ ! -f "$file" ]; then
+  echo "Topic $TOPIC has no automatic checks: its lab is reading, discussion or needs hardware this kit can't inspect."
+  exit 2
+fi
+if [ "$(id -u)" -ne 0 ]; then
+  echo "Checks need to read system files. Run: sudo $0 $*"
+  exit 2
+fi
+
+. "$dir/lib.sh"
+. "$file"
+run_steps "$STEP"

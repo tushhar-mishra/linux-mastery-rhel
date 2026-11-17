@@ -173,6 +173,8 @@ Same ideas. In GRUB, edit the `linux` line and use `init=/bin/bash` (or boot the
 3. Add a bad fstab line (a wrong UUID with no `nofail`), reboot, and recover via `rd.break`.
 4. Set a GRUB password, try `e`, then remove it.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 057` for every step, or `sudo ./checks/check 057 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Lost credentials** on lab machines, appliances and inherited servers.
@@ -205,3 +207,17 @@ Same ideas. In GRUB, edit the `linux` line and use `init=/bin/bash` (or boot the
 1. *How do you reset a lost root password on RHEL?* At GRUB press `e`, add `rd.break` to the linux line, boot, `mount -o remount,rw /sysroot`, `chroot /sysroot`, `passwd root`, `touch /.autorelabel`, then exit twice.
 2. *Why is `touch /.autorelabel` needed?* The new `/etc/shadow` is written from the initramfs without a proper SELinux label. After a normal boot with SELinux enforcing, login can't read it. The relabel fixes every file's label.
 3. *How do you prevent someone at the console from resetting the root password?* A GRUB password (`grub2-setpassword`), a firmware password, Secure Boot, full-disk encryption and physical/console access control.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"You reset root's password with `rd.break` on a RHEL server, rebooted, and the new password is rejected. What went wrong?"*
+
+**Model answer:**
+1. You probably skipped **`touch /.autorelabel`**.
+2. `passwd` in the initramfs chroot wrote a new `/etc/shadow` without its SELinux label (`shadow_t`). With SELinux enforcing, the login programs aren't allowed to read the mislabelled file, so every password check fails.
+3. Fix: do `rd.break` again → `mount -o remount,rw /sysroot` → `chroot /sysroot` → `touch /.autorelabel` (setting the password again doesn't hurt) → `exit`, `exit`.
+4. The next boot relabels the filesystem (it can take a while, then reboots by itself), and the password works.
+
+**Likely follow-ups:**
+- *A bad fstab line drops you to emergency mode. Steps?* Root password → `mount -o remount,rw /` → fix fstab → `systemctl daemon-reload` → `mount -a` → reboot.
+- *How do you stop someone at the console doing this?* A GRUB password (`grub2-setpassword`), firmware password, disk encryption and physical security.

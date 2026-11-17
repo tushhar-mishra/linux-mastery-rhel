@@ -106,6 +106,8 @@ c --help                                     # options (attachments, history) va
 3. Stop a service in Cockpit and watch `systemctl status` in a terminal at the same time.
 4. Restrict 9090 to your lab subnet with a firewalld rich rule, and test from another address.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 109` for every step, or `sudo ./checks/check 109 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Cockpit:**
@@ -140,3 +142,19 @@ c --help                                     # options (attachments, history) va
 1. *What port does Cockpit use, and how is it started?* HTTPS on 9090/tcp, socket-activated by `cockpit.socket`.
 2. *Does Cockpit keep its own configuration?* No. It drives the system's own APIs and tools (systemd, NetworkManager, storaged, firewalld), so changes are identical to CLI changes and visible both ways.
 3. *What are the risks of using an AI command assistant on servers?* Suggestions can be wrong or unsafe, so verify and test them, and anything you send leaves the machine, so remove secrets and personal data first.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A manager asks for a web UI so junior admins can manage servers. You suggest Cockpit. How do you deploy it securely?"*
+
+**Model answer:**
+1. `dnf install cockpit` and `systemctl enable --now cockpit.socket`: HTTPS on 9090, socket-activated (nothing runs until someone connects).
+2. **Network:** don't expose 9090 widely. Use a firewalld rich rule allowing only the admin subnet or a jump host.
+3. **Certificate:** replace the self-signed one with a real certificate in `/etc/cockpit/ws-certs.d/`.
+4. **Accounts:** juniors log in as **themselves** (central identity, topic 030), never as root. Grant "Administrative access" through sudo rules scoped to what they need.
+5. **Audit:** Cockpit uses the same system APIs, so actions show in the journal and in sudo/audit logs like CLI actions.
+6. Disable it on hosts that don't need it, and keep it updated.
+
+**Likely follow-ups:**
+- *Does Cockpit store its own config?* No. It drives systemd, NetworkManager, storaged and firewalld directly, so the GUI and CLI always agree.
+- *What are the risks of AI command assistants on servers?* Wrong or unsafe suggestions, and data leaving the machine; verify answers and strip secrets.

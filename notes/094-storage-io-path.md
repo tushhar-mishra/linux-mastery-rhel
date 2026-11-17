@@ -55,6 +55,22 @@ Sending a parcel:
 
 ## How it works inside
 
+The whole path of one `write()`, top to bottom. Each box is a place where I/O can be cached, queued or stuck:
+
+```mermaid
+flowchart TD
+    APP["application: write(fd, buf)"] --> VFS["VFS<br/>(dentry + inode caches)"]
+    VFS --> PC["page cache<br/>page marked dirty → write() returns"]
+    PC -. "later: flusher threads, fsync(), sync<br/>(O_DIRECT skips the cache)" .-> FS["filesystem: XFS / ext4<br/>file offset → disk blocks, journal"]
+    FS --> DM["device mapper stack<br/>LUKS → LVM → (thin, VDO, multipath)"]
+    DM --> BL["block layer (blk-mq)<br/>I/O scheduler: none / mq-deadline / bfq"]
+    BL --> DRV["driver: virtio_blk, nvme, sd"]
+    DRV --> DEV[("device + its own write cache<br/>(fsync makes it flush)")]
+    DEV -. "completion interrupt" .-> BL
+```
+
+`iostat -x` shows the bottom layers (one line per `dm-N` and per disk), `/proc/meminfo` `Dirty:` shows the page-cache layer, and a process stuck in **D** state is waiting somewhere in this chain.
+
 ### VFS caches
 
 The VFS keeps a **dentry cache** (path component → inode lookups, including "negative" entries for names that don't exist, which speeds up `$PATH` searches) and an **inode cache**. Both live in reclaimable kernel **slab** memory. A host with millions of files can show a big `SReclaimable`; that's normal (topic 093).
@@ -203,6 +219,8 @@ sudo fio --name=randread --rw=randread --bs=4k --size=1G --iodepth=32 --ioengine
 3. Lab only: `sync; echo 3 | sudo tee /proc/sys/vm/drop_caches`, then time `cat bigfile > /dev/null` twice and explain why the second run is faster.
 4. Run `fio` on a data LV while `iostat -xz 1` runs; compare the dm device and its physical disk.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 094` for every step, or `sudo ./checks/check 094 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Databases** (PostgreSQL, MySQL, etcd) depend on `fsync` latency. **etcd**, the brain of Kubernetes, is famously sensitive to slow disk fsync: its "slow fdatasync" warnings and leader elections often trace back to the storage path.
@@ -235,3 +253,22 @@ sudo fio --name=randread --rw=randread --bs=4k --size=1G --iodepth=32 --ioengine
 1. *Does a successful `write()` mean the data is on disk?* No. It's only in the page cache; it reaches disk later via writeback, or when the application calls `fsync()`/`fdatasync()` (or uses `O_SYNC`).
 2. *Why do writes run fast and then suddenly stall?* Dirty pages accumulate in RAM until `vm.dirty_ratio` is reached; then the writing process is throttled to the speed the storage can flush.
 3. *What does `%util` = 100% mean on an NVMe drive?* Only that at least one request was always in flight. NVMe handles many requests in parallel, so look at await and queue size before calling it saturated.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A file-upload service writes fast for the first few seconds of a big upload, then everything on the server freezes for a while. Explain the mechanism and the options."*
+
+**Model answer:**
+1. Writes go to the **page cache** first; `write()` returns as soon as the data is in RAM. So the first gigabytes go at memory speed.
+2. When dirty data passes `vm.dirty_background_ratio`, flushing starts. At `vm.dirty_ratio` (20%, or 30% under tuned's server profiles), **the writing processes are throttled** to disk speed.
+3. With lots of RAM, that's many gigabytes queued for a slow disk: long stalls, high `wa`, other processes blocked behind the same device.
+4. Evidence: `grep -E 'Dirty|Writeback' /proc/meminfo`, `iostat -xz 1` (await, aqu-sz), `vmstat` `b` and `wa`.
+5. Options:
+   - lower and smooth the thresholds with `vm.dirty_background_bytes`/`vm.dirty_bytes` (absolute sizes suit large-RAM hosts);
+   - a faster or separate disk for uploads;
+   - have the app `fsync` in chunks;
+   - set it in a tuned profile, not ad hoc.
+
+**Likely follow-ups:**
+- *Does journaling guarantee my data survived a crash?* No, only filesystem consistency. Data needs `fsync()`.
+- *How do you safely replace a config file?* Write a temp file in the same directory, `fsync`, then `rename()` over the old one.

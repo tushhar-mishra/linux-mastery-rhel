@@ -141,6 +141,8 @@ Reference: `man tuned.conf`, `man tuned-profiles`.
 2. Switch to `throughput-performance`, check `sysctl vm.swappiness`, then switch back with `auto_profile`.
 3. Build the `db-tuned` profile, activate it, and confirm the values. Change `vm.swappiness` by hand with `sysctl -w`, then run `tuned-adm verify`.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 056` for every step, or `sudo ./checks/check 056 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **New servers:** apply the recommended profile (or a vendor-recommended one: database and SAP vendors publish tuned profiles).
@@ -171,3 +173,17 @@ Reference: `man tuned.conf`, `man tuned-profiles`.
 1. *What does tuned do?* It applies workload-specific tuning profiles (kernel sysctls, CPU power, disk and memory settings) consistently and persistently, and can verify the system still matches.
 2. *How do you choose a profile?* `tuned-adm recommend` suggests one for the hardware or virtualisation type; apply it with `tuned-adm profile NAME` and check with `tuned-adm active`.
 3. *How do you customise a profile without copying it?* Create `/etc/tuned/profiles/NAME/tuned.conf` with `include=base-profile` and only the settings you want to change.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A database team set `vm.swappiness=1` in `/etc/sysctl.d/`, but after reboots it keeps coming back as 10 or 30. Why?"*
+
+**Model answer:**
+1. Something else also sets it, and **tuned** is the usual suspect: its active profile (for example `virtual-guest` or `throughput-performance`) applies sysctls when it starts, after `systemd-sysctl`.
+2. Check: `tuned-adm active`, then read the profile chain (`/usr/lib/tuned/profiles/<name>/tuned.conf` and its `include=`).
+3. Fix: own the setting in **one** place. Create a custom profile in `/etc/tuned/profiles/db/tuned.conf` with `include=virtual-guest` and `[sysctl] vm.swappiness=1`, then `tuned-adm profile db`, and remove the duplicate sysctl file.
+4. `tuned-adm verify` then confirms nothing has drifted.
+
+**Likely follow-ups:**
+- *What does `tuned-adm recommend` base its answer on?* The hardware and virtualisation type (VM vs bare metal).
+- *Is tuning a replacement for capacity?* No. Profiles adjust behaviour; they don't make a short machine big.

@@ -48,6 +48,17 @@ HTTP is **ordering at a counter**. You say a **verb** and an **item** ("GET /men
    ```
 6. The connection is kept open for more requests ("keep-alive") or closed.
 
+Each phase has its own way of failing, and `curl -w` (below) times each one:
+
+```mermaid
+flowchart TD
+    D["DNS<br/>ends at time_namelookup"] --> T["TCP handshake<br/>ends at time_connect"] --> L["TLS handshake<br/>ends at time_appconnect"] --> W["request sent, server works<br/>first byte at time_starttransfer"] --> B["body downloads<br/>ends at time_total"]
+    D -. "fails" .-> E1(["Could not resolve host"])
+    T -. "fails" .-> E2(["refused: closed port or reject<br/>timed out: drop or no route"])
+    L -. "fails" .-> E3(["certificate problem:<br/>expired, wrong name, unknown CA"])
+    W -. "slow" .-> E4(["slow application:<br/>big gap before the first byte"])
+```
+
 **HTTP/2** sends many requests in parallel over one connection, in binary. **HTTP/3** runs over **QUIC** (on UDP). The meaning of methods, headers and status codes is the same in every version.
 
 ### Methods
@@ -224,6 +235,8 @@ curl -sI http://localhost:8000/
 3. Time three different sites with the `-w` format and find which phase dominates for each.
 4. Run `python3 -m http.server`, request a file that exists and one that doesn't, and compare the codes.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 070` for every step, or `sudo ./checks/check 070 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Health checks:** load balancers, Kubernetes **liveness/readiness probes** (an HTTP GET that must return 2xx/3xx), uptime monitors.
@@ -259,3 +272,24 @@ curl -sI http://localhost:8000/
 1. *What's the difference between a 502 and a 504?* Both come from a proxy or load balancer. 502 means the backend returned an invalid response or refused or dropped the connection; 504 means the backend didn't respond in time.
 2. *How would you find out why an HTTPS request is slow?* `curl -w` with `time_namelookup`, `time_connect`, `time_appconnect` and `time_starttransfer` shows whether DNS, TCP connect, the TLS handshake or the server's processing time dominates.
 3. *401 vs 403?* 401 means you're not authenticated (no or invalid credentials). 403 means you're authenticated (or authentication doesn't matter) but not allowed to access the resource.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"Users get intermittent 502 errors from a site behind nginx. How do you narrow it down?"*
+
+**Model answer:**
+1. A 502 comes **from the proxy**: nginx got no valid response from the backend.
+2. nginx's error log names the reason and the upstream:
+   - "connect() failed (111: Connection refused)" → backend down or restarting;
+   - "(13: Permission denied)" → SELinux `httpd_can_network_connect`;
+   - "upstream prematurely closed connection" → the backend crashed mid-request.
+3. Test the backend **directly**, bypassing nginx: `curl -v http://127.0.0.1:8080/health`.
+4. Intermittent? Check:
+   - the backend's restarts (`journalctl -u app`, OOM kills);
+   - one bad server in a pool of several;
+   - connection limits: backend worker pool full, `ss -lnt` Recv-Q at the backend's listen queue.
+5. Time the phases with `curl -w` from the client and from the proxy host.
+
+**Likely follow-ups:**
+- *502 vs 504?* 502 = bad or no response; 504 = the backend took too long.
+- *How do you test a site on a new IP before changing DNS?* `curl --resolve site.example.com:443:NEW_IP https://site.example.com/`.

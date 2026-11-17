@@ -157,6 +157,8 @@ history 2
 3. Press Ctrl+R and find a command you ran earlier containing `tail`.
 4. Run `echo SECRET123`, then find its number and delete it with `history -d N`.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 015` for every step, or `sudo ./checks/check 015 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Speed during incidents:** Ctrl+R for the long `journalctl`/`kubectl` command you ran an hour ago. `sudo !!` when you forgot sudo.
@@ -187,3 +189,18 @@ history 2
 1. *`HISTSIZE` vs `HISTFILESIZE`?* `HISTSIZE` is how many entries are kept in memory during the session; `HISTFILESIZE` is how many lines are kept in the history file.
 2. *Why isn't shell history a reliable audit log?* The user controls it: they can disable it, edit or delete the file, and it's lost if a session is killed. Use auditd, sudo logs or session recording.
 3. *How do you re-run the last command as root?* `sudo !!`.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"You typed a database password on the command line by mistake. What risks does that create, and how do you clean up?"*
+
+**Model answer:**
+1. It's in your **shell history** (memory now, `~/.bash_history` later). Delete the entry: `history -d N`, then `history -w`.
+2. While the command ran, the password was visible to every user in `ps` output (`/proc/PID/cmdline`).
+3. It may also be in audit logs, terminal scrollback and session recordings.
+4. **Rotate the password**: cleaning the history doesn't make it safe again.
+5. Prevention: pass secrets through files with tight permissions, environment variables or prompts, and set `HISTCONTROL=ignoreboth` so commands starting with a space aren't saved.
+
+**Likely follow-ups:**
+- *Why didn't my history from another window appear?* Each shell keeps history in memory and writes it at exit. `shopt -s histappend` plus `history -a` makes it saved straight away.
+- *Is history an audit trail?* No. The user controls it. Use auditd or sudo logs.

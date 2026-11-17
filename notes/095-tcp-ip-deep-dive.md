@@ -85,6 +85,17 @@ A listening socket has two queues:
 - the **SYN queue** (half-open connections, in `SYN-RECV`);
 - the **accept queue** (finished handshakes waiting for the app to call `accept()`).
 
+```mermaid
+flowchart LR
+    C["client SYN"] --> SQ["SYN queue<br/>(SYN-RECV, half-open)"]
+    SQ -- "SYN-ACK sent,<br/>client ACK arrives" --> AQ["accept queue<br/>(ESTABLISHED, waiting)<br/>size = min(backlog, somaxconn)"]
+    AQ -- "app calls accept()" --> APP["application socket"]
+    AQ -. "queue full: the ACK is dropped,<br/>TcpExtListenOverflows +1" .-> X(["client sees a slow connect<br/>or a timeout"])
+    SQ -. "SYN flood: syncookies" .-> CK["handshake state encoded<br/>in the SYN-ACK instead"]
+```
+
+`ss -lnt` shows the accept queue for each listener: `Recv-Q` = connections waiting now, `Send-Q` = the queue size.
+
 The accept queue's size is `min(backlog given to listen(), net.core.somaxconn)` (`somaxconn` defaults to 4096). If the app accepts too slowly (saturated worker pool, blocked event loop), the queue fills and new connections are **dropped**, so clients see slow connects or timeouts. `net.ipv4.tcp_syncookies = 1` (the default) lets a server survive SYN floods.
 
 ### 4. Ephemeral port exhaustion
@@ -262,6 +273,8 @@ sudo dmesg | grep -i 'nf_conntrack: table full'
 3. Add `drop` and `reject` rules on two ports (nft or firewalld rich rules) and time `curl` against each.
 4. Write a server with `listen(1)` that sleeps before `accept()`; open 20 connections and watch `Recv-Q` and `TcpExtListenOverflows`.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 095` for every step, or `sudo ./checks/check 095 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Kubernetes:**
@@ -298,3 +311,20 @@ sudo dmesg | grep -i 'nf_conntrack: table full'
 1. *CLOSE-WAIT vs TIME-WAIT?* CLOSE-WAIT means the peer closed and our application hasn't called `close()` (a pile-up is a socket leak). TIME-WAIT is normal on the side that closed first; it lasts about 60 s, but many of them can exhaust a client's ephemeral ports.
 2. *"Connection refused" vs a timeout?* Refused means the host answered with a TCP RST (nothing listening, or a reject rule). A timeout means the SYN got no answer at all (dropped by a firewall, host down, or a routing problem).
 3. *Where does NAT happen in netfilter?* DNAT in PREROUTING (and OUTPUT for local traffic); SNAT/masquerade in POSTROUTING. Conntrack remembers each translation so replies are rewritten back automatically.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"An API server works for hours, then new clients start timing out while existing ones are fine. `ss -s` shows thousands of sockets. How do you diagnose it?"*
+
+**Model answer:**
+1. Look at socket **states**: `ss -tan | awk '{print $1}' | sort | uniq -c`.
+   - Thousands of **CLOSE-WAIT** on the server: the app isn't closing connections the clients closed. A leak eats fds and workers.
+   - Thousands of **TIME-WAIT** on a client or proxy making many short connections: possible ephemeral port exhaustion (`ip_local_port_range`).
+2. Check the **listen queue**: `ss -lnt sport = :443`. If `Recv-Q` is at `Send-Q` (the backlog), the accept queue is full. Confirm with `nstat -az TcpExtListenOverflows TcpExtListenDrops` rising.
+3. Check fds: `ls /proc/PID/fd | wc -l` against `/proc/PID/limits`.
+4. Check conntrack if a firewall or NAT is in the path: `nf_conntrack: table full` in `dmesg`.
+5. Fix the cause (close sockets, size worker pools, connection reuse), not just bigger limits.
+
+**Likely follow-ups:**
+- *Refused vs timeout vs reset?* Refused = RST to the SYN; timeout = no answer (dropped); reset by peer = an established connection aborted.
+- *Small requests work, big ones hang. What's that?* An MTU black hole: PMTUD's ICMP "fragmentation needed" is blocked.

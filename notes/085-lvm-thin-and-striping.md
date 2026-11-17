@@ -169,6 +169,8 @@ sudo lvs -a -o +sync_percent,devices vg_fast
 3. Create a thin snapshot, change the origin, and merge it back.
 4. Build a striped LV over two disks and compare `dd oflag=direct` speed with a linear LV.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 085` for every step, or `sudo ./checks/check 085 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Virtualisation and VDI** (Virtual Desktop Infrastructure): many VM disks from templates on thin pools, with cheap snapshots.
@@ -201,3 +203,25 @@ sudo lvs -a -o +sync_percent,devices vg_fast
 1. *What is thin provisioning, and what's the main risk?* Volumes draw real space from a shared pool only when data is written, so the total virtual size can exceed physical capacity. The risk is the pool filling up, which makes writes fail on every thin volume at once.
 2. *Why doesn't deleting files free space in a thin pool?* The pool only reclaims blocks when the filesystem sends discards (`fstrim` or the `discard` mount option).
 3. *Is a striped LV fault tolerant?* No. It's equivalent to RAID 0: data is spread across disks with no redundancy, so losing one disk loses the volume.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A thin pool hit 100% at 3 AM. Every application using thin LVs failed at once. How do you recover, and how do you stop it happening again?"*
+
+**Model answer:**
+1. Check the state: `lvs -a -o +data_percent,metadata_percent` and `dmesg`. With the default error behaviour, writes now fail (or queue).
+2. Recover:
+   - extend the pool with free VG space (`lvextend -L +20G vg/pool`);
+   - or add a PV first (`vgextend`);
+   - extend the **metadata** too if `Meta%` is high (`--poolmetadatasize`).
+3. Check the filesystems: some may have shut down (XFS) and need unmounting and `xfs_repair -n` before remounting.
+4. Reclaim space nobody uses: `fstrim -av` on the mounted thin LVs.
+5. Prevention:
+   - auto-extend: `thin_pool_autoextend_threshold = 70`, `thin_pool_autoextend_percent = 20` in `lvm.conf`, with VG free space kept for it;
+   - monitoring and alerts on `Data%`/`Meta%`;
+   - a periodic `fstrim.timer`;
+   - a deliberate overprovisioning ratio.
+
+**Likely follow-ups:**
+- *Why doesn't deleting files free pool space?* The pool only learns about freed blocks through discards (`fstrim`).
+- *Is a striped LV safer?* No, it's RAID 0: faster, with no redundancy.

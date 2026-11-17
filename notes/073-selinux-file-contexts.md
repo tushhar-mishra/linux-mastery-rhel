@@ -162,6 +162,8 @@ You need this after re-enabling SELinux, after rescue-mode edits (topic 057), or
 3. Label a test file with `chcon`, then run `restorecon` and watch it revert.
 4. Run `restorecon -Rnv /etc` to see whether anything in `/etc` is mislabelled.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 073` for every step, or `sudo ./checks/check 073 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Custom data paths** for web servers, databases (`/data/pgsql` needs `postgresql_db_t`), Samba, FTP and logs.
@@ -193,3 +195,21 @@ You need this after re-enabling SELinux, after rescue-mode edits (topic 057), or
 1. *`chcon` vs `semanage fcontext`?* `chcon` changes a file's label immediately but is undone by the next restorecon or relabel. `semanage fcontext` changes the rule, so the label is permanent once `restorecon` applies it.
 2. *Why do files moved into `/var/www/html` often give 403?* `mv` keeps the file's original label (for example `user_home_t`), which httpd isn't allowed to read. `restorecon -Rv /var/www/html` fixes it.
 3. *What does `'/srv/web(/.*)?'` mean in a file-context rule?* The directory `/srv/web` itself plus everything beneath it: it's a regex that must match the full path.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A developer moved a website from `/home/dev/site` to `/srv/site` and configured Apache. Every page is 403 Forbidden, and the permissions look fine. Fix it properly."*
+
+**Model answer:**
+1. `ls -Z /srv/site`: the files are probably `user_home_t` (from `mv`) or `var_t`. httpd (`httpd_t`) may only read `httpd_sys_content_t`.
+2. Confirm with the denial: `ausearch -m AVC -ts recent -c httpd`.
+3. Fix permanently:
+   - add a rule: `semanage fcontext -a -t httpd_sys_content_t '/srv/site(/.*)?'`;
+   - apply it: `restorecon -Rv /srv/site`.
+4. `chcon` would work until the next relabel, then silently break again. Don't use it for a permanent fix.
+5. If the app must write somewhere (uploads), label only that directory `httpd_sys_rw_content_t`.
+6. Test with `curl`, and check the rule is listed in `semanage fcontext -l -C`.
+
+**Likely follow-ups:**
+- *Why does `cp` behave differently from `mv`?* `cp` creates a new file, which gets the destination's default label; `mv` keeps the old inode and its label.
+- *How do you check what label a path should have?* `matchpathcon /srv/site/index.html` (or `restorecon -Rnv` as a dry run).

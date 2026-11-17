@@ -53,6 +53,17 @@ The house has many doors:
 5. `bash` runs `ls`. The output goes back the same way in reverse and appears on your laptop screen.
 6. When you log out, `bash` exits, `sshd` closes the master, and `/dev/pts/N` disappears. The number is reused later.
 
+```mermaid
+flowchart LR
+    L["Your laptop<br/>SSH client"] -- "encrypted network" --> S["sshd<br/>(holds the master end)"]
+    S --> LD["Kernel terminal layer<br/>(line discipline:<br/>echo, Backspace, Ctrl+C)"]
+    LD --> PTS["/dev/pts/N<br/>(slave end)"]
+    PTS --> B["bash<br/>fd 0, 1, 2"]
+    B -- "output goes back the same way" --> PTS
+```
+
+A text console works the same way, except that the keyboard and screen are wired to `/dev/tty1` by the kernel, and `agetty` (not `sshd`) shows the login prompt.
+
 ### The kernel's terminal layer (the "line discipline")
 
 Between the terminal and the shell, the kernel runs a small piece of logic called the **line discipline**. It handles:
@@ -185,6 +196,8 @@ reset
 3. Run `cat /usr/bin/ls` to scramble your terminal, then type `reset`.
 4. Press Ctrl+S, type something (nothing appears), then press Ctrl+Q and watch it appear.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 003` for every step, or `sudo ./checks/check 003 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Security checks:** `who` and `w` show who is logged in and from which IP. If you spot an unknown login on `pts/3` from a strange address, that's an incident.
@@ -219,3 +232,17 @@ reset
 1. *What is the difference between a TTY and a PTS?* A TTY is a terminal the kernel provides directly (the console, Ctrl+Alt+F2). A PTS is the slave end of a pseudo-terminal that software (sshd, a terminal emulator) creates so programs can act as if they're on a real terminal.
 2. *What happens when you press Ctrl+C?* The kernel's terminal layer turns it into a SIGINT signal and sends it to the program running in the foreground of that terminal. Most programs exit when they get it.
 3. *How do you see who is logged into a server and from where?* `who` or `w`. The FROM column shows the remote IP. `last` shows past logins (topic 038).
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A colleague says their SSH session is frozen: nothing they type appears. What do you check, and how do you help?"*
+
+**Model answer:**
+1. Ask whether they pressed **Ctrl+S**. It pauses terminal output (flow control). **Ctrl+Q** resumes it.
+2. If the screen is full of garbage after `cat`-ing a binary file, the terminal settings are scrambled: type `reset` (blind) and press Enter.
+3. If the session is truly dead (network dropped), the SSH client escape sequence **Enter, `~`, `.`** closes it.
+4. From another session, `who` / `w` shows their `pts/N` and what it's running. A stuck program can be signalled from there (`pkill -t pts/3 -INT`).
+
+**Likely follow-ups:**
+- *What's the difference between `/dev/tty1` and `/dev/pts/0`?* tty1 is a kernel console; pts/0 is a pseudo-terminal created for SSH or a terminal window.
+- *Why does Ctrl+C stop a program but Ctrl+D exits the shell?* Ctrl+C becomes SIGINT for the foreground program. Ctrl+D is end-of-input; at an empty prompt the shell reads EOF and exits.

@@ -193,6 +193,8 @@ After a panic, the vmcore lands in `/var/crash/`. Analysing it with the `crash` 
 4. Run `execsnoop` while `dnf makecache` runs; count the processes spawned.
 5. Make a core dump and read it with `coredumpctl info`.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 103` for every step, or `sudo ./checks/check 103 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Kubernetes:**
@@ -228,3 +230,21 @@ After a panic, the vmcore lands in `/var/crash/`. Analysing it with the `crash` 
 1. *A server is slow. What do you check first?* Use a method: load vs CPU count, the kernel log, `vmstat` (run queue, blocked tasks, swap, iowait, steal), per-CPU and per-process CPU, disk await, memory and PSI, network errors. Then drill into whichever resource is saturated, and ask what changed.
 2. *Why is load average a poor CPU metric on Linux?* It includes tasks in uninterruptible I/O sleep as well as runnable tasks, so I/O problems inflate it. The run-queue length, PSI CPU or `runqlat` measure CPU saturation directly.
 3. *strace vs eBPF tools in production?* `strace` uses ptrace and stops the process on every syscall (high overhead). eBPF programs run verified inside the kernel and only send summaries out, so they're safe on busy production systems.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A production service's latency doubled after a routine package update, but CPU, memory and disk all look normal. How do you find out where the time goes?"*
+
+**Model answer:**
+1. Pin down **what changed**: `dnf history info last`. Which packages (libraries, the runtime, the kernel, tuned)?
+2. Run the 60-second checklist anyway, to rule out obvious saturation (run queue, iowait, PSI, steal, retransmits).
+3. **Profile** where the time goes:
+   - on-CPU: `perf top -p PID` or `perf record -g` → `perf report`;
+   - off-CPU (waiting): the bcc tools `offcputime`, `biolatency`, `tcpconnlat`;
+   - syscall-level: `strace -c -p PID`, briefly (high overhead).
+4. Compare with a host **not yet updated** (or roll one back): a difference in the profile points at the changed component (a new TLS library, a different crypto policy, a changed default).
+5. Roll back if needed (`dnf history undo`), then report it upstream with the evidence.
+
+**Likely follow-ups:**
+- *Why is load average a poor CPU metric?* It counts tasks waiting on I/O too.
+- *Why eBPF tools over strace in production?* They run in the kernel and summarise, with low overhead; strace stops the process on every syscall.

@@ -48,14 +48,22 @@ A few frequent calls (like reading the clock) are served from the **vDSO** (virt
 
 ### 2. Process lifecycle: fork → exec → exit → wait
 
-```
- parent (bash, PID 343)
-   │ fork()/clone() ───────────────► child (PID 344): a copy of the parent
-   │                                   │ execve("/usr/bin/ls") → same PID, new program
-   │ wait4() … blocks                  │ … runs …
-   │                                   │ exit_group(0) → becomes a ZOMBIE (exit status kept)
-   │ ◄──── SIGCHLD ────────────────────┘
-   │ wait4() returns the status → the kernel frees the zombie
+```mermaid
+sequenceDiagram
+    participant P as parent: bash (PID 343)
+    participant K as kernel
+    participant C as child (PID 344)
+    P->>K: clone() (fork)
+    K-->>C: new process: a copy of bash (copy-on-write memory, same fds)
+    K-->>P: returns 344
+    P->>K: wait4(344) … bash sleeps
+    C->>K: execve("/usr/bin/ls")
+    Note over C: same PID 344, now running ls
+    C->>K: exit_group(0)
+    Note over C: ZOMBIE: memory freed, exit status kept
+    K-->>P: SIGCHLD
+    K-->>P: wait4 returns status 0
+    Note over K: zombie entry removed, PID 344 free for reuse
 ```
 
 **`fork()` and copy-on-write (COW).** The child starts as a near-copy of the parent: same memory contents, same open fds, same credentials and signal settings. Memory isn't copied up front. Both share the physical pages, marked read-only, and a page is only copied when one side **writes** to it. So forking a 10 GiB process is fast, but a child that then writes a lot can suddenly need much more memory (Redis background saves are a famous case).
@@ -305,6 +313,8 @@ SigCgt:	0000000180004002
 4. `ulimit -n 50 ; python3 -c 'f=[open("/dev/null") for _ in range(100)]'`: read the `Errno 24`.
 5. Deleted-but-open: hold a 50 MB file open with Python, `rm` it, compare `df` and `lsof +L1`, then kill the holder.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 092` for every step, or `sudo ./checks/check 092 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Debugging "works by hand, fails under systemd":** a different environment, limits, capabilities, SELinux domain or working directory. All of these are exec-time inheritance rules.
@@ -342,3 +352,20 @@ SigCgt:	0000000180004002
 1. *What happens on `fork()`, and why is it fast?* The kernel creates a child that shares the parent's memory pages copy-on-write (plus copies of the fd table, credentials and signal settings). Pages are only copied when one side writes, so nothing large is copied up front.
 2. *Why can't you kill a zombie, and how do you get rid of one?* It's already dead; only its exit status remains for the parent. Make the parent call `wait()`, or kill the parent so PID 1 adopts and reaps it.
 3. *Why might `docker stop` / `podman stop` take 10 seconds?* PID 1 in the container doesn't handle SIGTERM, and the kernel won't apply the default action to a namespace's PID 1, so the runtime waits for its timeout and then sends SIGKILL.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A Java service fails every few days with 'Too many open files'. Restarting fixes it for a while. How do you find the cause?"*
+
+**Model answer:**
+1. Check the **limit the process really has**, not your shell's: `cat /proc/PID/limits | grep "open files"`. A systemd service gets `LimitNOFILE=` from its unit, not from `limits.conf`.
+2. Count what it has open now, and watch it grow: `ls /proc/PID/fd | wc -l` every few minutes.
+3. See **what kind** of fds pile up: `ls -l /proc/PID/fd` or `lsof -p PID`.
+   - Sockets: check `ss -tanp | grep PID`. Many `CLOSE-WAIT` = the app never closes connections (topic 095).
+   - Files: the same log or temp file opened repeatedly.
+4. A steadily growing count is a **leak**: the fix belongs in the application. Raising `LimitNOFILE` only buys time.
+5. Meanwhile, raise the limit sensibly with `systemctl edit` (`LimitNOFILE=65536`) and alert on fd count.
+
+**Likely follow-ups:**
+- *What survives `execve()`?* The PID, open fds without close-on-exec, cwd, limits, cgroup and namespaces; memory and signal handlers don't.
+- *Why does a container's `kill -9 1` from inside do nothing?* The kernel shields a namespace's PID 1 from default-action signals sent from inside it.

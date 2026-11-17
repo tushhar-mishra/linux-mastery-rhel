@@ -156,6 +156,8 @@ journalctl -u sssd --since -15min
 2. Run `getent hosts localhost` and `getent hosts $(hostname)`. Which NSS source answered each?
 3. With a FreeIPA lab: install `ipa-client`, enrol server2, log in as an IdM user, and watch `/home/<user>` appear (mkhomedir).
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 030` for every step, or `sudo ./checks/check 030 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Corporate Linux fleets:** almost always joined to AD or IdM. "User can't log in" tickets mean checking SSSD.
@@ -186,3 +188,19 @@ journalctl -u sssd --since -15min
 1. *NSS vs PAM?* NSS maps names to IDs and returns account information (who). PAM authenticates and enforces access and session rules (may they log in).
 2. *Why does `grep alice /etc/passwd` find nothing for a domain user?* Domain users come from SSSD through NSS, not the local file. Use `getent passwd alice`.
 3. *Why is time synchronisation critical for domain logins?* Kerberos tickets carry timestamps, and servers reject them if clocks differ by more than a few minutes.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"Domain users suddenly can't log in to one Linux server, but local users can. Where do you look?"*
+
+**Model answer:**
+1. Is the user visible at all? `getent passwd alice` and `id alice`. If not, it's **NSS/SSSD** (identity), not passwords.
+2. `systemctl status sssd`, `journalctl -u sssd`, and `sssctl domain-status <domain>`: is it online and talking to a server?
+3. **Time:** `chronyc tracking`. Kerberos fails when the clock is more than about 5 minutes off.
+4. **DNS:** can the server resolve the domain controllers (`dig -t SRV _ldap._tcp.example.com`)? Kerberos and SSSD's server discovery depend on DNS.
+5. Stale cache after a change in the directory: `sss_cache -E`.
+6. If identity works but login fails, look at PAM/access rules (`/var/log/secure`), such as the allowed-groups (`simple_allow_groups`) or HBAC rules.
+
+**Likely follow-ups:**
+- *Why does `grep alice /etc/passwd` find nothing?* Domain users come from SSSD via NSS, not the local file.
+- *What does SSSD's cache give you?* Faster lookups and logins while the directory is unreachable.

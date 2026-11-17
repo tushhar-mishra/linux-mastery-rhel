@@ -154,6 +154,8 @@ bash --noprofile --norc
 3. Add `echo "Welcome!"` to `~/.bashrc`, then try `scp` to that account from another host and see what happens. Remove it, or guard it with `[[ $- == *i* ]]`.
 4. Run `bash -lx -c exit 2>&1 | less` and follow the startup chain.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 025` for every step, or `sudo ./checks/check 025 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Team-wide tooling:** `/etc/profile.d/company.sh` sets the proxy, PATH and aliases for every engineer.
@@ -186,3 +188,17 @@ bash --noprofile --norc
 1. *`~/.bash_profile` vs `~/.bashrc`?* Login shells read `~/.bash_profile`; interactive non-login shells read `~/.bashrc`. On RHEL, `.bash_profile` sources `.bashrc`, so login shells get both.
 2. *Is `su -` a login shell?* Yes. `su` without the dash is not, so profile files are skipped.
 3. *How do you find which startup file sets a variable?* Trace a login shell with `bash -lx -c exit`, or grep for it across `/etc/profile*`, `/etc/bashrc` and `~/.bash*`.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"After someone edited `~/.bashrc` on a server, `scp` and `rsync` to that account fail with strange errors, though SSH logins look fine. Why?"*
+
+**Model answer:**
+1. `scp`, `rsync` and `sftp` start a **non-interactive** shell that still reads `~/.bashrc`.
+2. If `.bashrc` prints anything (an `echo "Welcome"`, a `fortune`), that text is mixed into the protocol stream and confuses the client ("protocol version mismatch", "message too long").
+3. Fix: remove the output, or guard it so it only runs in interactive shells: `[[ $- == *i* ]] && echo "Welcome"`.
+4. Test with `ssh host /bin/true`: any output means a startup file is printing.
+
+**Likely follow-ups:**
+- *Where would you set a variable for all users?* A file in `/etc/profile.d/` (login shells).
+- *Why doesn't a variable from `.bashrc` reach a cron job or a systemd service?* Neither starts an interactive shell, so they never read it. Set it in the crontab, the unit (`Environment=`), or the script.

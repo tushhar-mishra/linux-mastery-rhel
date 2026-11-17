@@ -85,8 +85,8 @@ A new **file** starts from `666` (`rw-rw-rw-`; never executable by default). A n
 
 | umask | New files | New directories | Use |
 |---|---|---|---|
-| `0022` | `644` | `755` | **RHEL 10 and Ubuntu default** |
-| `0002` | `664` | `775` | Group collaboration (older RHEL gave this to normal users) |
+| `0022` | `644` | `755` | **RHEL 10 default**, and root's umask on Ubuntu |
+| `0002` | `664` | `775` | **Ubuntu default for normal users** (each user has a private group of the same name, so `pam_umask` with `USERGROUPS_ENAB yes` opens the group bits); older RHEL did the same |
 | `0027` | `640` | `750` | Hardened |
 | `0077` | `600` | `700` | Private |
 
@@ -210,6 +210,8 @@ drwxr-xr-x alice devs  data
 3. Compute the result of umask `0027` and `0033` by hand, then check with `touch`.
 4. Run `namei -l` on `/etc/ssh/sshd_config` and on your SSH key `~/.ssh/id_ed25519`.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 026` for every step, or `sudo ./checks/check 026 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **"Permission denied" incidents:** the checklist above, every time. Never "fix" with `chmod 777`: it opens the file to every user and every hacked service, and often doesn't even fix the real cause (SELinux, a parent directory).
@@ -241,3 +243,17 @@ drwxr-xr-x alice devs  data
 1. *What does `x` mean on a directory?* Permission to pass through it and reach entries inside by name (for example, with `cd` or by opening a file in it).
 2. *How can a user delete a file owned by root?* Deleting changes the directory, so it only needs `w` and `x` on the directory. Only the sticky bit prevents this.
 3. *How is the umask applied?* New files start at 666 and directories at 777, and the umask's bits are switched off: `base AND NOT umask`. It is not subtraction.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"nginx returns 403 Forbidden for `/srv/site/index.html`. The file is `644` and owned by root. What do you check?"*
+
+**Model answer:**
+1. Permissions on **every directory in the path**: the nginx user needs `x` on `/srv` and `/srv/site`. `namei -l /srv/site/index.html` shows them all at once. A `700` home or project directory is the usual culprit.
+2. Which user nginx's workers run as (`ps -o user,cmd -C nginx`), and test as that user: `sudo -u nginx cat /srv/site/index.html`.
+3. If that works but nginx still gets 403, it's not DAC: check **SELinux** (`ls -Z`, `ausearch -m avc -ts recent`; topic 073) and nginx's own config (`root`, `index`, `autoindex`, `deny` rules).
+4. The error log (`/var/log/nginx/error.log`) usually names the failing path and the error ("Permission denied" vs "directory index forbidden").
+
+**Likely follow-ups:**
+- *What umask gives files 640 and directories 750?* `027`.
+- *A file is `---rwxrwx` and you own it. Can you read it?* No. The owner class matches first and has no permissions; the group and other bits aren't consulted.

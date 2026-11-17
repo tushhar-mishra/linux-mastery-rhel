@@ -457,3 +457,25 @@ Pick one question from each section (A–F). Record yourself answering out loud,
 1. *How would you prepare for a Linux troubleshooting interview?* Practise the method on real break-fix labs (topic 110), explaining out loud: scope, evidence, hypotheses, the test, the fix, prevention.
 2. *What should you say when you don't know an answer?* Say so honestly, then explain how you'd find out (documentation, man pages, logs, a quick test in a lab), and reason from the mechanisms you do know.
 3. *What do interviewers value more: commands or reasoning?* Reasoning: a structured approach and understanding of mechanisms, with the commands as supporting evidence.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"Mock interview: 'A user reports that a website hosted on one of your Linux servers is slow. Go.'"*
+
+**Model answer:** (what a strong candidate says, in order)
+1. **Clarify:** slow for everyone or some users? All pages or one? Since when? Did anything change?
+2. **Measure from outside:** `curl -w` timings show whether DNS, the TCP connect, TLS or time-to-first-byte is slow. That picks the layer.
+3. **On the server:**
+   - load vs CPUs, `vmstat 1` (run queue, iowait, swapping, steal);
+   - `iostat -xz 1`, `free -h` and PSI;
+   - `ss -s` and the listen queue.
+4. **The application:**
+   - web server and app logs, slow upstreams (the database), worker pool saturation;
+   - error rates (502/504).
+5. **One hypothesis at a time**, with evidence, and say what you'd expect to see if it's true.
+6. **Fix and verify** from the user's side; prevent it with monitoring on the signal that would have caught it.
+7. Throughout: explain *why* each command, not just *what*. That's what interviewers score.
+
+**Likely follow-ups:**
+- *What if you don't know the answer?* Say so, then say how you'd find out, and reason from mechanisms you know.
+- *Which matters more, commands or reasoning?* Reasoning, backed by commands as evidence.

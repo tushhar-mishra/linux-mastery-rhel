@@ -378,6 +378,8 @@ sudo systemd-run --on-calendar='*-*-* 03:00' /usr/local/bin/cleanup.sh     # a t
 4. Make a crash loop with `ExecStart=/usr/bin/false`, `Restart=on-failure`, `StartLimitBurst=3`; watch `journalctl -fu`, then `reset-failed`.
 5. Deploy the hardened `static-web.service` and compare `systemd-analyze security` with an unhardened copy.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 098` for every step, or `sudo ./checks/check 098 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Deploying your own apps** on VMs: a unit file is the simplest production-grade supervisor.
@@ -414,3 +416,23 @@ sudo systemd-run --on-calendar='*-*-* 03:00' /usr/local/bin/cleanup.sh     # a t
 1. *`Requires=` vs `After=`?* `Requires=` is a dependency (start that unit too, and fail together); `After=` is only ordering. Without `After=`, both start in parallel, so the failure of the required unit may not stop yours.
 2. *How do you change the `ExecStart=` of a vendor unit?* `systemctl edit UNIT`, then add an empty `ExecStart=` line to clear the list, followed by the new `ExecStart=`. Never edit `/usr/lib/systemd/system`.
 3. *How does systemd make sure all of a service's processes are stopped?* Each service runs in its own cgroup; on stop, systemd sends SIGTERM to every process in it, waits `TimeoutStopSec=`, then sends SIGKILL to whatever is left.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"Write me a production-ready systemd unit for a Python web app, out loud. What goes in it and why?"*
+
+**Model answer:**
+1. `[Unit]`: `Description=`, `Wants=network-online.target` **and** `After=network-online.target` (a dependency and the ordering are separate), and `After=postgresql.service` if it's local.
+2. `[Service]`:
+   - `Type=exec` (or `notify` if the app supports it);
+   - `ExecStart=/opt/app/venv/bin/gunicorn …`;
+   - `User=app` (or `DynamicUser=yes`), `WorkingDirectory=`;
+   - `EnvironmentFile=/etc/app/env` for config, with secrets via `LoadCredential=`.
+3. Resilience: `Restart=on-failure`, `RestartSec=2`, and start limits so a crash loop stops and alerts instead of spinning.
+4. Limits: `MemoryMax=`, `TasksMax=`, `LimitNOFILE=`.
+5. Hardening: `NoNewPrivileges=yes`, `ProtectSystem=strict` + `ReadWritePaths=/var/lib/app`, `PrivateTmp=yes`, `ProtectHome=yes`, `CapabilityBoundingSet=`. Check the score with `systemd-analyze security app`.
+6. `[Install] WantedBy=multi-user.target`; then `daemon-reload`, `enable --now`, and read `journalctl -u app`.
+
+**Likely follow-ups:**
+- *How do you change one setting of a vendor unit?* `systemctl edit unit` (a drop-in); reset list settings like `ExecStart=` with an empty line first.
+- *How does systemd stop every process of a service?* SIGTERM to the whole cgroup, then SIGKILL after `TimeoutStopSec`.

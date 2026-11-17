@@ -139,6 +139,8 @@ sudo systemctl daemon-reload && sudo mount -a && df -hT /mnt/team
 2. Forget the SELinux label on a new share and see the failure: `NT_STATUS_ACCESS_DENIED` in smbclient, and an AVC in `ausearch`. Fix it with `restorecon`.
 3. Remove `demo` from `teamshare` and confirm access is refused.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 080` for every step, or `sudo ./checks/check 080 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Office file servers** and NAS-style shares for Windows users.
@@ -170,3 +172,18 @@ sudo systemctl daemon-reload && sudo mount -a && df -hT /mnt/team
 1. *SMB vs CIFS?* SMB is the protocol family; CIFS was an early dialect (SMB1) that's obsolete and insecure. Use SMB2 or SMB3.
 2. *Why do you need `smbpasswd -a` when the user already has a Linux password?* SMB authentication uses a different password-hash format, so Samba keeps its own password database, separate from `/etc/shadow`.
 3. *A Samba share works with SELinux permissive but not enforcing. What's the fix?* Label the shared directory `samba_share_t` with `semanage fcontext -a -t samba_share_t 'DIR(/.*)?'` and `restorecon -Rv DIR` (or use the appropriate samba boolean).
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"Windows users can see a Samba share but get 'Access denied' opening it. The Linux permissions look correct. What do you check?"*
+
+**Model answer:**
+1. `testparm -s`: is the share defined as intended (`path`, `valid users`, `writable`)? Typos are silent otherwise.
+2. Is the user in **Samba's** database? `pdbedit -L`. Linux passwords don't count; add with `smbpasswd -a user`.
+3. **SELinux**: `ls -Zd /srv/share` should be `samba_share_t`. If not: `semanage fcontext -a -t samba_share_t '/srv/share(/.*)?'` and `restorecon -Rv /srv/share`. Check `ausearch -m avc -c smbd`.
+4. Linux permissions **as that user**, including every parent directory (`namei -l`).
+5. Test from Linux: `smbclient //server/share -U user -c ls`. The error string (`NT_STATUS_ACCESS_DENIED` vs `NT_STATUS_LOGON_FAILURE`) separates permission problems from authentication ones.
+
+**Likely follow-ups:**
+- *Which SMB versions should you allow?* SMB2/3 only; SMB1 is insecure.
+- *How do you mount a share on Linux at boot without a password in fstab?* `credentials=/root/.smbcred` (mode 600), plus `_netdev,nofail`.

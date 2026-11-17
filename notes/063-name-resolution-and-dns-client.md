@@ -44,6 +44,22 @@ Looking up a name is like **finding a phone number**:
 4. The **resolver** checks its cache. If the answer isn't there, it does the **recursive** walk: root servers → `.com` servers → `example.com`'s authoritative servers → the answer. It caches the answer for its TTL.
 5. If the name has **fewer dots** than `ndots` (default 1), glibc first tries it with each **`search`** domain appended (`web1` → `web1.example.com`).
 
+```mermaid
+flowchart TD
+    A["getaddrinfo('web1')"] --> N["/etc/nsswitch.conf<br/>hosts: files dns myhostname"]
+    N --> F{"files:<br/>in /etc/hosts?"}
+    F -- "yes" --> R1(["answer from /etc/hosts<br/>(DNS never asked)"])
+    F -- "no" --> SD["dns: fewer dots than ndots?<br/>try web1.example.com first (search list)"]
+    SD --> NS1["query nameserver 1 (UDP 53)"]
+    NS1 -- "no reply within timeout" --> NS2["nameserver 2, then 3"]
+    NS1 -- "answer" --> RES
+    NS2 -- "answer" --> RES
+    RES["resolver: cache hit, or recursive walk<br/>root → .com → example.com servers"] --> R2(["IP address (cached for its TTL)"])
+    NS2 -- "all fail" --> MH{"myhostname:<br/>own name or localhost?"}
+    MH -- "yes" --> R3(["answer from myhostname"])
+    MH -- "no" --> R4(["Name or service not known"])
+```
+
 **RHEL doesn't run a local DNS cache by default**, so every lookup goes to the configured servers. Programs may cache answers themselves (Java, browsers, nscd/systemd-resolved if enabled).
 
 ### /etc/resolv.conf
@@ -112,7 +128,7 @@ getent ahosts www.redhat.com | head -2
 ### dig: ask DNS directly
 
 ```bash
-sudo dnf install -y bind-utils         # dig, host, nslookup (Ubuntu: dnsutils)
+sudo dnf install -y bind-utils         # dig, host, nslookup (Ubuntu: bind9-dnsutils; `dnsutils` is the old, transitional name)
 dig www.example.com
 ```
 ```
@@ -179,6 +195,8 @@ resolvectl flush-caches
 3. `dig @1.1.1.1` vs `dig @8.8.8.8` for the same name: compare times.
 4. Add a dead first nameserver (`10.255.255.1`) in front of a working one and time `getent hosts www.redhat.com` (each lookup waits for the timeout). Then remove it.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 063` for every step, or `sudo ./checks/check 063 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **"Can't connect to db.internal":** `getent hosts` first. Most "network" problems are name resolution.
@@ -211,4 +229,21 @@ resolvectl flush-caches
 
 1. *What happens when a program resolves a hostname on Linux?* glibc follows `/etc/nsswitch.conf`: checks `/etc/hosts`, then queries the DNS servers in `/etc/resolv.conf` (applying search domains and ndots). The resolver walks root → TLD → authoritative servers if it doesn't have the answer cached.
 2. *`dig` vs `getent hosts`?* `dig` queries DNS servers directly and ignores `/etc/hosts`. `getent` uses the system's full resolution path (nsswitch), so it shows what applications actually get.
-3. *Why do Kubernetes pods sometimes make many DNS queries for one external name?* `ndots:5` plus several search domains make the resolver try the name with each cluster suffix before trying it as an absolute name.
+3. *Why might one short name like `db` cause several DNS queries?* If the name has fewer dots than `ndots`, glibc tries it with each `search` domain appended first (`db.example.com`, `db.corp.example.com`…), and only then as an absolute name. Every miss is a full round trip to the DNS server.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"An application intermittently takes 5 seconds to connect to a service, then works fine. `dig` is always fast. What could be going on?"*
+
+**Model answer:**
+1. `dig` talks to one DNS server directly; applications use glibc's resolver (`getent`), which follows `/etc/nsswitch.conf` and `/etc/resolv.conf`.
+2. A 5-second delay is the classic **resolver timeout**: the first `nameserver` in `/etc/resolv.conf` is dead or slow, so each lookup waits `timeout:5` before trying the next.
+3. Other causes:
+   - the **search** list plus `ndots`, which makes glibc try several wrong names first;
+   - IPv6 (AAAA) queries that a broken server never answers.
+4. Test with `time getent hosts name` (what apps see), and query each nameserver: `dig @server name`.
+5. Fix the bad or slow server in the NetworkManager profile (`ipv4.dns`), not by editing `/etc/resolv.conf` by hand (NetworkManager overwrites it). Consider `options timeout:1 rotate`.
+
+**Likely follow-ups:**
+- *NXDOMAIN vs SERVFAIL?* NXDOMAIN = the name doesn't exist (authoritative answer). SERVFAIL = the resolver couldn't get an answer (broken DNSSEC, unreachable authoritative servers).
+- *Why does `/etc/hosts` win over DNS?* `hosts: files dns` in nsswitch.conf puts files first.

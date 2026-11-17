@@ -144,6 +144,8 @@ sudo sysctl --system                                             # load all sett
 2. Watch `vmstat 1` while running `stress-ng --vm 1 --vm-bytes 90% --timeout 30s` and see `si`/`so` appear.
 3. Remove the swap file cleanly.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 050` for every step, or `sudo ./checks/check 050 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Sizing new servers and VMs:** keep some swap as a safety net, even with lots of RAM.
@@ -175,4 +177,19 @@ sudo sysctl --system                                             # load all sett
 
 1. *What does `vm.swappiness` control?* How willing the kernel is to reclaim anonymous memory by swapping, compared with dropping file cache. Lower values prefer dropping cache; it doesn't disable swap.
 2. *Is high swap usage a problem?* Not by itself: idle pages sitting in swap are fine. Continuous swap-in/swap-out (thrashing) is the problem, visible in `vmstat` `si`/`so`.
-3. *Why do Kubernetes nodes traditionally disable swap?* Swap makes a pod's memory behaviour and limits unpredictable, so the kubelet historically refused to run with swap on unless explicitly configured.
+3. *Swap partition or swap file?* Both work the same for the kernel. A swap file is easier to add or resize later; a partition or LV avoids filesystem limitations (a swap file must be fully allocated, not sparse, and some filesystems restrict them). Size it for headroom and, if you use hibernation, for RAM.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A server shows 6 GB of swap used and someone wants to add more RAM urgently. How do you decide if swap is actually a problem?"*
+
+**Model answer:**
+1. **Used swap is not the problem; swapping activity is.** Idle pages parked in swap cost nothing.
+2. `vmstat 1`: are `si`/`so` (swap in/out) non-zero continuously? Constant swap-in under load means the working set doesn't fit in RAM (thrashing).
+3. `free -h`: is `available` low? Is there major-fault and I/O-wait pressure (`sar -B`, `iostat`)?
+4. Per process: `grep VmSwap /proc/*/status | sort -k2 -n` shows who owns the swapped pages.
+5. If there's no swap activity and performance is fine, nothing needs doing. If it's thrashing, you need more RAM, or less memory use; more swap only makes it slower.
+
+**Likely follow-ups:**
+- *How do you add a swap file?* `dd` (not `fallocate` on every filesystem), `chmod 600`, `mkswap`, `swapon`, plus an fstab line.
+- *Does `swappiness=0` disable swap?* No. It makes the kernel strongly prefer dropping cache, but it can still swap under pressure. `swapoff` disables it.

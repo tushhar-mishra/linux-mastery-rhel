@@ -137,6 +137,8 @@ Snaps are mounted as compressed **squashfs** images under `/snap/`, which is why
 3. Uninstall it, then run `flatpak uninstall --unused`.
 4. On Ubuntu, run `snap list` and `df -h | grep loop`.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 032` for every step, or `sudo ./checks/check 032 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **RHEL workstations** for developers and admins (browser, editors).
@@ -169,3 +171,17 @@ Snaps are mounted as compressed **squashfs** images under `/snap/`, which is why
 1. *Why would an enterprise distro ship apps as Flatpaks?* Fast-moving desktop apps can bring their own runtimes without changing the stable system libraries, and they run sandboxed.
 2. *System vs user Flatpak install?* System installs go to `/var/lib/flatpak` for all users and need root. User installs go to `~/.local/share/flatpak` and need no root.
 3. *How does Flatpak sandbox apps?* bubblewrap uses kernel namespaces to give the app a private view of the system; portals give controlled access to files and devices.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A user on a RHEL 10 desktop says Firefox didn't update after you ran `dnf upgrade`. Explain why, and how you manage it."*
+
+**Model answer:**
+1. On RHEL 10, Firefox ships as a **Flatpak**, not an RPM, so `dnf` doesn't manage it.
+2. `flatpak list` shows it, with its origin (the `rhel` remote).
+3. Update with `flatpak update` (system installs need root; `--user` installs are updated by the user).
+4. Patch processes and compliance reports must include Flatpak (and snap on Ubuntu), not just the package manager.
+
+**Likely follow-ups:**
+- *Where are system and user Flatpaks stored?* `/var/lib/flatpak` and `~/.local/share/flatpak`.
+- *What does `flatpak uninstall --unused` do?* Removes runtimes no remaining app needs.

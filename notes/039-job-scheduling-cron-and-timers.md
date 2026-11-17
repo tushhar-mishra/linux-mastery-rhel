@@ -234,6 +234,8 @@ systemd's `weekly` = **Monday** 00:00; cron's `@weekly` = **Sunday** 00:00.
 3. Write a job that uses a command from `/usr/local/bin` without a full path. See it fail in cron, read `/var/log/cron`, and fix it.
 4. Convert that job into a systemd timer running every 2 minutes (`OnCalendar=*:0/2`) and watch it in `list-timers` and `journalctl -u`.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 039` for every step, or `sudo ./checks/check 039 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Backups, cleanups, reports, certificate renewals** (Let's Encrypt's certbot installs a timer), cache refreshes.
@@ -266,3 +268,23 @@ systemd's `weekly` = **Monday** 00:00; cron's `@weekly` = **Sunday** 00:00.
 1. *Why does a script work in your shell but not from cron?* cron runs it with a minimal environment: a short PATH, no profile files, `/bin/sh`, and `%` meaning newline. Use full paths, set variables in the script, and escape `%`.
 2. *cron vs anacron?* cron runs jobs at exact times only if the machine is up. anacron runs daily/weekly/monthly jobs that were missed while it was off.
 3. *What advantages do systemd timers have over cron?* Output goes to the journal automatically, missed runs can be caught up (`Persistent=true`), a job can't overlap with itself, and the job gets all of systemd's dependency, resource-limit and security options.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A nightly backup cron job has silently not run for two weeks. How do you find out why, and how would you make sure it can't fail silently again?"*
+
+**Model answer:**
+1. Did cron run it? `grep backup /var/log/cron` (or `journalctl -u crond`): no entry means the schedule or the crontab is wrong, or `crond` isn't running.
+2. If it ran: its output. Cron mails output; if no mail is set up, it was lost. Redirect output to a log file.
+3. Common causes:
+   - PATH (works in a shell, "command not found" in cron);
+   - an unescaped `%` in the crontab line;
+   - a file in `/etc/cron.d/` missing its user field;
+   - the server being off at the scheduled time.
+4. Prevent:
+   - move it to a **systemd timer** with `Persistent=true` (catches up after downtime) and journal logging;
+   - alert on failure (`OnFailure=` or a monitoring check on the backup's age), not on success.
+
+**Likely follow-ups:**
+- *What does `0 2 * * 1-5` mean?* 02:00, Monday to Friday.
+- *How do you check when a timer will fire next?* `systemctl list-timers`, and `systemd-analyze calendar 'Mon..Fri 02:00'` to test the expression.

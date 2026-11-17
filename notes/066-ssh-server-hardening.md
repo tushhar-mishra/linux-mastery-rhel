@@ -32,7 +32,7 @@ sshd is the **building's main entrance**. Hardening is: no master key handed out
 | `40-redhat-crypto-policies.conf` | The system-wide crypto policy (topic 064) |
 | `50-redhat.conf` | Red Hat defaults (for example `X11Forwarding yes`) |
 
-On Ubuntu the structure is the same (`/etc/ssh/sshd_config.d/`); the service is called `ssh`.
+On Ubuntu the structure is the same (`/etc/ssh/sshd_config.d/`); the service is called `ssh`, and on 24.04 the **socket** (`ssh.socket`) owns the listening port. After changing `Port`, run `sudo systemctl daemon-reload && sudo systemctl restart ssh.socket` (restarting `ssh` alone keeps the old port), then confirm with `ss -tln`. There's no SELinux step; open the port with `ufw` instead.
 
 ### Two other gates on RHEL (explained fully later)
 
@@ -168,6 +168,8 @@ sudo lastb | head          # failed logins
 3. Add `AllowGroups sshusers`, forget to add yourself, and see what happens (your old session saves you). Fix it.
 4. Move SSH to port 2222 with all three steps, then back.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 066` for every step, or `sudo ./checks/check 066 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Every new server's baseline**, usually applied by Ansible or a hardened image (CIS benchmark, DISA STIG).
@@ -199,3 +201,24 @@ sudo lastb | head          # failed logins
 1. *How do you disable root login over SSH?* Set `PermitRootLogin no` in an early drop-in (or wherever it takes effect), confirm with `sshd -T`, and reload sshd. Admins then log in as themselves and use sudo.
 2. *What do you need to move SSH to port 2222 on RHEL?* Label the port for SELinux (`semanage port -a -t ssh_port_t -p tcp 2222`), open it in firewalld, set `Port 2222`, restart sshd, and test before closing your session.
 3. *Why use drop-in files, and what's the gotcha?* Package updates don't overwrite them, and they're easy to audit. The gotcha is that sshd uses the first value it sees for a keyword, so an earlier file overrides a later one.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"Harden SSH on a fleet of RHEL servers to keys only, no root login, and admins only, without anyone getting locked out."*
+
+**Model answer:**
+1. Make sure every admin has working key login first (test it).
+2. Write `/etc/ssh/sshd_config.d/00-local.conf` (it sorts first, and **the first value wins**):
+   - `PermitRootLogin no`
+   - `PasswordAuthentication no`
+   - `KbdInteractiveAuthentication no`
+   - `AllowGroups sshadmins`
+   - `MaxAuthTries 3`
+3. Add the admins to `sshadmins`, **including yourself**.
+4. Validate: `sshd -t` (syntax), then `sshd -T | grep -Ei 'permitroot|passwordauth|allowgroups'` (the effective values).
+5. `systemctl reload sshd`, keep the current session open, and test from a **new** session: key works, `-o PubkeyAuthentication=no` is refused, root is refused.
+6. Roll out to one server, then in waves, with console access as the fallback.
+
+**Likely follow-ups:**
+- *What does moving SSH to another port need on RHEL?* `semanage port -a -t ssh_port_t -p tcp 2222`, a firewall rule, `Port 2222`, and a restart.
+- *Is a non-standard port real security?* It cuts log noise from scanners but isn't a control; keys and access rules are.

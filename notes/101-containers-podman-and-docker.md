@@ -220,6 +220,8 @@ docker compose up -d                      # multi-container apps from compose.ya
 4. Turn your container into a Quadlet service, enable linger, reboot, and confirm it's running.
 5. Find the container's host PID and compare its namespaces and capabilities with your shell (topic 097).
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 101` for every step, or `sudo ./checks/check 101 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Kubernetes:** pods, images, registries, volumes and probes are the same concepts. CRI-O (used by OpenShift) shares Podman's libraries, so `crictl` on a node feels similar. `podman kube play` lets you test Kubernetes YAML locally.
@@ -255,3 +257,21 @@ docker compose up -d                      # multi-container apps from compose.ya
 1. *Podman vs Docker?* Podman has no central daemon, runs rootless by default for normal users, and integrates with systemd (Quadlet). Docker uses a root daemon that all clients talk to. Their CLIs and images are compatible.
 2. *How does rootless Podman isolate containers without root?* A user namespace maps the container's root to the user's own UID, and other container UIDs to the subordinate range in `/etc/subuid`, so "root" inside has no real privilege outside.
 3. *What do `:Z` and `:z` do on a bind mount?* They relabel the host directory for SELinux: `:Z` privately for this container (its MCS categories), `:z` shared among containers. Without one, `container_t` is denied access.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A rootless Podman container with a bind mount runs fine on your laptop but fails on a RHEL server with 'Permission denied' when it reads its data directory. Why?"*
+
+**Model answer:**
+1. Most likely **SELinux**: the host directory has a label like `user_home_t` or `var_t`, and `container_t` may not read it.
+   - Check with `ls -Zd /data`;
+   - and `ausearch -m avc -ts recent` (or `journalctl -t setroubleshoot`).
+2. Fix by adding `:Z` (private) or `:z` (shared) to the volume: `-v /data:/data:Z`. Podman relabels the directory with the container's categories.
+3. If SELinux is fine, it's the **user namespace**: inside, the app runs as, say, UID 1000. Outside that maps to a subordinate UID (from `/etc/subuid`), which doesn't own the files.
+   - Fix ownership with `podman unshare chown 1000:1000 /data`;
+   - or use `--userns=keep-id`.
+4. Your laptop probably has SELinux off or permissive, or runs Docker as root, which hides both issues.
+
+**Likely follow-ups:**
+- *How do you make a container start at boot?* A Quadlet `.container` file; for rootless, also `loginctl enable-linger user`.
+- *Why is the `docker` group dangerous?* Its members can start privileged containers that mount the host's `/`: that's root.

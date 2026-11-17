@@ -134,6 +134,8 @@ sudo nmcli con add type bridge con-name br0 ifname br0         # a software swit
 2. Ping it continuously from another VM while you disconnect the active port. Count lost packets.
 3. Read `/proc/net/bonding/bond0` before and after.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 062` for every step, or `sudo ./checks/check 062 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Bare-metal servers** in data centres: two NICs to two switches (active-backup, or 802.3ad with MLAG/stacked switches).
@@ -164,3 +166,19 @@ sudo nmcli con add type bridge con-name br0 ifname br0         # a software swit
 1. *Which bonding mode gives high availability without switch configuration?* `active-backup` (mode 1): one port carries traffic, and another takes over if it fails.
 2. *Does bonding two 1 Gbit links make a single download 2 Gbit/s?* No. Each flow is hashed to one port, so one connection is limited to one link's speed; aggregation helps when there are many flows.
 3. *What does 802.3ad require?* LACP configured on the switch ports that form the bundle, matching the bond on the server.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"You bonded two 10 Gbit NICs in 802.3ad mode, but a single large file copy still only reaches 10 Gbit/s, and after a switch change the bond keeps failing over. Explain both."*
+
+**Model answer:**
+1. **Speed:** bonding hashes each **flow** onto one port. One TCP connection always uses one link, so it can't exceed 10 Gbit/s. Many parallel flows (many clients, or `xmit_hash_policy=layer3+4`) can use both.
+2. **Failovers:** 802.3ad needs **LACP configured on the switch** with matching ports in the same port-channel. After the switch change, check `/proc/net/bonding/bond0`:
+   - the "Aggregator ID" should be the same on both ports;
+   - the partner MAC address should be the switch's, not `00:00:00:00:00:00`;
+   - the "MII Status" of each port.
+3. If the switch can't do LACP, use `active-backup` (mode 1), which needs no switch configuration.
+
+**Likely follow-ups:**
+- *How do you test a bond's failover?* Ping continuously from another host while disconnecting the active port; watch `/proc/net/bonding/bond0`.
+- *What replaced teaming in RHEL 10?* Bonding; teaming was removed.

@@ -266,10 +266,61 @@ oracle
 - Take a snapshot called `clean` right after setup, and another before every risky lab (boot, disks, passwords).
 - After each lab, **reboot** and check that your change survived. Many changes only live in memory until you make them permanent. Real servers reboot for patches.
 
+### Get these notes onto your VMs (for the self-checks)
+
+Every lab in these notes ends with a **Check your work** line. The `checks/` folder of this repository has a small script per topic that inspects your VM and tells you which steps are done, with a hint for anything that isn't. Some steps are things you only *observe* (a key you pressed, an error you saw); for those it asks a short question and checks your answer against the live machine where it can.
+
+Clone the notes into each VM once:
+```bash
+sudo dnf install -y git          # Ubuntu: sudo apt install -y git
+git clone https://github.com/tushhar-mishra/linux-mastery-rhel.git ~/linux-notes
+cd ~/linux-notes
+git pull                         # later, to get updates
+```
+
+Then, after a lab:
+```bash
+sudo ./checks/check 007          # every step of topic 007
+sudo ./checks/check 007 2        # only step 2
+```
+Real output, with one step not done yet:
+```
+Topic 007 · Files and directories
+
+Step 1 The ~/lab tree
+  ✔ ~/lab/a, ~/lab/b and ~/lab/c are directories
+  ✔ ~/lab/c/f1 exists (copied with cp -a)
+
+Step 2 mv keeps the inode
+  ✘ f1 is now in ~/lab/b, not ~/lab/a
+      hint: mv ~/lab/a/f1 ~/lab/b/
+  ? Did the inode number change after the mv?
+    > no
+  ✔ correct
+      mv within one filesystem only renames: same inode, same data.
+
+Step 3 A file named -x
+  ✔ the file '-x' is gone from your home directory
+
+Step 4 rmdir
+  ? Why did 'rmdir ~/lab/b' fail?
+    > 
+      (skipped)
+
+Result: 4 passed, 1 failed, 1 skipped
+```
+- **It only looks.** A check never changes your system, so you can run it as often as you like.
+- It needs `sudo` to read system files, but it still knows which user you are (`~` means *your* home).
+- Run it on the machine where you did the lab: most labs are on server1; where a lab says server2, run it there.
+- Press Enter on an empty line to skip a question. `☐` lines are reminders for things no script can see (for example, watching the boot messages).
+- Many labs end by cleaning up, so run each step's check right after that step: `sudo ./checks/check 049 1` before you tear the LVs down in step 4.
+
 ### Try it
 1. Build the two-VM lab and run `ping` from server1 to server2.
 2. Take a snapshot. Then (inside server1) run `sudo touch /i-was-here`, restore the snapshot, and confirm the file is gone with `ls /`.
 3. Add two 5 GB disks to server1 and find them with `lsblk`.
+
+**Check your work:** clone the notes onto server1 as shown above, then run `sudo ./checks/check 002` (or `sudo ./checks/check 002 STEP` for one step).
 
 ## Where you'll use it
 
@@ -290,6 +341,7 @@ oracle
 | VM very slow | Too little RAM, or hardware virtualization unavailable | Give it more RAM; check the `vmx`/`svm` flags |
 | Windows host: `vagrant up` times out; the VM console froze after about 3 seconds of kernel messages; the VirtualBox log (`VBoxManage showvminfo NAME --log 0`) says "VT-x is not available … fall back to NEM" | Windows' hypervisor (Memory integrity/VBS, Hyper-V or WSL2) owns VT-x, so VirtualBox runs on top of it, and recent kernels can hang there | Quickest: 1 vCPU and no paravirtualization: add `vb.cpus = 1` and `vb.customize ["modifyvm", :id, "--paravirt-provider", "none"]`, then `vagrant reload`. Faster VMs: turn off Memory integrity (Windows Security → Device security → Core isolation) and reboot Windows, which lowers Windows' protection, so decide deliberately |
 | VM is up but hostname is `localhost` and there's no `192.168.56.x` address | `vagrant up` timed out before its setup steps | `vagrant reload` |
+| Windows host: the Ubuntu VM's console shows `Kernel panic - not syncing: IO-APIC + timer doesn't work!` | Same cause (VirtualBox running on top of Windows' hypervisor); the Ubuntu kernel's timer check fails there | With 1 vCPU, switch the VM to the older chipset without an IO-APIC: `VBoxManage modifyvm NAME --chipset piix3 --ioapic off` (VM powered off), then start it again |
 
 ## Quick recap
 
@@ -303,3 +355,18 @@ oracle
 1. *Type 1 vs Type 2 hypervisor?* Type 1 runs directly on hardware (ESXi, Hyper-V, KVM). Type 2 runs as an app on a normal OS (VirtualBox, VMware Workstation).
 2. *Why is KVM called Type 1 when a full Linux OS runs on the host?* Its kernel modules turn the Linux kernel itself into the hypervisor. VMs are processes scheduled directly by that kernel.
 3. *How do you check if a server can host VMs?* Look for the `vmx` or `svm` CPU flags, check that `/dev/kvm` exists, check the firmware settings, and run `virt-host-validate`.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"You need to practise a risky change (say, editing fstab or PAM) before doing it on a production server. How do you set up a safe place to try it?"*
+
+**Model answer:**
+1. Use a VM running the same distribution and major version as production, ideally built the same way (same partitioning, LVM, SELinux enforcing).
+2. Give it the same kind of extra disks or network setup the change touches.
+3. **Take a snapshot** before the change, so any mistake is one click to undo.
+4. Make the change, then **reboot** to prove it survives a boot, because many mistakes (fstab, bootloader, units) only show up then.
+5. Write the exact commands down, so the production change is a copy of what worked.
+
+**Likely follow-ups:**
+- *Is a snapshot a backup?* No. It lives on the same storage as the VM and depends on the original disk. It's an undo button, not protection against losing the host.
+- *Why keep SELinux and the firewall on in a lab?* Otherwise the lab hides the exact problems production will have, and your fix fails there.

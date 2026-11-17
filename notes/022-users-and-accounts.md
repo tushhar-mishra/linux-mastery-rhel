@@ -249,6 +249,8 @@ alice            pts/0    192.168.56.1     Mon Nov 16 09:12:41 +0000 2026
 3. Add `testuser` to `wheel` with `-aG`, then (on purpose) run `usermod -G users testuser` and see that `wheel` is gone.
 4. Delete both users with `userdel -r` and run `find / -xdev -nouser`.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 022` for every step, or `sudo ./checks/check 022 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Service accounts:** every daemon you install (nginx, postgres, prometheus) should run as its own `-r -s /sbin/nologin` user. Containers do the same: `USER 1001` in a Dockerfile. Kubernetes `runAsUser: 1001` sets the **UID number**, which is why the number (not the name) is what matters.
@@ -280,3 +282,18 @@ alice            pts/0    192.168.56.1     Mon Nov 16 09:12:41 +0000 2026
 1. *What makes an account root?* UID 0, regardless of its name.
 2. *`usermod -G` vs `usermod -aG`?* `-G` replaces all supplementary groups with the list given; `-aG` appends to the existing ones.
 3. *What happens to a deleted user's files outside their home?* They keep the old numeric UID and show as a number in `ls -l`. A new user given that UID would own them. Find them with `find / -nouser`.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"An engineer left the company. Walk me through removing their access safely."*
+
+**Model answer:**
+1. **Lock first, delete later:** `usermod -L user` plus `chage -E 0 user` (expiry also stops SSH key logins); remove their keys from `~/.ssh/authorized_keys`.
+2. Kill their sessions and processes: `pkill -KILL -u user` (after checking what's running).
+3. Look for what they own or run elsewhere: `crontab -l -u user`, systemd user units, `find / -xdev -user user`, sudoers entries, shared service-account keys they knew.
+4. Archive their home if needed, then `userdel -r user`.
+5. Find leftover files that now show only a UID: `find / -xdev -nouser`, and give them a proper owner, so a future user with the same UID doesn't inherit them.
+
+**Likely follow-ups:**
+- *Why not just `userdel` immediately?* You may lose evidence or break jobs that run as that user; locking is reversible.
+- *What makes an account root?* UID 0, whatever its name.

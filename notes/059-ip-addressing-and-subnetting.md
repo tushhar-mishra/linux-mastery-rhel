@@ -184,6 +184,8 @@ python3 -c "import ipaddress as i; n=i.ip_network('10.96.0.0/12'); print(n.num_a
 3. Shorten `2001:0db8:0000:0000:0000:0000:0000:0001`. (`2001:db8::1`)
 4. On your VM, change nothing, but compute whether `192.168.56.200` and `192.168.57.5` are local to `192.168.56.10/24`. Confirm with `ip route get`.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 059` for every step, or `sudo ./checks/check 059 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Cloud design:** choosing a VPC CIDR (e.g. `10.0.0.0/16`) and subnets per availability zone (/20s or /24s). **Overlapping ranges** make VPC peering, VPNs and on-prem links impossible, so plan early.
@@ -214,4 +216,18 @@ python3 -c "import ipaddress as i; n=i.ip_network('10.96.0.0/12'); print(n.num_a
 
 1. *What are the private IPv4 ranges?* `10.0.0.0/8`, `172.16.0.0/12` and `192.168.0.0/16` (RFC 1918).
 2. *How many usable hosts in a /26?* 62: 64 addresses minus the network and broadcast addresses.
-3. *Why must the Kubernetes pod and service CIDRs not overlap with your corporate network?* Routing would be ambiguous: traffic for corporate addresses in that range would be sent into the cluster (or the reverse), breaking connectivity.
+3. *Why must a VPN or lab network range not overlap with your corporate network?* Routing becomes ambiguous: traffic for addresses in the overlapping range follows whichever route is more specific (or has the lower metric), so one of the two networks becomes unreachable from that host.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A host with IP `10.1.4.20/22` can't talk to `10.1.7.200`, but can reach `10.1.3.5`. The network team says all three are 'in the same network'. Who's right?"*
+
+**Model answer:**
+1. A /22 has 1024 addresses. `10.1.4.20/22` is in `10.1.4.0–10.1.7.255` (network `10.1.4.0`, broadcast `10.1.7.255`).
+2. So `10.1.7.200` **is** local to it, and `10.1.3.5` is **not** (it's in `10.1.0.0/22`); traffic to it goes via the gateway, which explains why that one works.
+3. Since 10.1.7.200 is "local", the host ARPs for it directly. If 10.1.7.200 is configured with a smaller prefix (say /24), it thinks our host is remote and sends replies to its gateway: an asymmetric path, often dropped.
+4. Check both sides with `ip -br addr` and `ip route get`, and fix the **mask mismatch**.
+
+**Likely follow-ups:**
+- *How many usable hosts in a /28?* 14.
+- *What's `169.254.x.x` on an interface?* A link-local address: the host gave itself one because DHCP failed (and the cloud metadata service lives at 169.254.169.254).

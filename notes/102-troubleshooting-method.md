@@ -167,6 +167,8 @@ Break things on a lab VM (or have a friend do it) and fix them **out loud**, fol
 
 For each, write: the symptom, the evidence, the hypothesis, the test, the fix, the verification, and the prevention.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 102` for every step, or `sudo ./checks/check 102 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **On-call and incident response** in any production team.
@@ -196,3 +198,21 @@ For each, write: the symptom, the evidence, the hypothesis, the test, the fix, t
 1. *A website is down. What do you do first?* Confirm and scope it (what fails, for whom, since when), check what changed recently, and gather evidence such as service status, logs and listening ports. If users are impacted, mitigate first (roll back or fail over), then find the root cause layer by layer.
 2. *Why not just reboot the server?* It may hide the symptom temporarily but destroys evidence (process state, memory, logs in volatile storage), and the root cause remains, so the problem returns.
 3. *What makes a good postmortem?* A factual timeline, the root cause and contributing factors, why it wasn't detected sooner, and concrete owned action items. It's blameless, focusing on systems and processes rather than individuals.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"It's 2 AM. Monitoring says the checkout page is returning errors. You're the on-call engineer. Talk me through your first 15 minutes."*
+
+**Model answer:**
+1. **Acknowledge** and open an incident channel. Note the time.
+2. **Confirm and scope:** reproduce it (`curl -sv`). Is it all users or some? One server or all? When did it start (dashboards)?
+3. **What changed?** Deploys, config changes, certificate expiry, infrastructure events around the start time.
+4. **Mitigate first** if users are hurting: roll back the last deploy, fail over, or take the bad node out of the pool. Restoring service beats finding root cause at 2 AM.
+5. **Collect evidence before changing things:** service status, `journalctl -u`, error logs, `df`, `free`, `ss -s`, and `sos report` if needed.
+6. **Work the layers** with one hypothesis at a time: proxy → app → database → DNS → network.
+7. **Verify** the fix from the user's side, keep stakeholders updated, and write down the timeline as you go.
+8. Afterwards: a blameless postmortem with owned action items.
+
+**Likely follow-ups:**
+- *Why not just reboot?* It destroys evidence and the problem usually returns.
+- *What makes a good postmortem?* A factual timeline, the root cause and contributing factors, why detection was late, and concrete owned actions.

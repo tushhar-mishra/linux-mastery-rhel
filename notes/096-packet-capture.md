@@ -161,6 +161,8 @@ sudo nsenter -t <PID> -n tcpdump -i eth0 -nn   # inside one container's network 
 3. Capture DNS while running `dig` against a working server and then a non-existent one.
 4. Write a pcap, copy it to your workstation and find retransmissions in Wireshark.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 096` for every step, or `sudo ./checks/check 096 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **"Is the request reaching the server?"**: run tcpdump on the server.
@@ -192,3 +194,21 @@ sudo nsenter -t <PID> -n tcpdump -i eth0 -nn   # inside one container's network 
 1. *How do you prove whether traffic reaches a server?* Run `tcpdump -nn -i any port PORT` on the server: see if SYNs arrive and whether SYN-ACKs (or RSTs) go back.
 2. *Capture filter vs display filter?* A capture filter (BPF) decides which packets are recorded at all; a display filter only hides or shows packets already recorded.
 3. *What does a refused connection look like in tcpdump?* The client's `[S]` is answered immediately by an `[R.]` (RST) from the server.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"The application team says 'the network is dropping our requests'. The network team says 'the network is fine'. How do you settle it with evidence?"*
+
+**Model answer:**
+1. Capture at **both ends** at the same time, filtered to the flow: `tcpdump -i any -nn -w /tmp/side.pcap host 10.0.0.5 and port 8443` on client and server.
+2. Reproduce the failure, stop the captures, and compare:
+   - The SYN leaves the client but never arrives at the server → something in between drops it (firewall, routing, security group).
+   - The SYN arrives and the server answers `[R.]` → the server side refuses (nothing listening, or a reject rule).
+   - The SYN arrives and nothing goes back → the server's own firewall or no return route.
+   - The handshake completes, then retransmissions or resets mid-stream → MTU, a middlebox timeout, or the app.
+3. Open the pcaps in Wireshark (`tcp.analysis.retransmission`, `tcp.flags.reset == 1`) and show the timeline.
+4. Packets don't lie, so this ends the argument quickly, and points at the right team.
+
+**Likely follow-ups:**
+- *Capture filter vs display filter?* BPF decides what's recorded; Wireshark's filter only hides or shows.
+- *Why `not port 22` when capturing over SSH?* Otherwise you capture your own session, which generates more traffic: a feedback loop.

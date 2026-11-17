@@ -144,6 +144,8 @@ sudo repquota -a
 2. Set an inode hard limit of 15 and `touch f{1..20}`.
 3. Create a project quota for a directory and confirm `df -h /shared/webapp` shows the project size.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 089` for every step, or `sudo ./checks/check 089 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Shared servers** (universities, hosting, build servers): per-user home and scratch limits.
@@ -174,3 +176,23 @@ sudo repquota -a
 1. *Soft vs hard quota?* A soft limit may be exceeded for a grace period (7 days by default), after which it's enforced; a hard limit can never be exceeded.
 2. *What is a project quota?* A limit on a whole directory tree (tagged with a project ID), counting all files inside regardless of who owns them.
 3. *Why don't XFS quotas work after `mount -o remount,uquota`?* XFS only enables quota accounting at mount time, so you must unmount and mount again (or use `rootflags=` for the root filesystem).
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A shared web-hosting server needs each customer limited to 10 GB, regardless of which Linux user writes the files. How do you implement it on XFS?"*
+
+**Model answer:**
+1. User quotas don't fit (several users write to one site); **project quotas** do: they limit a directory tree.
+2. Mount the filesystem with `prjquota` (`pquota`) in fstab, then **unmount and mount** (XFS doesn't enable quotas on remount).
+3. Define projects:
+   - `/etc/projid`: `cust1:101`;
+   - `/etc/projects`: `101:/srv/sites/cust1`.
+4. Initialise and limit:
+   - `xfs_quota -x -c 'project -s cust1' /srv`;
+   - `xfs_quota -x -c 'limit -p bsoft=9g bhard=10g cust1' /srv`.
+5. Check: `xfs_quota -x -c 'report -pbih' /srv`, and `df -h /srv/sites/cust1` shows the project's size.
+6. Alert near the soft limit; at the hard limit, writes fail with "Disk quota exceeded".
+
+**Likely follow-ups:**
+- *Soft vs hard limit?* Soft can be exceeded for the grace period; hard never.
+- *How do you limit the number of files?* Inode limits: `isoft`/`ihard`.

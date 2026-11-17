@@ -126,6 +126,8 @@ sudo mokutil --import my-signing-key.der    # enrol your key; confirm in MOK Man
 3. Remove the custom kernel cleanly.
 4. With Secure Boot enabled in a UEFI VM, observe the refusal; then disable Secure Boot (lab) or sign and enrol.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 107` for every step, or `sudo ./checks/check 107 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Kernel development and bug hunting:** testing an upstream fix, bisecting a regression (`git bisect` on the kernel tree).
@@ -155,3 +157,26 @@ sudo mokutil --import my-signing-key.der    # enrol your key; confirm in MOK Man
 1. *Why shouldn't you run a self-compiled kernel on production RHEL?* You lose Red Hat support, security updates, the kABI guarantee for third-party modules, and Secure Boot signing.
 2. *What does `make modules_install` do?* It installs the compiled `.ko` modules into `/lib/modules/VERSION/` and runs `depmod` to generate module dependency data.
 3. *How do you base a custom kernel on your distribution's configuration?* Copy `/boot/config-$(uname -r)` to `.config` and run `make olddefconfig` to fill in defaults for options that are new in this kernel version.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A colleague wants to compile a newer upstream kernel on production RHEL servers to get a driver fix. What do you say?"*
+
+**Model answer:**
+1. Don't run self-built kernels in production on RHEL:
+   - Red Hat support for that system ends;
+   - you lose Red Hat's security errata stream and the kABI guarantee for third-party modules;
+   - the kernel isn't signed, so **Secure Boot** refuses it.
+2. Alternatives, in order:
+   - check whether the fix is already backported in a newer RHEL kernel (`rpm -q --changelog kernel | grep -i driver`);
+   - ask the vendor or Red Hat for a supported driver (kmod, DUP);
+   - use a newer minor release of the distribution.
+3. If a custom kernel is unavoidable (a lab, a special appliance):
+   - build it from RHEL's config;
+   - sign it and its modules with an enrolled MOK;
+   - keep the RHEL kernel installed as the fallback;
+   - own its updates from then on.
+
+**Likely follow-ups:**
+- *What does `make olddefconfig` do?* Takes the existing `.config` and fills new options with defaults.
+- *What does `make modules_install` do?* Installs the modules into `/lib/modules/VERSION/` and runs `depmod`.

@@ -58,6 +58,20 @@ For `cmd1 | cmd2`, bash asks the kernel for a **pipe**: an in-memory buffer (64 
 - A pipe carries **only stdout**. stderr still goes to your screen unless you redirect it.
 - The pipeline's exit status is that of the **last** command, unless `set -o pipefail` is on (topic 014).
 
+What `grep error app.log 2>/dev/null | sort > errors.txt` looks like after bash has wired it up:
+
+```mermaid
+flowchart LR
+    F1[("app.log")] --> G
+    G["grep<br/>fd 0 = terminal<br/>fd 1 = pipe<br/>fd 2 = /dev/null"] -- "stdout" --> P[["pipe<br/>64 KB kernel buffer"]]
+    P -- "stdin" --> S["sort<br/>fd 0 = pipe<br/>fd 1 = errors.txt<br/>fd 2 = terminal"]
+    S --> F2[("errors.txt")]
+    G -. "stderr" .-> N[("/dev/null")]
+    S -. "stderr" .-> T(["your terminal"])
+```
+
+Both programs run at the same time. Neither knows where its fds point; bash set that up before each one started.
+
 ### Order of `2>&1`
 
 `2>&1` means "make FD 2 point **where FD 1 points right now**".
@@ -244,6 +258,8 @@ truncate -s 0 app.log  # same
 3. Run `sudo echo test > /etc/test1` and see it fail. Then do it correctly with `tee`.
 4. `set -o noclobber; echo x > a.txt` → error; `echo x >| a.txt` → works; `set +o noclobber`.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 016` for every step, or `sudo ./checks/check 016 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **cron jobs:** `/usr/local/bin/backup.sh >> /var/log/backup.log 2>&1`. Without `2>&1`, errors go to email (or nowhere) and you never see them (topic 039).
@@ -277,3 +293,17 @@ truncate -s 0 app.log  # same
 1. *What's the difference between `cmd > f 2>&1` and `cmd 2>&1 > f`?* The first sends both stdout and stderr to `f`. The second points stderr at the terminal (where stdout pointed at that moment), then moves only stdout to `f`.
 2. *Why does `sudo echo x > /etc/file` fail?* The redirection is done by your own non-root shell before sudo runs. Use `echo x | sudo tee /etc/file`.
 3. *Why does `sort f > f` destroy the file?* The shell truncates `f` to zero bytes before `sort` starts reading it.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A nightly job's log file is always empty, even when the job clearly failed. The cron line is `backup.sh 2>&1 > /var/log/backup.log`. What's wrong?"*
+
+**Model answer:**
+1. Redirections are processed **left to right**. `2>&1` points stderr at where stdout points **now** (cron's mail/output pipe). Then `> file` moves only stdout to the file.
+2. The errors (stderr) never reach the file, and a failing backup writes mostly errors.
+3. Fix: `backup.sh > /var/log/backup.log 2>&1` (or `>>` to keep history).
+4. Also make the job's exit status visible: alert on non-zero, or run it as a systemd service so failures show in `systemctl --failed`.
+
+**Likely follow-ups:**
+- *How do you write to a root-owned file from a non-root shell with sudo?* `cmd | sudo tee /etc/file` (or `tee -a`), because `sudo cmd > file` opens the file with your own permissions.
+- *What happens to `cmd1 | head -1` when cmd1 keeps writing?* It gets SIGPIPE on its next write after `head` exits, and stops.

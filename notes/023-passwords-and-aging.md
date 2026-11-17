@@ -204,6 +204,8 @@ $6$Kq3h9bZr8s$2mJ...
 3. Lock `temp1`, look at its shadow line (the `!`), then unlock it.
 4. `chage -E 2026-01-01 temp1` (a date in the past), then try `su - temp1` and read the message.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 023` for every step, or `sudo ./checks/check 023 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Onboarding:** create the account, set a temporary password, `chage -d 0` so the user picks their own.
@@ -236,3 +238,18 @@ $6$Kq3h9bZr8s$2mJ...
 1. *Lock vs expire vs delete password?* Lock puts `!` before the hash, so passwords fail but SSH keys still work. Expire disables the whole account, keys included. Deleting the password leaves it empty, which may allow login with no password at all.
 2. *What does `chage -d 0 user` do?* It sets the last-change day to 0, which forces the user to change their password at the next login.
 3. *What is a salt?* Random data stored with the hash and mixed into the password before hashing. Identical passwords get different hashes, and precomputed crack tables become useless.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A user says they can log in with their SSH key but not with their password. Another says their account 'expired'. How do you investigate both?"*
+
+**Model answer:**
+1. `sudo passwd -S user` and `sudo chage -l user` show the state.
+2. **Key works, password doesn't:** the password is probably **locked** (`!` in front of the hash in `/etc/shadow`, `passwd -S` shows `LK`). Lock only blocks passwords. Unlock with `usermod -U`. Also check faillock (topic 029).
+3. **"Account expired":** the account expiry date (`chage -l`, "Account expires") has passed. That blocks keys too. Fix with `chage -E -1 user` (never) or a new date.
+4. "Password expired" is different: the user is forced to change it at login (`max` days reached, or `chage -d 0`).
+5. Check the logs (`/var/log/secure`, `journalctl -u sshd`) to see the exact refusal message.
+
+**Likely follow-ups:**
+- *What does `$y$` at the start of a hash mean?* yescrypt, the default on RHEL 10 and Ubuntu.
+- *Why use `vipw` instead of editing `/etc/passwd` directly?* It locks the file and checks the syntax, so a typo can't lock everyone out.

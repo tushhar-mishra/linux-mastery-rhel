@@ -151,6 +151,8 @@ sudo semanage login -m -s user_u -r s0 __default__    # 2. everyone else becomes
 3. Create `guest1` mapped to `guest_u` and `staff1` mapped to `staff_u`. SSH in as each, run `id -Z`, try `sudo -l`, and try running a script in the home directory.
 4. Set up the `staff_u` + `TYPE=sysadm_t ROLE=sysadm_r` sudo rule and confirm the role switch.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 075` for every step, or `sudo ./checks/check 075 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Security reviews:** "which services run unconfined?" (`ps -eZ | grep unconfined_service_t`). Third-party agents (monitoring, backup, security tools) are the usual suspects. Vendors sometimes ship SELinux policy modules for them.
@@ -181,3 +183,18 @@ sudo semanage login -m -s user_u -r s0 __default__    # 2. everyone else becomes
 1. *What does "targeted" policy mean?* Selected system services run in their own confined domains; users and everything else run unconfined, restricted mainly by normal permissions.
 2. *Why would a service run as `unconfined_service_t`?* Its executable has a generic label (such as `bin_t` or `usr_t`), so no transition rule puts it into a specific confined domain.
 3. *How do you stop a user from ever using sudo, at the SELinux level?* Map them to `user_u` (or `guest_u`) with `semanage login -a -s user_u USER`; those SELinux users can't transition to root even if sudoers allows it.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"Contractors need SSH access to run a few scripts, but must never become root, even if a sudo rule is added by mistake later. How can SELinux help?"*
+
+**Model answer:**
+1. Map their Linux accounts to a restricted SELinux user: `semanage login -a -s user_u contractor1` (or for a group: `semanage login -a -s user_u %contractors`).
+2. `user_u` can't use `su` or `sudo` to reach root domains, even if sudoers would allow it. SELinux checks happen after DAC and sudo.
+3. Admins who need root get `staff_u` with a sudo rule that switches to `sysadm_r`/`sysadm_t`.
+4. Mappings apply at **login**; test with a fresh SSH login and `id -Z`, then try `sudo -l`.
+5. Keep admins mapped (and tested) **before** confining the `__default__` login, or you can lock yourself out.
+
+**Likely follow-ups:**
+- *What does "targeted" mean?* Only selected services are confined; users and everything else run unconfined by default.
+- *Why does a service show `unconfined_service_t`?* Its binary has a generic label, so no domain transition applies.

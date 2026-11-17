@@ -194,13 +194,15 @@ rpm -qf /etc/ssh/sshd_config
 ```
 openssh-server-9.9p1-25.el10_2.alma.1.x86_64
 ```
-- Which installed package owns this file (`-q` query, `-f` file). Ubuntu: `dpkg -S /etc/ssh/sshd_config`.
+- Which installed package owns this file (`-q` query, `-f` file). Ubuntu: `dpkg -S /usr/sbin/sshd` → `openssh-server: /usr/sbin/sshd`. (On Ubuntu, `/etc/ssh/sshd_config` itself belongs to no package: the install script generates it, so `dpkg -S` on it says "no path found".)
 
 ### Try it
 1. Run `ls /` and match each directory to the table above.
 2. Run `df -hT` and find which entries are real disks and which are in RAM.
 3. Look at `/proc/cpuinfo` and `/proc/uptime`, then run `cat /proc/uptime` again and see it change.
 4. Find which package owns `/usr/bin/ls`.
+
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 006` for every step, or `sudo ./checks/check 006 STEP` for one (topic 002 shows how to get the notes there).
 
 ## Where you'll use it
 
@@ -233,3 +235,18 @@ openssh-server-9.9p1-25.el10_2.alma.1.x86_64
 1. *What's the difference between `/` and `/root`?* `/` is the top of the whole tree. `/root` is the home directory of the root user.
 2. *`/proc` vs `/sys`?* Both are virtual filesystems made by the kernel. `/proc` shows processes and kernel settings (`/proc/sys`). `/sys` shows the device and driver model.
 3. *`df` says the disk is full but `du` doesn't add up. Why?* Usually a deleted file is still open by a process (find it with `lsof +L1`), or files are hidden underneath a mount point.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"Monitoring says `/` is 95% full. Walk me through finding what's using the space."*
+
+**Model answer:**
+1. `df -hT /` to confirm which filesystem and its size. Also `df -i /`: running out of **inodes** gives "No space left" too.
+2. `sudo du -xh --max-depth=1 / | sort -h` (`-x` stays on that filesystem), then drill down into the biggest directory, usually `/var` (logs, caches, containers) or `/home`.
+3. If `du`'s total is much smaller than `df`'s, look for **deleted files still held open**: `sudo lsof +L1`. Restart or reload the process that holds them.
+4. Also check for files **hidden under a mount point** (written before something was mounted on top).
+5. Fix the cause (log rotation, a cache limit), not just this instance.
+
+**Likely follow-ups:**
+- *Why not delete files in `/proc` to free space?* `/proc` is virtual: it lives in RAM and uses no disk.
+- *Where do logs and application data normally live?* `/var/log` and `/var/lib`, which is why `/var` is often a separate filesystem on servers.

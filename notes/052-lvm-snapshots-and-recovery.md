@@ -139,6 +139,8 @@ sudo vgcfgbackup vgdata          # take a manual metadata backup now
 3. Snapshot an LV, make several changes, then `lvconvert --merge` and confirm the changes are gone.
 4. Delete a test LV and bring it back with `vgcfgrestore`.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 052` for every step, or `sudo ./checks/check 052 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Before patching or upgrades:** snapshot, upgrade, test, then remove the snapshot (success) or merge it (roll back).
@@ -169,3 +171,20 @@ sudo vgcfgbackup vgdata          # take a manual metadata backup now
 1. *How does an LVM snapshot work?* Copy-on-write: before a block on the origin is overwritten for the first time, the original is copied into the snapshot's COW area. Reading the snapshot combines those saved blocks with the unchanged blocks from the origin.
 2. *What happens when a snapshot fills up?* It becomes invalid and can't be used. You must size it for the expected amount of change, or enable autoextend.
 3. *How would you recover an LV that was deleted by mistake?* Stop writing to the VG, find the archive taken before the `lvremove` with `vgcfgrestore --list`, test it, restore it, activate the LV, and mount it read-only to verify. It only works if the extents haven't been reused.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"You must upgrade an application that changes its data files, and you need a fast way back if it goes wrong. The data is on LVM. Plan it."*
+
+**Model answer:**
+1. Check the VG has free space for the snapshot: about the amount of data you expect the upgrade to change, plus a margin.
+2. Stop or quiesce the app (or flush the database) so the snapshot is **consistent**.
+3. `lvcreate -s -L 5G -n data_pre_upgrade /dev/vg/data`.
+4. Upgrade, and watch the snapshot fill: `lvs` `Data%`. A snapshot that reaches 100% becomes **invalid**.
+5. If it fails: stop the app, unmount, `lvconvert --merge /dev/vg/data_pre_upgrade`. The origin returns to the snapshot's state (the merge finishes on the next activation if the LV was busy).
+6. If it succeeds: `lvremove` the snapshot (it slows writes while it exists).
+7. A snapshot is **not a backup**: it lives on the same disks. Take a real backup too.
+
+**Likely follow-ups:**
+- *Why mount an XFS snapshot with `-o nouuid`?* It has the same UUID as the mounted origin, which XFS refuses otherwise.
+- *What does `vgcfgrestore` restore?* The LVM metadata (the map of extents), not the data.

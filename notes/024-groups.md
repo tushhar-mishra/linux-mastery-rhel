@@ -131,6 +131,8 @@ Adding user julian to group devs
 3. Try `groupdel` on a user's primary group and read the error.
 4. Make a user the admin of `music` and have them add someone.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 024` for every step, or `sudo ./checks/check 024 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Admin rights:** `usermod -aG wheel alice` (RHEL) or `usermod -aG sudo alice` (Ubuntu) (topic 028).
@@ -165,3 +167,17 @@ After changing a GID with `groupmod -g`, fix old files: `find / -xdev -gid OLD -
 1. *Primary vs supplementary group?* The primary group (exactly one, from `/etc/passwd`) becomes the group owner of new files. Supplementary groups (zero or more, from `/etc/group`) give extra access.
 2. *A user was added to a group but still gets "Permission denied". Why?* Their running shell got its group list at login. They need to log in again (or use `newgrp`/`su -`); services need a restart.
 3. *Why might `groupdel` fail?* The group is some user's primary group.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"You added a user to the `docker` (or `wheel`) group, but they still get 'permission denied'. What's going on?"*
+
+**Model answer:**
+1. Group membership is attached to a process **at login**. Their current shell still has the old group list: `id` in their session doesn't show the new group, while `id username` (which reads the database) does.
+2. They need to **log out and in** again (or `newgrp group` / `su - user` to test).
+3. Services running as that user need a **restart** for the same reason.
+4. Also check the change itself: `getent group docker`, and that it was `usermod -aG` (with `-a`), not `-G`, which would have removed their other groups.
+
+**Likely follow-ups:**
+- *Primary vs supplementary group?* The primary group owns new files; supplementary groups grant extra access.
+- *How can you see a running process's real groups?* `grep Groups /proc/PID/status`.

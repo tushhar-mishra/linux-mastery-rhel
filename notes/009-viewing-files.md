@@ -199,6 +199,8 @@ Viewing compressed files without unpacking them (topic 021): `zcat`, `zless`, `z
 3. In one terminal run `sudo tail -F /var/log/secure`. In another, SSH into the machine. Watch the login appear.
 4. Create a Windows-style file with `printf 'a\r\nb\r\n' > win.txt` and inspect it with `file` and `cat -A`.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 009` for every step, or `sudo ./checks/check 009 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Live debugging:** `tail -F` on the app log in one window while you send test requests in another.
@@ -230,3 +232,17 @@ Viewing compressed files without unpacking them (topic 021): `zcat`, `zless`, `z
 1. *`tail -f` vs `tail -F`?* `-f` follows the open file; after log rotation it keeps watching the old renamed file. `-F` follows the file name and reopens the new file after rotation.
 2. *`more` vs `less`?* `less` scrolls both directions, searches better and doesn't load the whole file first.
 3. *What does `cat -A` show?* Tabs as `^I`, line ends as `$`, carriage returns as `^M`, and other control characters. It's useful for spotting Windows line endings and stray whitespace.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"You're watching an application log with `tail -f` during an incident, and the output stops at midnight even though the app is still busy. What happened?"*
+
+**Model answer:**
+1. Log rotation ran at midnight: `app.log` was renamed (to `app.log-20261117`) and a new `app.log` was created.
+2. `tail -f` follows the **open file**, so it's still watching the old, renamed file, which nobody writes to any more.
+3. Use **`tail -F`**: it follows the **name**, notices the new file and reopens it.
+4. Or, if the app logs to the journal, `journalctl -fu app` doesn't have this problem.
+
+**Likely follow-ups:**
+- *A config file from a Windows colleague gives strange errors. How do you check it?* `file conf` says "with CRLF line terminators"; `cat -A` shows `^M$` at line ends. Fix it with `sed -i 's/\r$//'` or `dos2unix`.
+- *How do you see the last 50 lines of a huge file without loading it all?* `tail -n 50 file`, or `less +G file`. `less` doesn't read the whole file first.

@@ -75,6 +75,24 @@ The receiver peels the headers off in reverse. Engineers say "a layer-2 problem"
 6. The server's NIC receives the frame. The kernel strips the headers, finds which program owns port 443 (a **socket**: a program's endpoint for network communication), and hands it the data.
 7. The reply comes back the same way, addressed to your IP and your ephemeral port.
 
+```mermaid
+sequenceDiagram
+    participant C as Laptop 192.168.1.20
+    participant DNS as DNS server
+    participant GW as Gateway 192.168.1.1
+    participant S as Web server 93.184.215.14
+    C->>DNS: A record for www.example.com? (UDP 53)
+    DNS-->>C: 93.184.215.14
+    Note over C: Not in my subnet → send via the gateway
+    C->>GW: ARP: who has 192.168.1.1? (broadcast)
+    GW-->>C: 192.168.1.1 is at aa:bb:cc:00:00:01
+    C->>S: SYN to port 443 (frames go to the gateway's MAC)
+    Note over GW: each router: new Ethernet header, TTL − 1
+    S-->>C: SYN-ACK
+    C->>S: ACK, then the request
+    S-->>C: response, to 192.168.1.20 port 51022
+```
+
 ### TCP vs UDP
 
 | | TCP | UDP |
@@ -210,6 +228,8 @@ ethtool enp0s3 | grep -E 'Speed|Duplex|Link detected'
 3. Run `ss -tuln` and identify every listening port using `/etc/services`.
 4. `tracepath -n 8.8.8.8` and count the hops.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 058` for every step, or `sudo ./checks/check 058 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Every "can't connect" incident:** walk up the layers: link up? IP correct? route to the destination? ARP resolving the gateway? port listening? firewall? application?
@@ -241,3 +261,23 @@ ethtool enp0s3 | grep -E 'Speed|Duplex|Link detected'
 1. *MAC address vs IP address?* A MAC address identifies a NIC on the local link and is used by switches; it gets replaced at every router hop. An IP address identifies a host across networks and is used by routers; it stays the same end to end (unless NAT changes it).
 2. *TCP vs UDP?* TCP is connection-oriented, reliable and ordered (handshake, acknowledgements, retransmission). UDP sends independent datagrams with no guarantee and very little overhead.
 3. *What does ARP do?* It finds the MAC address belonging to an IP address on the local network, by broadcasting a request that the owner of the IP answers. Results are cached in the neighbour table (`ip neigh`).
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A server can't reach a database on another subnet. Walk me through troubleshooting it, layer by layer."*
+
+**Model answer:**
+1. **Link:** `ip -br link`. Is the interface UP? `ethtool eth0`: is a link detected?
+2. **IP:** `ip -br addr`. Is the right address and prefix configured?
+3. **Route:** `ip route get <db-ip>`. Which interface and gateway will be used? Is there a default route?
+4. **Gateway reachable:** `ping` the gateway, then `ip neigh` to check ARP resolved it (`REACHABLE`, not `FAILED`).
+5. **Path:** `tracepath -n <db-ip>`. Where does it stop?
+6. **Port:** `nc -zv <db-ip> 5432` or `curl -v telnet://<db-ip>:5432`.
+   - "refused" = reached the host, nothing listening or rejected;
+   - "timed out" = dropped on the way (firewall or no return route).
+7. **Far side:** is the DB listening (`ss -tlnp`), on the right address (not only 127.0.0.1)? Does its firewall allow us? Does it have a route back?
+8. Fix at the lowest layer that fails.
+
+**Likely follow-ups:**
+- *What changes at each router hop, and what doesn't?* The Ethernet header (MACs) is rewritten and the TTL drops; the source and destination IPs stay (unless NAT).
+- *Why might ping fail even though the port works?* ICMP is often blocked by firewalls. Test the real port.

@@ -258,6 +258,8 @@ curl -LO https://example.com/file.tar.gz
 3. Create a file called `-x` with `touch -- -x`, then delete it.
 4. Run `rmdir ~/lab/b` and read the error. Why does it fail?
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 007` for every step, or `sudo ./checks/check 007 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Before editing any config:** `cp -a file file.$(date +%F)`. You can roll back in seconds.
@@ -291,3 +293,18 @@ curl -LO https://example.com/file.tar.gz
 1. *Why is `mv` instant on the same filesystem but slow to another disk?* On the same filesystem only the directory entry changes; the inode and data stay put. Across filesystems the data must be copied, then the original deleted.
 2. *Why can't you delete a file you own?* Deleting changes the directory, so you need write and execute permission on the directory. The sticky bit or an immutable attribute can also block it.
 3. *What is ctime?* The time the inode (metadata) last changed: permissions, owner, rename. It is not the creation time.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A user can't delete a file they own in a shared directory. They have write permission on the file. Why, and what do you check?"*
+
+**Model answer:**
+1. Deleting a file changes the **directory**, not the file. They need **write + execute on the directory**: `ls -ld dir`.
+2. If the directory has the **sticky bit** (`t`, as on `/tmp`), only the file's owner, the directory's owner or root can delete. Owning the file should be enough, so check who really owns it.
+3. Check for the **immutable** or append-only attribute: `lsattr file` (`i` or `a`); not even root can delete it until `chattr -i`.
+4. Check whether the filesystem is mounted **read-only**: `findmnt -T dir`.
+5. On RHEL, an SELinux denial is possible too (an AVC in `ausearch`).
+
+**Likely follow-ups:**
+- *Why is `mv` within one filesystem instant even for a 50 GB file?* Only the directory entry changes; the inode and data stay where they are.
+- *Does `rm` erase the data?* No. It removes a name. The blocks are freed when the last name is gone and no process has the file open.

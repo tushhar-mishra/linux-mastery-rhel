@@ -156,6 +156,8 @@ sudo conntrack -L -d 172.30.45.12 2>/dev/null | head -3   # flows to a ClusterIP
 3. Deploy a pod with `limits.cpu: 100m` running a busy loop; read `nr_throttled` on the node.
 4. Find a Service's DNAT rules and its conntrack entries on a node.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 111` for every step, or `sudo ./checks/check 111 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Every Kubernetes/OpenShift job:** node debugging, capacity planning (requests/limits), performance (throttling), networking (DNS, conntrack, MTU), and security reviews (securityContext, SCCs, privileged pods).
@@ -183,3 +185,22 @@ sudo conntrack -L -d 172.30.45.12 2>/dev/null | head -3   # flows to a ClusterIP
 1. *What is a pod at the Linux level?* One or more processes that share a network namespace (and usually IPC/UTS), each with its own mount and PID namespaces and a cgroup under the pod's cgroup.
 2. *CPU request vs CPU limit?* A request becomes `cpu.weight` (a share under contention, never throttles) and is used for scheduling; a limit becomes a `cpu.max` quota that throttles the container once it's used up in each period.
 3. *How does a ClusterIP Service work?* kube-proxy (or an eBPF CNI) installs DNAT rules that rewrite the virtual Service IP to one of the backend pod IPs; conntrack remembers the translation for the rest of the flow.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A containerised app on a Linux host keeps restarting with exit code 137, but the host shows plenty of free memory. Using only Linux tools on the host, prove what's happening."*
+
+**Model answer:**
+1. 137 = 128 + 9: the main process was killed with SIGKILL.
+2. Find the container's cgroup: `podman inspect -f '{{.State.Pid}}' NAME` → `cat /proc/PID/cgroup` → its directory under `/sys/fs/cgroup/`.
+3. Read `memory.max` (the limit) and `memory.events`. An `oom_kill` count that rises with each restart is proof.
+4. The kernel log agrees: `journalctl -k | grep -i "memory cgroup out of memory"` names the process and the cgroup.
+5. Host free memory is irrelevant: the **cgroup** hit its own `memory.max`.
+6. Fix:
+   - raise the limit to the app's real working set, measured from `memory.current` and `memory.peak`;
+   - or make the app use less (heap size, worker count);
+   - set `memory.high` a bit below `max`, so it's throttled before being killed.
+
+**Likely follow-ups:**
+- *What do a "CPU limit" and a "CPU share" become in the kernel?* `cpu.max` (a quota that throttles) and `cpu.weight` (a relative share under contention).
+- *How do you run a command inside the container's network namespace from the host?* `nsenter -t PID -n ss -tlnp`. For its files, add `-m`, or read `/proc/PID/root/…`.

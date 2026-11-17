@@ -76,6 +76,24 @@ The kernel keeps free memory above **watermarks** (derived from `vm.min_free_kby
 2. **Direct reclaim**: if allocations outrun kswapd, the allocating process must reclaim memory **itself**. It stalls, so latency rises everywhere. This is "memory pressure".
 3. **OOM killer**: if reclaim can't free enough, the kernel kills a process.
 
+```mermaid
+flowchart TD
+    A["process needs a page<br/>(page fault or allocation)"] --> F{"free memory above<br/>the min watermark?"}
+    F -- "yes" --> G(["page given out"])
+    G -. "free drops below low watermark" .-> KS["kswapd wakes (background)<br/>reclaims until high watermark"]
+    F -- "no" --> DR["direct reclaim:<br/>the process reclaims itself<br/>(it stalls: latency, PSI rises)"]
+    KS --> R
+    DR --> R{"what can be freed?"}
+    R -- "clean page cache" --> D1["drop it (re-read later)"]
+    R -- "dirty page cache" --> D2["write back, then drop"]
+    R -- "anonymous memory" --> D3["write to swap, then free<br/>(swappiness sets the balance)"]
+    D1 --> OKQ{"enough freed?"}
+    D2 --> OKQ
+    D3 --> OKQ
+    OKQ -- "yes" --> G
+    OKQ -- "no" --> OOM(["OOM killer picks a victim<br/>(cgroup OOM if the limit was memory.max)"])
+```
+
 `vm.swappiness` (0–200) biases reclaim between anonymous pages (→ swap) and file pages (→ drop cache). It is **not** "the percentage of RAM at which swapping starts" (topic 050).
 
 **Measure pressure, not just usage.** **PSI** (Pressure Stall Information) reports the share of time tasks were stalled waiting for memory. It's a much better early warning than "free is low", and it exists per cgroup too (`memory.pressure`). **On RHEL, PSI is built into the kernel but switched off** (`CONFIG_PSI_DEFAULT_DISABLED=y`): `/proc/pressure/` and the cgroup `*.pressure` files don't exist until you boot with the kernel argument `psi=1` (`sudo grubby --update-kernel=ALL --args=psi=1`, then reboot; topic 054).
@@ -199,6 +217,8 @@ Nov 17 11:02:41 server1 kernel: Out of memory: Killed process 4242 (java) total-
 3. **RSS vs PSS:** sum `ps -o rss` for all `httpd` workers and compare with the sum of their PSS values.
 4. **OOM priority:** start two `sleep` processes; set one's `oom_score_adj` to 1000 and the other's to −1000; compare their `oom_score`.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 093` for every step, or `sudo ./checks/check 093 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Kubernetes:**
@@ -237,3 +257,20 @@ Nov 17 11:02:41 server1 kernel: Out of memory: Killed process 4242 (java) total-
 1. *Why is "free" memory low on a healthy Linux server?* Linux uses unused RAM as page cache. That cache is reclaimable, so `MemAvailable` (`available` in `free`) is the real headroom.
 2. *A container was killed with exit code 137, but the host has 30 GB free. Why?* Its cgroup hit `memory.max`, so the cgroup OOM killer sent SIGKILL (128 + 9 = 137). Check `memory.events` and the kernel log.
 3. *What's the difference between RSS and PSS?* RSS counts every resident page of a process, including shared ones in full; PSS divides each shared page among the processes sharing it, so PSS values add up correctly.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A process was killed overnight and the logs say 'Out of memory: Killed process'. The team wants to just add RAM. What do you investigate first?"*
+
+**Model answer:**
+1. Read the kernel's OOM report: `journalctl -k | grep -B5 -A30 "invoked oom-killer"`.
+   - "**Memory cgroup** out of memory" = a cgroup limit (`MemoryMax=` on a service or a container limit) was hit, not the host. More RAM won't help; the limit or the app's usage must change.
+   - Global OOM: the task list shows who held the most memory (RSS) at the time.
+2. Was it a **leak** or a **spike**? Use history (`sar -r`, monitoring): steady growth over days = leak; a sudden jump = a batch job or a traffic spike.
+3. Check overcommit settings and swap. Little or no swap means no buffer before the OOM killer.
+4. Protect what matters: `OOMScoreAdjust=-500` (or `oom_score_adj`) for the critical service, and a `MemoryMax` on the noisy neighbour.
+5. Then size RAM from real data, if it's still needed.
+
+**Likely follow-ups:**
+- *Why is low "free" memory normal?* RAM is used as page cache; `available` is the real headroom.
+- *RSS vs PSS?* PSS shares shared pages fairly between processes; RSS counts them in full for each.

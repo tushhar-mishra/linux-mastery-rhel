@@ -170,6 +170,8 @@ file /data/lost+found/*          # identify recovered files by their content
 2. Corrupt the primary superblock on that **lab** partition: `sudo dd if=/dev/zero of=/dev/vdb2 bs=1024 seek=1 count=1`. Try to mount it, then repair it with a backup superblock.
 3. On an XFS lab volume, run `xfs_repair -n`, then a real repair.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 051` for every step, or `sudo ./checks/check 051 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **After power failures or storage incidents** when a volume won't mount.
@@ -201,3 +203,24 @@ file /data/lost+found/*          # identify recovered files by their content
 1. *Why must you never run fsck on a mounted filesystem?* The kernel is reading and changing the same metadata at the same time, so the repair and the kernel would overwrite each other's changes and cause corruption.
 2. *How do you repair XFS?* Unmount; mount and unmount once to replay the log; `xfs_repair -n` to preview; then `xfs_repair`. Use `-L` (zero the log) only if the log can't be replayed.
 3. *What is `lost+found`?* A directory where repair tools put files that still have data but lost their directory entry; they're named by inode number.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"After a power failure, a data filesystem won't mount: `mount: wrong fs type, bad superblock`. Walk me through recovery."*
+
+**Model answer:**
+1. Don't make it worse: no writes, and if the data matters, take an image or snapshot of the device first (`dd`, `ddrescue` or an LVM snapshot).
+2. Identify the filesystem: `blkid /dev/vdb1`, and read `dmesg` for the kernel's actual complaint.
+3. **XFS:**
+   - try to mount once, so the log is replayed;
+   - then `xfs_repair -n` (preview), then `xfs_repair`;
+   - only if the log can't be replayed, `xfs_repair -L` (loses the latest changes).
+4. **ext4:**
+   - `e2fsck -n` (preview), then `e2fsck -f`;
+   - if the primary superblock is damaged, list the backups with `dumpe2fs /dev/vdb1 | grep -i backup` (or `mke2fs -n`) and run `e2fsck -b 32768`.
+5. Mount, check `lost+found`, verify the application data.
+6. If it happens again, suspect the hardware (check SMART and the controller), not the filesystem.
+
+**Likely follow-ups:**
+- *Why never fsck a mounted filesystem?* The kernel and the repair tool would change the same metadata at the same time.
+- *How do you force a check of an ext4 root at next boot?* Add `fsck.mode=force` to the kernel command line for one boot.

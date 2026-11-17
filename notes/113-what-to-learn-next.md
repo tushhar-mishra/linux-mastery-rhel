@@ -136,6 +136,24 @@ echo "$(date +%F) finished 113, next: Kubernetes basics (kind cluster)" >> ~/stu
 
 **Interview questions**
 
-1. *What's your plan to grow from Linux admin to SRE?* Strengthen automation (Python, Ansible, Git, CI/CD), learn a cloud and Terraform, run Kubernetes at the node level, and practise observability and incident response, with real projects to show for each.
-2. *Why is Linux knowledge still important when everything runs on Kubernetes?* Kubernetes configures Linux features (namespaces, cgroups, netfilter, mounts) on every node; most hard incidents are Linux problems underneath.
+1. *Which Linux areas are worth going deeper in after the basics?* Kernel-level observability (eBPF tools, `perf`), nftables rule sets, storage stacks (LVM, multipath, filesystems under load), and security (SELinux policy, auditd, hardening), because those are where hard production incidents live.
+2. *Why is deep Linux knowledge still valuable when so much runs on managed platforms?* Every platform is built from the same kernel features (namespaces, cgroups, netfilter, filesystems), and the hardest incidents are Linux problems underneath. Knowing the mechanisms lets you debug what the platform hides.
 3. *How do you keep your skills current?* Release notes and upstream docs, lab environments to reproduce changes, re-running break-fix drills, and building small projects with each new tool.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"How would you prove to an employer that you can run Linux in production, beyond saying you've read about it?"*
+
+**Model answer:**
+1. Build a **capstone** and publish it (Git repository + write-up):
+   - a hardened web stack (nginx, TLS, firewalld, SELinux enforcing);
+   - storage on LVM with backups and a tested restore;
+   - everything automated with Ansible, rebuilt from scratch with one command.
+2. Show **break-fix skill**: do the topic 110 scenarios against a timer and write short postmortems for each.
+3. Show **observability**: dashboards or saved `sar`/PSI evidence from a load test, with an explanation of what saturated.
+4. Be able to **explain mechanisms** in interviews: what happens on `ls -l`, on boot, on `curl https://…`, on an OOM kill.
+5. Keep it current: re-run the labs on new releases and note what changed.
+
+**Likely follow-ups:**
+- *Which Linux area would you deepen next?* Pick one honestly (for example eBPF tracing or nftables) and give a concrete plan.
+- *How do you keep up with changes?* Release notes, upstream docs, and reproducing changes in a lab.

@@ -177,6 +177,8 @@ journalctl -u autofs -b
 4. As root on server1, create a file in the rw share and check its owner on server2 (`nobody`: root_squash).
 5. Stop nfs-server on server2 while server1 has the share mounted; try `ls` and `df` on server1 (they hang). Start it again.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 079` for every step, or `sudo ./checks/check 079 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Shared home directories** across many servers (with central identity, topic 030).
@@ -210,3 +212,22 @@ journalctl -u autofs -b
 1. *What is root_squash?* An export option (the default) that maps the client's root user to the anonymous `nobody` user on the server, so root on a client can't act as root on the server's files.
 2. *Why do processes hang when an NFS server goes down?* NFS mounts are `hard` by default: operations are retried until the server answers, leaving processes stuck in uninterruptible sleep (`D` state) rather than returning errors that could corrupt data.
 3. *Why use autofs instead of fstab for NFS?* Shares are mounted only when accessed and unmounted when idle, the boot never waits on network servers, and one wildcard map can serve every user's home directory.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"An NFS server went down for 10 minutes. Now `df` hangs on every client and the load average is 50. What's happening, and what do you do?"*
+
+**Model answer:**
+1. NFS mounts are **hard** by default: every process touching the mount (including `df`, which `stat`s every filesystem) waits forever in **D** state for the server. Each counts toward the load average.
+2. Once the server is back, the clients usually recover by themselves. Check `rpcinfo -p server`, `showmount -e server` and `mount | grep nfs`.
+3. If the server is gone for good: `umount -f -l /mnt/share` (lazy, forced) to detach it, then fix fstab or the automounter.
+4. Avoid hanging tools while you work: `df -x nfs4`, or `df -l` (local filesystems only).
+5. Prevention:
+   - mount through autofs, so idle shares aren't mounted;
+   - `nofail,_netdev` in fstab;
+   - monitoring on the NFS server;
+   - consider `soft` only for read-only, non-critical data (`soft` can return I/O errors mid-write).
+
+**Likely follow-ups:**
+- *What's root_squash?* The client's root is mapped to `nobody` on the server.
+- *Why must UIDs match between NFS clients and server?* With `sec=sys` the server trusts the numeric UID the client sends.

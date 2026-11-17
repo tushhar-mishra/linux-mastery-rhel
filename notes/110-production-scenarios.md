@@ -493,6 +493,8 @@ su - ana -c 'cat /srv/reports/q3.txt' ; su - opsuser -c 'cat /srv/reports/q3.txt
 1. Snapshot a lab VM, then reproduce any five of scenarios 1–24: break it, take notes from the symptom only, fix it, and write a three-line postmortem (cause, fix, prevention).
 2. Do scenario 25 under a 60-minute timer, then revert the snapshot and do it again faster.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 110` for every step, or `sudo ./checks/check 110 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **On-call:** most real incidents are variations of these 25: full disks, labels, ports, limits, OOM kills, throttling, DNS, time and certificates.
@@ -519,3 +521,26 @@ su - ana -c 'cat /srv/reports/q3.txt' ; su - opsuser -c 'cat /srv/reports/q3.txt
 1. *A web page returns 403 but the file permissions are fine. What do you check?* SELinux: `ls -Z` for the file's label, and `ausearch -m avc -ts recent` for denials. A file moved with `mv` keeps its old label; `restorecon` fixes it. Also check the parent directory permissions and the web server config.
 2. *`df` shows a full disk, but `du` shows much less. Why?* A process still holds deleted files open. `lsof +L1` finds them; restarting the process (or truncating via `/proc/PID/fd/N`) frees the space.
 3. *A service is slow but the host's CPU is mostly idle. What could it be?* CPU quota throttling in its cgroup (`cpu.stat` `nr_throttled`). Other causes are waiting on I/O, locks or a slow dependency such as DNS, which you can tell apart with PSI, `wchan`/stack and timing tools.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"You inherit a server from another team with no documentation. Before you change anything, what do you check?"*
+
+**Model answer:**
+1. **Identity:** OS and kernel version, hostname, VM or bare metal, uptime, whether a reboot is pending.
+2. **Purpose:**
+   - what's running and enabled (`systemctl list-units --type=service --state=running`, `list-unit-files --state=enabled`);
+   - listening ports (`ss -tlnp`);
+   - containers;
+   - cron jobs and timers.
+3. **Storage:** `lsblk`, `df -hT`, fstab, LVM, any NFS/iSCSI, and free space.
+4. **Access and security:** local users with login shells, sudoers, SSH settings, SELinux mode, firewall rules, authorized_keys files.
+5. **Health:**
+   - `journalctl -p err -b`, failed units, NTP sync;
+   - when it was last patched (`dnf history`);
+   - backups: does a recent one exist, and has it been restored?
+6. **Record** it all, take a snapshot or backup, and only then start changing things.
+
+**Likely follow-ups:**
+- *What's the first thing you'd fix?* Whatever risks data or availability first: no backups, a full disk, an expired certificate, an unpatched exposed service.
+- *How do you find what changed recently?* `dnf history`, `find /etc -mtime -7`, `journalctl --since`, `last`.

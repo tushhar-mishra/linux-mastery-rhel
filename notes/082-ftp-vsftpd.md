@@ -151,6 +151,8 @@ PASS S3cretPassw0rd
 3. Capture a local-user login with tcpdump and see the password in clear text.
 4. Compare with `sftp bob@localhost` (encrypted).
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 082` for every step, or `sudo ./checks/check 082 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Legacy integrations** (partners, banks, old ERP systems, network-device firmware). The modern replacement is SFTP, or HTTPS uploads/object storage (S3).
@@ -179,3 +181,22 @@ PASS S3cretPassw0rd
 1. *Active vs passive FTP?* In active mode the server opens the data connection back to the client from port 20; in passive mode the client opens it to a high port announced by the server, which works better through client-side firewalls and NAT.
 2. *Why is plain FTP insecure, and what do you use instead?* Credentials and data are sent unencrypted, so anyone on the path can read them. Use SFTP (over SSH) or FTPS (FTP over TLS).
 3. *Why does a firewall need a "helper" for FTP?* The data connections use ports negotiated inside the control connection; the conntrack helper reads that negotiation and opens the matching data port temporarily.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"A partner insists on FTP for file exchange. Users can log in, but every directory listing hangs. What's the cause, and what would you propose instead?"*
+
+**Model answer:**
+1. Login works over the **control** connection (port 21), but listings and transfers use a separate **data** connection.
+2. A hanging listing almost always means the data connection is blocked:
+   - in passive mode, the server's passive port range isn't open in the firewall, or a NAT device rewrites the announced address;
+   - in active mode, the server can't connect back to the client.
+3. Fix:
+   - set `pasv_min_port`/`pasv_max_port` (and `pasv_address` behind NAT);
+   - open that range in firewalld (or rely on the `ftp` service's conntrack helper);
+   - check SELinux booleans (`ftpd_full_access`, `ftpd_use_passive_mode`) and labels.
+4. Propose **SFTP** instead: one encrypted port (22), keys, and chroot via sshd's `ChrootDirectory` + `ForceCommand internal-sftp`. Plain FTP sends passwords in clear text.
+
+**Likely follow-ups:**
+- *FTPS vs SFTP?* FTPS is FTP over TLS (still two connections); SFTP is a different protocol over SSH.
+- *How do you jail FTP users in their home directory?* `chroot_local_user=YES` in vsftpd.

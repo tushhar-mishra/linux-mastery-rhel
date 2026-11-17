@@ -256,6 +256,8 @@ ls: /usr/bin/ls /usr/share/man/man1/ls.1.gz
 3. Run `man -f crontab`, then open the section-5 page and jump to `/EXAMPLE`.
 4. Run `help` alone to see every bash builtin.
 
+**Check your work:** on your lab VM, from the notes folder, run `sudo ./checks/check 005` for every step, or `sudo ./checks/check 005 STEP` for one (topic 002 shows how to get the notes there).
+
 ## Where you'll use it
 
 - **Writing a config file you've never written before** (a systemd timer, an sudoers rule): `man 5 …` plus `/EXAMPLES` is quicker and safer than guessing.
@@ -286,3 +288,18 @@ ls: /usr/bin/ls /usr/share/man/man1/ls.1.gz
 1. *How do you find a command if you don't know its name?* `man -k keyword` (or `apropos`), narrowed by section with `-s 8`.
 2. *Why are there two `passwd` man pages?* Section 1 documents the `passwd` command; section 5 documents the `/etc/passwd` file format.
 3. *`which` vs `type`?* `which` only searches PATH for program files. `type` follows the shell's own lookup (aliases, functions, builtins), so it shows what will really run.
+
+**Scenario question** (answer out loud first, then compare)
+
+> *"You need to change a setting in a config file you've never seen, on a server with no internet access. How do you find out what's valid?"*
+
+**Model answer:**
+1. `man -k name` to find the right page, especially **section 5** (file formats): `man 5 sshd_config`, `man 5 crontab`.
+2. Inside the page, search with `/keyword` and jump to `/EXAMPLES`.
+3. Check `/usr/share/doc/<package>/` for sample configs and READMEs.
+4. Many tools can **test** their config before you apply it: `sshd -t`, `nginx -t`, `named-checkconf`, `visudo -c`.
+5. Use `rpm -qc package` (or `dpkg -L`) to list the package's config files.
+
+**Likely follow-ups:**
+- *What if `man -k` finds nothing?* The index may be stale: run `mandb` as root. Or the man pages aren't installed (minimal images often strip them).
+- *How do you get help for `cd`?* It's a builtin, so `help cd`, not `man cd`.
