@@ -1,0 +1,48 @@
+# Added by the notes audit (2026-11-20): keeps notes, links and code from drifting apart.
+# Every action is pinned to a full commit SHA (update with Dependabot/Renovate).
+name: Lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lint-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  links:
+    name: Internal Markdown links resolve
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # --offline: check links between notes and to files in the repo (fast, no flaky network).
+      # Links into the OTHER notes folders (../../Jenkins/…) are separate repos on GitHub, so they are skipped here.
+      - uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
+        with:
+          args: >-
+            --offline --no-progress
+            --exclude '/(Ansible|CKA-Certification-Course-2025|Docker|GitHub-Actions-Basics-To-Production|Jenkins|linux-mastery-rhel|Terraform)/'
+            './**/*.md'
+          fail: true
+
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # shellcheck is preinstalled on GitHub's Ubuntu runners
+      - run: |
+          shellcheck --version
+          shellcheck -S warning checks/*.sh checks/check
