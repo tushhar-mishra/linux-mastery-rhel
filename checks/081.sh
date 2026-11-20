@@ -17,8 +17,8 @@ step_3() {
 }
 STEP_4="A missing trailing dot"
 step_4() {
-  if command -v named-checkzone >/dev/null && [ -f /var/named/example.lan.zone ]; then
-    check "example.lan's zone file passes named-checkzone again" "Fix the name, bump the serial, rndc reload" named-checkzone example.lan /var/named/example.lan.zone
+  if command -v named-checkzone >/dev/null && [ -f /var/named/example.lan.db ]; then
+    check "example.lan's zone file passes named-checkzone again" "Fix the name, bump the serial, rndc reload" named-checkzone example.lan /var/named/example.lan.db
   fi
   quiz "Without the trailing dot, what did 'www.example.lan' in the zone become?" "www\.example\.lan\.example\.lan" "Names without a final dot get the zone's origin appended."
 }

@@ -10,7 +10,7 @@ step_1() {
 STEP_2="Testing as ann"
 step_2() {
   check "ann: 'sudo -n systemctl status chronyd' is allowed" "Check the exact command and path in the rule" runuser -u ann -- sudo -n /usr/bin/systemctl status chronyd
-  check "ann: 'sudo -n dnf install zsh' is refused" "The rule must allow nothing else" not runuser -u ann -- sudo -n dnf --version
+  check "ann: 'sudo -n dnf …' is refused (tested with the harmless 'dnf --version')" "The rule must allow nothing else" not runuser -u ann -- sudo -n dnf --version
 }
 STEP_3="Drop-in names"
 step_3() {

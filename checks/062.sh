@@ -8,7 +8,7 @@ step_1() {
 }
 STEP_2="Failover"
 step_2() {
-  quiz "About how many pings were lost when you disconnected the active port?" "^\s*~?\s*[0-9]{1,2}\s*$|none|few|zero" "With miimon=100, failover takes about a tenth of a second plus ARP updates: 0–3 lost pings."
+  quiz "About how many pings were lost when you disconnected the active port?" "^\s*~?\s*[0-3]\s*$|none|few|zero" "With miimon=100, failover takes about a tenth of a second plus ARP updates: 0–3 lost pings."
 }
 STEP_3="/proc/net/bonding/bond0"
 step_3() {

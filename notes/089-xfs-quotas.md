@@ -191,7 +191,7 @@ sudo repquota -a
    - `xfs_quota -x -c 'project -s cust1' /srv`;
    - `xfs_quota -x -c 'limit -p bsoft=9g bhard=10g cust1' /srv`.
 5. Check: `xfs_quota -x -c 'report -pbih' /srv`, and `df -h /srv/sites/cust1` shows the project's size.
-6. Alert near the soft limit; at the hard limit, writes fail with "Disk quota exceeded".
+6. Alert near the soft limit; at the project hard limit, writes fail with **"No space left on device" (ENOSPC)**, not "Disk quota exceeded" (that is EDQUOT, used for user/group quotas). Teach your on-call to check `report -p` before blaming the disk.
 
 **Likely follow-ups:**
 - *Soft vs hard limit?* Soft can be exceeded for the grace period; hard never.

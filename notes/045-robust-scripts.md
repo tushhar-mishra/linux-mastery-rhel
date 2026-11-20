@@ -60,7 +60,7 @@ So treat `set -e` as a **safety net**, not error handling. Check critical comman
 
 ### trap: always clean up
 
-`trap 'commands' EXIT` runs the commands **whenever the script ends**: a normal end, `exit N`, or an error stop from `set -e`. Signals are separate: add `trap '…; exit 130' INT TERM`, so Ctrl+C or `kill` also ends through the EXIT trap. (130 = 128 + 2, the standard "killed by SIGINT" code, topic 004.) SIGKILL can't be trapped (topic 033).
+`trap 'commands' EXIT` runs the commands **whenever the script ends**: a normal end, `exit N`, or an error stop from `set -e`. Signals are separate: add `trap '…; exit 130' INT` and `trap '…; exit 143' TERM`, so Ctrl+C or `kill` also ends through the EXIT trap. (The convention is 128 + signal number: 130 = SIGINT (2), 143 = SIGTERM (15), topic 004. Supervisors such as systemd and Kubernetes read 143 as "stopped by SIGTERM".) SIGKILL can't be trapped (topic 033).
 
 ### Temporary files
 
@@ -112,7 +112,8 @@ tmp=$(mktemp -d)
 # shellcheck disable=SC2317   # cleanup is called by the trap, which ShellCheck can't see
 cleanup() { local rc=$?; rm -rf -- "$tmp"; (( rc == 0 )) || log "failed (rc=$rc)"; }
 trap cleanup EXIT
-trap 'log "interrupted"; exit 130' INT TERM
+trap 'log "interrupted"; exit 130' INT
+trap 'log "terminated"; exit 143' TERM
 
 name="$(basename -- "$src")-$(date +%Y%m%d-%H%M%S).tar.gz"
 tar -czf "$tmp/$name" -C "$(dirname -- "$src")" "$(basename -- "$src")"
@@ -245,7 +246,7 @@ Move to Python (or Go, or Ansible) when you need real data structures, JSON/YAML
 **Interview questions**
 
 1. *Is `set -e` enough to make a script safe?* No. It's ignored in conditions and `&&`/`||` lists, `local var=$(cmd)` hides failures, and without `pipefail` only the last pipeline stage counts. Check important commands explicitly.
-2. *How do you make sure a script cleans up its temp files even when interrupted?* Create them with `mktemp`, delete them in `trap '…' EXIT`, and add `trap 'exit 130' INT TERM` so signals also go through the EXIT trap.
+2. *How do you make sure a script cleans up its temp files even when interrupted?* Create them with `mktemp`, delete them in `trap '…' EXIT`, and add `trap 'exit 130' INT` plus `trap 'exit 143' TERM` so signals also go through the EXIT trap (exit code = 128 + signal number).
 3. *How do you stop a cron job from overlapping with itself?* Take a lock with `flock -n` on a lock file at the start (or run it as a systemd timer, which won't start a second instance of a running service).
 
 **Scenario question** (answer out loud first, then compare)

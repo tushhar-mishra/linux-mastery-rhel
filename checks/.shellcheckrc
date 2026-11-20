@@ -1,0 +1,7 @@
+# ShellCheck settings for the check files (picked up automatically for files in this folder).
+# The NNN.sh files have no shebang on purpose: checks/check sources them into bash.
+shell=bash
+# TITLE and STEP_N are set here and read by checks/check after sourcing, so they only look unused.
+disable=SC2034
+# "~/lab/..." appears inside messages shown to the learner, where a literal ~ is intended.
+disable=SC2088

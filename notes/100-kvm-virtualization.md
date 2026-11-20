@@ -16,7 +16,7 @@
 | **libvirt** | The management layer: an API and daemons that define VMs as XML, plus networks and storage pools |
 | `virsh` | The libvirt command-line tool |
 | `virt-install` | Creates new VMs |
-| **Cockpit** + `cockpit-machines` | The web UI for VMs (`virt-manager` is deprecated in RHEL 10) |
+| **Cockpit** + `cockpit-machines` | The web UI for VMs (`virt-manager` was deprecated in RHEL 9 and is no longer shipped in RHEL 10) |
 | **sVirt** | SELinux MCS labels that isolate each VM's process and disk files from the others (topic 076) |
 
 Words:

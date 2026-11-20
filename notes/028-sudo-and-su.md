@@ -285,7 +285,8 @@ journalctl _COMM=sudo --since today
 3. Mistakes to avoid:
    - never allow commands that can start a shell: `vi`, `less`, `find -exec`, `tar`, `systemctl edit`, or a bare `systemctl`;
    - don't put a dot in the file name (`oncall.conf` is silently ignored);
-   - keep mode 0440, owned by root.
+   - keep mode 0440, owned by root;
+   - `systemctl status` opens a pager (`less`), and on old systemd (< 247, CVE-2023-26604) that pager kept root and allowed `!sh`. Modern systemd runs the pager in secure mode under sudo, but the safe habit is to grant `/usr/bin/systemctl --no-pager status app.service` and/or set `Defaults env_keep -= SYSTEMD_PAGER` with `SYSTEMD_PAGERSECURE=1`.
 4. Check with `sudo -l -U username`, and test as a member: allowed command works, anything else is refused (and logged).
 
 **Likely follow-ups:**
