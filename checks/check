@@ -26,5 +26,6 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 . "$dir/lib.sh"
+# shellcheck source=/dev/null  # the topic file is chosen at run time
 . "$file"
 run_steps "$STEP"

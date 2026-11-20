@@ -2,7 +2,7 @@ TITLE="GRUB and kernel packages"
 STEP_1="Default kernel"
 step_1() {
   is_rhel || { manual "On Ubuntu, check the default in /etc/default/grub and run update-grub."; return; }
-  local newest def; newest=$(ls /boot/vmlinuz-* | grep -v rescue | sort -V | tail -1); def=$(grubby --default-kernel 2>/dev/null)
+  local newest def; newest=$(printf '%s\n' /boot/vmlinuz-* | grep -v rescue | sort -V | tail -1); def=$(grubby --default-kernel 2>/dev/null)
   check "the default kernel is the newest one again" "sudo grubby --set-default $newest" test "$def" = "$newest"
   check "you're running the default kernel (rebooted back)" "Reboot once more" test "/boot/vmlinuz-$(uname -r)" = "$def"
 }
