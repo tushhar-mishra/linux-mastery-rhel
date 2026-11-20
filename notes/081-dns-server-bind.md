@@ -160,7 +160,8 @@ sudo rndc reload example.lan
 ```
 zone reload queued
 ```
-- If you forgot to increase the serial, you get `zone reload up-to-date` instead, and named keeps serving the old records (and secondaries would never fetch the change).- `rndc` (Remote Name Daemon Control) controls the running named: `reload`, `flush` (clear the cache), `status`.
+- If you forgot to increase the serial, you get `zone reload up-to-date` instead, and named keeps serving the old records (and secondaries would never fetch the change).
+- `rndc` (Remote Name Daemon Control) controls the running named: `reload`, `flush` (clear the cache), `status`.
 
 ### Test it
 
@@ -245,7 +246,7 @@ zone "example.lan" IN { type secondary; primaries { 192.168.56.11; };
 > *"You added a new A record to a BIND zone and reloaded, but clients still get NXDOMAIN, and the secondary server doesn't have it either. What did you forget?"*
 
 **Model answer:**
-1. Check the primary: `dig @primary newhost.example.lan`. If even it doesn't answer, check `named-checkzone example.lan /var/named/example.lan.zone` and the journal for load errors.
+1. Check the primary: `dig @primary newhost.example.lan`. If even it doesn't answer, check `named-checkzone example.lan /var/named/example.lan.db` and the journal for load errors.
 2. If the primary answers but the secondary doesn't: you didn't **bump the SOA serial**. Secondaries only transfer when the serial increases. Increase it, then `rndc reload`.
 3. Clients may be getting a **cached negative answer** from their resolver. The SOA's minimum/negative TTL decides how long that lasts; flush the resolver's cache, or wait.
 4. Also check:

@@ -77,7 +77,7 @@ A TCP connection is a **phone call**.
 | `ESTABLISHED` | An open connection | Count vs expectations (pool sizes, leaks) |
 | **`CLOSE-WAIT`** | The peer closed; **our application hasn't called `close()`** | **Always an application bug** when it piles up: leaked sockets → fd exhaustion |
 | `FIN-WAIT-2` | We closed; waiting for the peer's FIN | The peer app is stuck (in CLOSE-WAIT on its side) |
-| **`TIME-WAIT`** | We closed first; kept for 2×MSL (Maximum Segment Lifetime, 60 s on Linux) so stray packets can't corrupt a new connection | Huge numbers on a **client** making many short connections → ephemeral port exhaustion |
+| **`TIME-WAIT`** | We closed first; RFC 793 says hold it for 2×MSL (Maximum Segment Lifetime). Linux uses a fixed **60 s total** (`TCP_TIMEWAIT_LEN`, not tunable by sysctl), so stray packets can't corrupt a new connection | Huge numbers on a **client** making many short connections → ephemeral port exhaustion |
 
 ### 3. Listen queues
 

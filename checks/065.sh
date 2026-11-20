@@ -15,7 +15,7 @@ STEP_3="An alias in ~/.ssh/config"
 step_3() {
   local h; h=$(getent passwd alice | cut -d: -f6)
   check "alice's ~/.ssh/config defines a Host alias" "Host s2 / HostName 192.168.56.11 / User alice" grep -qiE '^\s*Host\s+\S' "$h/.ssh/config"
-  check "~/.ssh/config is mode 600 (or 644)" "chmod 600 ~/.ssh/config" bash -c "[[ \$(stat -c %a '$h/.ssh/config') =~ ^6[04]0|644$ ]]"
+  check "~/.ssh/config is mode 600 (or 644)" "chmod 600 ~/.ssh/config" bash -c "[[ \$(stat -c %a '$h/.ssh/config') =~ ^(600|640|644)$ ]]"
 }
 STEP_4="Changed host key"
 step_4() {

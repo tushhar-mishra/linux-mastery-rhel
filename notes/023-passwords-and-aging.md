@@ -245,7 +245,7 @@ $6$Kq3h9bZr8s$2mJ...
 
 **Model answer:**
 1. `sudo passwd -S user` and `sudo chage -l user` show the state.
-2. **Key works, password doesn't:** the password is probably **locked** (`!` in front of the hash in `/etc/shadow`, `passwd -S` shows `LK`). Lock only blocks passwords. Unlock with `usermod -U`. Also check faillock (topic 029).
+2. **Key works, password doesn't:** the password is probably **locked** (`!` in front of the hash in `/etc/shadow`, `passwd -S` shows `L` on RHEL 10, `LK` on RHEL 9). Lock only blocks passwords. Unlock with `usermod -U`. Also check faillock (topic 029).
 3. **"Account expired":** the account expiry date (`chage -l`, "Account expires") has passed. That blocks keys too. Fix with `chage -E -1 user` (never) or a new date.
 4. "Password expired" is different: the user is forced to change it at login (`max` days reached, or `chage -d 0`).
 5. Check the logs (`/var/log/secure`, `journalctl -u sshd`) to see the exact refusal message.

@@ -81,7 +81,7 @@ ls -li a.txt b.txt
 17358831 -rw-r--r--. 2 alice alice 6 Nov 16 10:20 a.txt
 17358831 -rw-r--r--. 2 alice alice 6 Nov 16 10:20 b.txt
 ```
-- `-i` adds the inode number as the first column. Both names show **the same inode** (`3407940`) and a link count of **2**. They are the same file.
+- `-i` adds the inode number as the first column. Both names show **the same inode** (`17358831`) and a link count of **2**. They are the same file.
 
 ```bash
 rm a.txt ; cat b.txt ; ls -li b.txt

@@ -127,7 +127,8 @@ sudo lvchange -ay /dev/vgdata/lvdb
 sudo mount -o ro /dev/vgdata/lvdb /db        # read-only first, check the data, then remount rw
 ```
 - If other LVs in the VG are still active, `vgcfgrestore` (even with `--test`) warns `Restoring VG with active LVs, may cause mismatch with its metadata` and asks `Do you really want to proceed … [y/n]`. Restoring an archive that differs only by the removed LV is safe, so answer `y`. If you can, unmount and deactivate the other LVs first (`vgchange -an vgdata`), which avoids the question.
-- Pick the archive by its **Description**: you want the one `Created *before* executing 'lvremove …'`, usually the newest file in `/etc/lvm/archive/`.- **Stop all writes to the VG immediately** after an accidental `lvremove`. Any new LV or growth could reuse the freed extents and overwrite the data. VGs with thin pools need `--force` and extra care.
+- Pick the archive by its **Description**: you want the one `Created *before* executing 'lvremove …'`, usually the newest file in `/etc/lvm/archive/`.
+- **Stop all writes to the VG immediately** after an accidental `lvremove`. Any new LV or growth could reuse the freed extents and overwrite the data. VGs with thin pools need `--force` and extra care.
 
 ```bash
 sudo vgcfgbackup vgdata          # take a manual metadata backup now

@@ -42,7 +42,11 @@ firewall-cmd / Cockpit ──(D-Bus)──► firewalld daemon ──► nftable
 - **Connection tracking (conntrack):** netfilter remembers connections. Once you open port 80 inbound, the **reply** packets of that connection are allowed automatically. Outgoing connections, and their replies, are allowed by default. That's why opening a port is usually the only rule you need.
 - **Which zone handles a packet?** The zone bound to the packet's **source address** wins first; otherwise the zone of the **incoming interface**; otherwise the default zone.
 - **Defaults on RHEL:** firewalld enabled; zone `public` allows `ssh`, `dhcpv6-client` and `cockpit` incoming; everything else incoming is rejected; all outgoing traffic is allowed.
-- **Reject vs drop:** `reject` replies "port unreachable", so the client fails instantly with "Connection refused". `drop` stays silent, so the client waits and gets "Connection timed out". That difference tells you, from the client side, what kind of filtering you're hitting.
+- **Reject vs drop:** `reject` answers immediately; `drop` stays silent, so the client waits and gets "Connection timed out". *What* the client sees for a reject depends on the reject type:
+  - firewalld's **zone default** (traffic no rule allows in `public`) rejects with ICMP **admin-prohibited**, so the client sees **"No route to host"**;
+  - a rich rule `reject type="icmp-port-unreachable"` (or nft's plain `reject`) gives **"Connection refused"**;
+  - `reject with tcp reset` (nft) also gives **"Connection refused"**, which looks exactly like "nothing is listening".
+  So "No route to host" to a host you can ping is a strong hint of a firewalld reject, not a routing problem (topic 095's error table).
 
 The path of an incoming packet:
 
@@ -272,7 +276,7 @@ sudo ufw status verbose
 
 1. *Runtime vs permanent in firewalld?* Runtime rules take effect immediately but are lost on reload or reboot. Permanent rules are saved to disk and take effect after `firewall-cmd --reload`.
 2. *How would you allow HTTP only from 10.0.0.0/8?* Don't add the http service to the zone; instead add a rich rule: `rule family="ipv4" source address="10.0.0.0/8" service name="http" accept` (or bind that source to a zone that allows http).
-3. *A client gets "Connection timed out" vs "Connection refused". What does each suggest?* Timed out = packets are being silently dropped (a firewall `drop` rule or no route). Refused = a reply came back, so either nothing is listening on the port or a firewall is rejecting it.
+3. *A client gets "Connection timed out" vs "Connection refused". What does each suggest?* Timed out = packets are being silently dropped (a firewall `drop` rule or no route). Refused = a TCP RST (or ICMP port-unreachable) came back, so nothing is listening on the port, or a reject rule is configured to send a reset/port-unreachable. firewalld's *default* reject sends ICMP admin-prohibited instead, which the client reports as "No route to host".
 
 **Scenario question** (answer out loud first, then compare)
 

@@ -226,7 +226,7 @@ sudo lsof /var/log/messages
 COMMAND   PID USER   FD   TYPE DEVICE SIZE/OFF     NODE NAME
 rsyslogd 1240 root    8w   REG    8,4   535345 50636504 /var/log/messages
 ```
-- `rsyslogd` (PID 812) has it open on file descriptor 7, for writing (`w`).
+- `rsyslogd` (PID 1240) has it open on file descriptor 8, for writing (`8w`).
 
 ```bash
 sudo lsof +L1                 # deleted files still held open (topic 008)

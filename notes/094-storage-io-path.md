@@ -89,7 +89,7 @@ The VFS keeps a **dentry cache** (path component → inode lookups, including "n
 | Tunable (kernel default) | Meaning |
 |---|---|
 | `vm.dirty_background_ratio` (10) | Above 10% of available memory dirty → start background writeback |
-| `vm.dirty_ratio` (20; **30** on RHEL VMs and servers, set by tuned's `virtual-guest`/`throughput-performance` profiles) | Above this share → **the writing process itself is throttled** until writeback catches up |
+| `vm.dirty_ratio` (20 by default; tuned raises it: **30** with `virtual-guest`, **40** with `throughput-performance`) | Above this share → **the writing process itself is throttled** until writeback catches up |
 | `vm.dirty_expire_centisecs` (3000 = 30 s) | Dirty data older than this is written at the next flush |
 | `vm.dirty_writeback_centisecs` (500 = 5 s) | How often the flushers wake |
 | `vm.dirty_bytes`, `vm.dirty_background_bytes` | Absolute alternatives (better on large-RAM hosts) |
